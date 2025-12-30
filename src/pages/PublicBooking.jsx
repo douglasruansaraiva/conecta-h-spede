@@ -23,7 +23,13 @@ import {
   Loader2,
   Calendar,
   Home,
-  X
+  X,
+  Star,
+  MessageCircle,
+  Shield,
+  DollarSign,
+  Gift,
+  ChevronDown
 } from "lucide-react";
 import CalendarGrid from '@/components/reservations/CalendarGrid';
 
@@ -340,6 +346,42 @@ export default function PublicBooking() {
         {/* Step 1: Choose Accommodation */}
         {step === 1 && (
           <div>
+            {/* Benefits Section */}
+            <div className="mb-8 sm:mb-12 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-6 sm:p-8 border border-emerald-200">
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-800 mb-4 text-center">
+                Por que Reservar Direto Conosco?
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="flex items-start gap-3 bg-white/80 p-4 rounded-xl">
+                  <div className="w-10 h-10 rounded-lg bg-emerald-500 flex items-center justify-center flex-shrink-0">
+                    <DollarSign className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-slate-800 mb-1">Melhor Preço</h3>
+                    <p className="text-sm text-slate-600">Sem taxas de intermediários, economia direta para você</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 bg-white/80 p-4 rounded-xl">
+                  <div className="w-10 h-10 rounded-lg bg-emerald-500 flex items-center justify-center flex-shrink-0">
+                    <Gift className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-slate-800 mb-1">Benefícios Exclusivos</h3>
+                    <p className="text-sm text-slate-600">Upgrades e cortesias especiais para reservas diretas</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 bg-white/80 p-4 rounded-xl">
+                  <div className="w-10 h-10 rounded-lg bg-emerald-500 flex items-center justify-center flex-shrink-0">
+                    <Shield className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-slate-800 mb-1">Mais Flexibilidade</h3>
+                    <p className="text-sm text-slate-600">Atendimento personalizado e políticas mais flexíveis</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <h2 className="text-lg sm:text-xl font-semibold text-slate-800 mb-4 sm:mb-6">Escolha sua Acomodação</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {accommodations.map(acc => (
@@ -391,6 +433,105 @@ export default function PublicBooking() {
                   </CardContent>
                 </Card>
               ))}
+            </div>
+
+            {/* Testimonials Section */}
+            <div className="mt-12 sm:mt-16">
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-800 mb-6 text-center">
+                O que nossos hóspedes dizem
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <Card className="bg-white border-slate-200">
+                  <CardContent className="p-6">
+                    <div className="flex gap-1 mb-3">
+                      {[1,2,3,4,5].map(i => <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />)}
+                    </div>
+                    <p className="text-slate-600 text-sm mb-4">
+                      "Experiência maravilhosa! O lugar é exatamente como nas fotos. Atendimento impecável e localização perfeita."
+                    </p>
+                    <p className="font-semibold text-slate-800">Maria Silva</p>
+                    <p className="text-xs text-slate-500">Janeiro 2025</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-white border-slate-200">
+                  <CardContent className="p-6">
+                    <div className="flex gap-1 mb-3">
+                      {[1,2,3,4,5].map(i => <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />)}
+                    </div>
+                    <p className="text-slate-600 text-sm mb-4">
+                      "Lugar perfeito para relaxar! Voltaremos com certeza. A reserva pelo site foi super fácil e rápida."
+                    </p>
+                    <p className="font-semibold text-slate-800">João Santos</p>
+                    <p className="text-xs text-slate-500">Dezembro 2024</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-white border-slate-200">
+                  <CardContent className="p-6">
+                    <div className="flex gap-1 mb-3">
+                      {[1,2,3,4,5].map(i => <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />)}
+                    </div>
+                    <p className="text-slate-600 text-sm mb-4">
+                      "Acomodações limpas e confortáveis. Os anfitriões foram muito atenciosos. Recomendo!"
+                    </p>
+                    <p className="font-semibold text-slate-800">Ana Costa</p>
+                    <p className="text-xs text-slate-500">Novembro 2024</p>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+
+            {/* FAQ Section */}
+            <div className="mt-12 sm:mt-16">
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-800 mb-6 text-center">
+                Perguntas Frequentes
+              </h2>
+              <div className="space-y-4 max-w-3xl mx-auto">
+                <details className="bg-white border border-slate-200 rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow">
+                  <summary className="font-semibold text-slate-800 flex items-center justify-between">
+                    Como funciona o processo de reserva?
+                    <ChevronDown className="w-5 h-5 text-slate-400" />
+                  </summary>
+                  <p className="text-slate-600 text-sm mt-3 pl-2">
+                    É simples! Escolha sua acomodação, selecione as datas desejadas, preencha seus dados e confirme. Você receberá a confirmação por e-mail com todas as instruções.
+                  </p>
+                </details>
+                <details className="bg-white border border-slate-200 rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow">
+                  <summary className="font-semibold text-slate-800 flex items-center justify-between">
+                    Qual o horário de check-in e check-out?
+                    <ChevronDown className="w-5 h-5 text-slate-400" />
+                  </summary>
+                  <p className="text-slate-600 text-sm mt-3 pl-2">
+                    Check-in: {company.check_in_time || '14:00'}h | Check-out: {company.check_out_time || '12:00'}h. Horários especiais podem ser combinados mediante disponibilidade.
+                  </p>
+                </details>
+                <details className="bg-white border border-slate-200 rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow">
+                  <summary className="font-semibold text-slate-800 flex items-center justify-between">
+                    Como faço o pagamento?
+                    <ChevronDown className="w-5 h-5 text-slate-400" />
+                  </summary>
+                  <p className="text-slate-600 text-sm mt-3 pl-2">
+                    Aceitamos diversas formas de pagamento. Após a confirmação da reserva, você receberá as instruções detalhadas de pagamento por e-mail.
+                  </p>
+                </details>
+                <details className="bg-white border border-slate-200 rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow">
+                  <summary className="font-semibold text-slate-800 flex items-center justify-between">
+                    Posso cancelar minha reserva?
+                    <ChevronDown className="w-5 h-5 text-slate-400" />
+                  </summary>
+                  <p className="text-slate-600 text-sm mt-3 pl-2">
+                    {company.cancellation_policy || 'Entre em contato conosco para informações sobre nossa política de cancelamento.'}
+                  </p>
+                </details>
+                <details className="bg-white border border-slate-200 rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow">
+                  <summary className="font-semibold text-slate-800 flex items-center justify-between">
+                    O que está incluído na estadia?
+                    <ChevronDown className="w-5 h-5 text-slate-400" />
+                  </summary>
+                  <p className="text-slate-600 text-sm mt-3 pl-2">
+                    Cada acomodação possui suas comodidades listadas. Em caso de dúvidas específicas, entre em contato conosco.
+                  </p>
+                </details>
+              </div>
             </div>
           </div>
         )}
@@ -523,9 +664,9 @@ export default function PublicBooking() {
                 <Button 
                   onClick={() => setStep(2)}
                   size="lg"
-                  className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-lg shadow-emerald-500/20 h-12 sm:h-14 text-sm sm:text-base"
+                  className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-lg shadow-emerald-500/20 h-12 sm:h-14 text-sm sm:text-base font-semibold"
                 >
-                  Escolher Datas
+                  Reservar Agora - Escolher Datas
                   <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
                 </Button>
               </CardContent>
@@ -751,22 +892,53 @@ export default function PublicBooking() {
         )}
       </div>
 
+      {/* WhatsApp Float Button */}
+      {company.phone && (
+        <a
+          href={`https://wa.me/${company.phone.replace(/\D/g, '')}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="fixed bottom-6 right-6 w-14 h-14 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all z-50 animate-bounce"
+          title="Fale conosco no WhatsApp"
+        >
+          <MessageCircle className="w-7 h-7" />
+        </a>
+      )}
+
       {/* Footer */}
       <div className="bg-white/80 backdrop-blur border-t border-slate-200 mt-8 sm:mt-12">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
-          <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-slate-600">
-            {company.phone && (
-              <a href={`tel:${company.phone}`} className="flex items-center gap-1 hover:text-[#2C5F5D] transition-colors">
-                <Phone className="w-4 h-4" />
-                {company.phone}
-              </a>
-            )}
-            {company.email && (
-              <a href={`mailto:${company.email}`} className="flex items-center gap-1 hover:text-[#2C5F5D] transition-colors">
-                <Mail className="w-4 h-4" />
-                {company.email}
-              </a>
-            )}
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-slate-600">
+              {company.phone && (
+                <a href={`tel:${company.phone}`} className="flex items-center gap-2 hover:text-[#2C5F5D] transition-colors">
+                  <Phone className="w-4 h-4" />
+                  {company.phone}
+                </a>
+              )}
+              {company.email && (
+                <a href={`mailto:${company.email}`} className="flex items-center gap-2 hover:text-[#2C5F5D] transition-colors">
+                  <Mail className="w-4 h-4" />
+                  {company.email}
+                </a>
+              )}
+              {company.phone && (
+                <a 
+                  href={`https://wa.me/${company.phone.replace(/\D/g, '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-green-600 hover:text-green-700 transition-colors font-medium"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  WhatsApp
+                </a>
+              )}
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-slate-500">
+                © {new Date().getFullYear()} {company.name}. Todos os direitos reservados.
+              </p>
+            </div>
           </div>
         </div>
       </div>
