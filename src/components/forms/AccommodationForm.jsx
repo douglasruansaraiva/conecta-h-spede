@@ -28,7 +28,7 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
     min_nights: 1,
     amenities: [],
     images: [],
-    ical_import_url: '',
+    ical_urls: [],
     status: 'active'
   });
 
@@ -44,7 +44,7 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
         min_nights: accommodation.min_nights || 1,
         amenities: accommodation.amenities || [],
         images: accommodation.images || [],
-        ical_import_url: accommodation.ical_import_url || '',
+        ical_urls: accommodation.ical_urls || [],
         status: accommodation.status || 'active'
       });
     } else {
@@ -58,7 +58,7 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
         min_nights: 1,
         amenities: [],
         images: [],
-        ical_import_url: '',
+        ical_urls: [],
         status: 'active'
       });
     }
@@ -93,9 +93,32 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
     }));
   };
 
+  const addIcalUrl = () => {
+    setFormData(prev => ({
+      ...prev,
+      ical_urls: [...prev.ical_urls, { name: '', url: '' }]
+    }));
+  };
+
+  const removeIcalUrl = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      ical_urls: prev.ical_urls.filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateIcalUrl = (index, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      ical_urls: prev.ical_urls.map((item, i) => 
+        i === index ? { ...item, [field]: value } : item
+      )
+    }));
+  };
+
   const syncIcal = async () => {
-    if (!formData.ical_import_url) {
-      toast.error('Cole a URL do iCal primeiro');
+    if (!formData.ical_urls || formData.ical_urls.length === 0) {
+      toast.error('Adicione pelo menos uma URL de iCal primeiro');
       return;
     }
     
@@ -106,96 +129,97 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
     
     setSyncing(true);
     try {
-      // Use proxy CORS para evitar bloqueios
-      const proxyUrl = 'https://corsproxy.io/?';
-      const response = await fetch(proxyUrl + encodeURIComponent(formData.ical_import_url));
+      // Delete existing ical blocks for this accommodation
+      const existingBlocks = await base44.entities.BlockedDate.filter({ 
+        company_id: companyId,
+        accommodation_id: accommodation.id,
+        source: 'ical_import'
+      });
       
-      if (!response.ok) {
-        throw new Error('Erro ao buscar iCal');
-      }
-      
-      const icalData = await response.text();
-      console.log('iCal data:', icalData.substring(0, 500)); // Debug
-      
-      // Parse iCal data - melhorado para suportar diferentes formatos
-      const events = [];
-      const lines = icalData.split(/\r?\n/);
-      let currentEvent = null;
-      
-      for (const line of lines) {
-        const trimmed = line.trim();
-        
-        if (trimmed === 'BEGIN:VEVENT') {
-          currentEvent = {};
-        } else if (trimmed === 'END:VEVENT' && currentEvent) {
-          if (currentEvent.start && currentEvent.end) {
-            events.push(currentEvent);
-          }
-          currentEvent = null;
-        } else if (currentEvent) {
-          // DTSTART - suporta formato com VALUE=DATE e com timezone
-          if (trimmed.startsWith('DTSTART')) {
-            const match = trimmed.match(/DTSTART[^:]*:(\d{8})/);
-            if (match) {
-              const dateStr = match[1];
-              currentEvent.start = `${dateStr.slice(0,4)}-${dateStr.slice(4,6)}-${dateStr.slice(6,8)}`;
-            }
-          } 
-          // DTEND - suporta formato com VALUE=DATE e com timezone
-          else if (trimmed.startsWith('DTEND')) {
-            const match = trimmed.match(/DTEND[^:]*:(\d{8})/);
-            if (match) {
-              const dateStr = match[1];
-              currentEvent.end = `${dateStr.slice(0,4)}-${dateStr.slice(4,6)}-${dateStr.slice(6,8)}`;
-            }
-          } 
-          // SUMMARY
-          else if (trimmed.startsWith('SUMMARY')) {
-            const parts = trimmed.split(':');
-            currentEvent.summary = parts.slice(1).join(':').trim();
-          }
-        }
+      for (const block of existingBlocks) {
+        await base44.entities.BlockedDate.delete(block.id);
       }
 
-      console.log('Eventos encontrados:', events); // Debug
+      let totalCreated = 0;
 
-      if (events.length > 0) {
-        // Delete existing ical blocks for this accommodation
-        const existingBlocks = await base44.entities.BlockedDate.filter({ 
-          company_id: companyId,
-          accommodation_id: accommodation.id,
-          source: 'ical_import'
-        });
-        
-        console.log('Bloqueios existentes:', existingBlocks.length); // Debug
-        
-        for (const block of existingBlocks) {
-          await base44.entities.BlockedDate.delete(block.id);
-        }
+      // Sync each iCal URL
+      for (const icalConfig of formData.ical_urls) {
+        if (!icalConfig.url) continue;
 
-        // Create new blocks
-        let created = 0;
-        for (const event of events) {
-          try {
-            await base44.entities.BlockedDate.create({
-              company_id: companyId,
-              accommodation_id: accommodation.id,
-              start_date: event.start,
-              end_date: event.end,
-              reason: event.summary || 'Reserva externa',
-              source: 'ical_import'
-            });
-            created++;
-          } catch (err) {
-            console.error('Erro ao criar bloqueio:', err);
+        try {
+          const proxyUrl = 'https://corsproxy.io/?';
+          const response = await fetch(proxyUrl + encodeURIComponent(icalConfig.url));
+          
+          if (!response.ok) {
+            console.error(`Erro ao buscar ${icalConfig.name}:`, response.statusText);
+            continue;
           }
-        }
+          
+          const icalData = await response.text();
+          
+          // Parse iCal data
+          const events = [];
+          const lines = icalData.split(/\r?\n/);
+          let currentEvent = null;
+          
+          for (const line of lines) {
+            const trimmed = line.trim();
+            
+            if (trimmed === 'BEGIN:VEVENT') {
+              currentEvent = {};
+            } else if (trimmed === 'END:VEVENT' && currentEvent) {
+              if (currentEvent.start && currentEvent.end) {
+                events.push(currentEvent);
+              }
+              currentEvent = null;
+            } else if (currentEvent) {
+              if (trimmed.startsWith('DTSTART')) {
+                const match = trimmed.match(/DTSTART[^:]*:(\d{8})/);
+                if (match) {
+                  const dateStr = match[1];
+                  currentEvent.start = `${dateStr.slice(0,4)}-${dateStr.slice(4,6)}-${dateStr.slice(6,8)}`;
+                }
+              } 
+              else if (trimmed.startsWith('DTEND')) {
+                const match = trimmed.match(/DTEND[^:]*:(\d{8})/);
+                if (match) {
+                  const dateStr = match[1];
+                  currentEvent.end = `${dateStr.slice(0,4)}-${dateStr.slice(4,6)}-${dateStr.slice(6,8)}`;
+                }
+              } 
+              else if (trimmed.startsWith('SUMMARY')) {
+                const parts = trimmed.split(':');
+                currentEvent.summary = parts.slice(1).join(':').trim();
+              }
+            }
+          }
 
-        console.log('Bloqueios criados:', created); // Debug
-        toast.success(`${created} datas bloqueadas importadas!`);
+          // Create blocks for this calendar
+          for (const event of events) {
+            try {
+              await base44.entities.BlockedDate.create({
+                company_id: companyId,
+                accommodation_id: accommodation.id,
+                start_date: event.start,
+                end_date: event.end,
+                reason: `${icalConfig.name || 'Reserva externa'}: ${event.summary || ''}`,
+                source: 'ical_import'
+              });
+              totalCreated++;
+            } catch (err) {
+              console.error('Erro ao criar bloqueio:', err);
+            }
+          }
+        } catch (error) {
+          console.error(`Erro ao sincronizar ${icalConfig.name}:`, error);
+        }
+      }
+
+      if (totalCreated > 0) {
+        toast.success(`${totalCreated} datas bloqueadas importadas de ${formData.ical_urls.length} calendários!`);
         onSave();
       } else {
-        toast.warning('Nenhum evento encontrado no iCal');
+        toast.warning('Nenhum evento encontrado nos calendários');
       }
     } catch (error) {
       console.error('Erro ao sincronizar iCal:', error);
@@ -367,29 +391,70 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
           </div>
 
           <div>
-            <Label>URL iCal (Airbnb, Booking, etc)</Label>
-            <div className="flex gap-2">
-              <Input
-                value={formData.ical_import_url}
-                onChange={(e) => setFormData({ ...formData, ical_import_url: e.target.value })}
-                placeholder="https://..."
-                className="flex-1"
-              />
+            <div className="flex items-center justify-between mb-3">
+              <Label>URLs iCal (Airbnb, Booking, VRBO, etc)</Label>
               <Button
                 type="button"
                 variant="outline"
-                onClick={syncIcal}
-                disabled={syncing || !formData.ical_import_url || !accommodation}
+                size="sm"
+                onClick={addIcalUrl}
               >
-                {syncing ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <RefreshCw className="w-4 h-4" />
-                )}
+                <Plus className="w-4 h-4 mr-1" />
+                Adicionar
               </Button>
             </div>
-            <p className="text-xs text-slate-500 mt-1">
-              Cole a URL do calendário iCal e clique em sincronizar para importar datas bloqueadas
+            
+            <div className="space-y-3">
+              {formData.ical_urls.map((ical, index) => (
+                <div key={index} className="flex gap-2">
+                  <Input
+                    value={ical.name}
+                    onChange={(e) => updateIcalUrl(index, 'name', e.target.value)}
+                    placeholder="Nome (ex: Airbnb)"
+                    className="w-32"
+                  />
+                  <Input
+                    value={ical.url}
+                    onChange={(e) => updateIcalUrl(index, 'url', e.target.value)}
+                    placeholder="https://..."
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeIcalUrl(index)}
+                  >
+                    <X className="w-4 h-4 text-red-500" />
+                  </Button>
+                </div>
+              ))}
+              
+              {formData.ical_urls.length > 0 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={syncIcal}
+                  disabled={syncing || !accommodation}
+                  className="w-full"
+                >
+                  {syncing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      Sincronizando...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Sincronizar Todos os Calendários
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
+            
+            <p className="text-xs text-slate-500 mt-2">
+              Adicione múltiplas URLs de calendários iCal e sincronize todos de uma vez
             </p>
           </div>
 
