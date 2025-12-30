@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { 
@@ -20,7 +20,9 @@ import {
   ArrowDownRight,
   Loader2,
   Edit,
-  Trash2
+  Trash2,
+  BarChart3,
+  Home
 } from "lucide-react";
 import {
   AlertDialog,
@@ -36,10 +38,16 @@ import StatsCard from '@/components/dashboard/StatsCard';
 import {
   AreaChart,
   Area,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
+  Legend,
   ResponsiveContainer
 } from 'recharts';
 import CompanyGuard from '@/components/auth/CompanyGuard';
@@ -67,7 +75,9 @@ const paymentMethodLabels = {
 };
 
 function FinancialContent({ user, company }) {
+  const [activeTab, setActiveTab] = useState('transactions');
   const [typeFilter, setTypeFilter] = useState('all');
+  const [reportPeriod, setReportPeriod] = useState('6months');
   const [formOpen, setFormOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
@@ -88,6 +98,24 @@ function FinancialContent({ user, company }) {
     queryFn: async () => {
       if (!company?.id) return [];
       return await base44.entities.Transaction.filter({ company_id: company.id }, '-date');
+    },
+    enabled: !!company?.id
+  });
+
+  const { data: accommodations = [] } = useQuery({
+    queryKey: ['accommodations', company?.id],
+    queryFn: async () => {
+      if (!company?.id) return [];
+      return await base44.entities.Accommodation.filter({ company_id: company.id });
+    },
+    enabled: !!company?.id
+  });
+
+  const { data: reservations = [] } = useQuery({
+    queryKey: ['reservations', company?.id],
+    queryFn: async () => {
+      if (!company?.id) return [];
+      return await base44.entities.Reservation.filter({ company_id: company.id });
     },
     enabled: !!company?.id
   });
@@ -128,6 +156,80 @@ function FinancialContent({ user, company }) {
   const filteredTransactions = transactions.filter(t => 
     typeFilter === 'all' || t.type === typeFilter
   );
+
+  // Reports data
+  const reportMonths = [];
+  const monthsCount = reportPeriod === '6months' ? 6 : 12;
+  for (let i = monthsCount - 1; i >= 0; i--) {
+    const month = subMonths(currentMonth, i);
+    reportMonths.push(month);
+  }
+
+  const revenueByMonth = reportMonths.map(month => {
+    const monthStart = startOfMonth(month);
+    const monthEnd = endOfMonth(month);
+    
+    const monthReservations = reservations.filter(r => {
+      const checkIn = parseISO(r.check_in);
+      return r.status !== 'cancelled' && isWithinInterval(checkIn, { start: monthStart, end: monthEnd });
+    });
+
+    const revenue = monthReservations.reduce((sum, r) => sum + (r.total_amount || 0), 0);
+    
+    return {
+      month: format(month, 'MMM/yy', { locale: ptBR }),
+      receita: revenue,
+      reservas: monthReservations.length
+    };
+  });
+
+  const revenueByAccommodation = accommodations.map(acc => {
+    const accReservations = reservations.filter(r => 
+      r.accommodation_id === acc.id && r.status !== 'cancelled'
+    );
+    
+    const revenue = accReservations.reduce((sum, r) => sum + (r.total_amount || 0), 0);
+    
+    return {
+      name: acc.name,
+      receita: revenue,
+      reservas: accReservations.length
+    };
+  }).sort((a, b) => b.receita - a.receita);
+
+  const reservationsBySource = reservations
+    .filter(r => r.status !== 'cancelled')
+    .reduce((acc, r) => {
+      const source = r.source || 'direct';
+      acc[source] = (acc[source] || 0) + 1;
+      return acc;
+    }, {});
+
+  const sourceLabels = {
+    direct: 'Direta',
+    airbnb: 'Airbnb',
+    booking: 'Booking',
+    vrbo: 'VRBO',
+    other: 'Outros'
+  };
+
+  const sourceData = Object.entries(reservationsBySource).map(([key, value]) => ({
+    name: sourceLabels[key] || key,
+    value
+  }));
+
+  const totalRevenue = reservations
+    .filter(r => r.status !== 'cancelled')
+    .reduce((sum, r) => sum + (r.total_amount || 0), 0);
+
+  const totalExpenses = transactions
+    .filter(t => t.type === 'expense' && t.status === 'completed')
+    .reduce((sum, t) => sum + (t.amount || 0), 0);
+
+  const totalReservations = reservations.filter(r => r.status !== 'cancelled').length;
+  const avgReservationValue = totalReservations > 0 ? totalRevenue / totalReservations : 0;
+
+  const COLORS = ['#2C5F5D', '#10b981', '#3b82f6', '#f59e0b', '#ef4444'];
 
   // Chart data
   const chartData = [];
@@ -206,26 +308,55 @@ function FinancialContent({ user, company }) {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="max-w-7xl mx-auto p-4 sm:p-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-slate-800">Financeiro</h1>
-            <p className="text-slate-500">Controle de receitas e despesas</p>
+            <p className="text-slate-500">Controle de receitas, despesas e relatórios</p>
           </div>
-          <Button 
-            onClick={() => {
-              resetForm();
-              setEditingTransaction(null);
-              setFormOpen(true);
-            }}
-            className="bg-gradient-to-r from-[#2C5F5D] to-[#3A7A77] hover:from-[#234B49] hover:to-[#2C5F5D] text-white w-full sm:w-auto shadow-md"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Nova Transação
-          </Button>
+          {activeTab === 'transactions' && (
+            <Button 
+              onClick={() => {
+                resetForm();
+                setEditingTransaction(null);
+                setFormOpen(true);
+              }}
+              className="bg-gradient-to-r from-[#2C5F5D] to-[#3A7A77] hover:from-[#234B49] hover:to-[#2C5F5D] text-white w-full sm:w-auto shadow-md"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Nova Transação
+            </Button>
+          )}
+          {activeTab === 'reports' && (
+            <Select value={reportPeriod} onValueChange={setReportPeriod}>
+              <SelectTrigger className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="6months">Últimos 6 meses</SelectItem>
+                <SelectItem value="12months">Últimos 12 meses</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 sm:mb-8">
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+          <TabsList className="bg-white border">
+            <TabsTrigger value="transactions">
+              <DollarSign className="w-4 h-4 mr-2" />
+              Transações
+            </TabsTrigger>
+            <TabsTrigger value="reports">
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Relatórios
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Transactions Tab */}
+          <TabsContent value="transactions" className="space-y-6 mt-6">
+
+            {/* Stats */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <StatsCard
             title="Receita do Mês"
             value={`R$ ${currentIncome.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
@@ -238,15 +369,15 @@ function FinancialContent({ user, company }) {
             value={`R$ ${currentExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
             icon={TrendingDown}
           />
-          <StatsCard
-            title="Lucro do Mês"
-            value={`R$ ${(currentIncome - currentExpenses).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-            icon={DollarSign}
-          />
-        </div>
+              <StatsCard
+                title="Lucro do Mês"
+                value={`R$ ${(currentIncome - currentExpenses).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+                icon={DollarSign}
+              />
+            </div>
 
-        {/* Chart */}
-        <Card className="mb-6 sm:mb-8">
+            {/* Chart */}
+            <Card>
           <CardHeader>
             <CardTitle>Fluxo de Caixa</CardTitle>
           </CardHeader>
@@ -281,10 +412,10 @@ function FinancialContent({ user, company }) {
               </ResponsiveContainer>
             </div>
           </CardContent>
-        </Card>
+            </Card>
 
-        {/* Transactions */}
-        <Card>
+            {/* Transactions */}
+            <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>Transações</CardTitle>
@@ -363,7 +494,143 @@ function FinancialContent({ user, company }) {
               )}
             </div>
           </CardContent>
-        </Card>
+            </Card>
+          </TabsContent>
+
+          {/* Reports Tab */}
+          <TabsContent value="reports" className="space-y-6 mt-6">
+            {/* Summary Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm text-slate-500">Receita Total</p>
+                    <DollarSign className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <p className="text-2xl font-bold text-slate-800">
+                    R$ {totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm text-slate-500">Despesas</p>
+                    <DollarSign className="w-5 h-5 text-red-600" />
+                  </div>
+                  <p className="text-2xl font-bold text-slate-800">
+                    R$ {totalExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm text-slate-500">Lucro Líquido</p>
+                    <TrendingUp className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <p className="text-2xl font-bold text-slate-800">
+                    R$ {(totalRevenue - totalExpenses).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm text-slate-500">Ticket Médio</p>
+                    <BarChart3 className="w-5 h-5 text-purple-600" />
+                  </div>
+                  <p className="text-2xl font-bold text-slate-800">
+                    R$ {avgReservationValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Revenue by Month */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Receita por Mês</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={revenueByMonth}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis />
+                      <Tooltip 
+                        formatter={(value) => `R$ ${value.toLocaleString('pt-BR')}`}
+                      />
+                      <Bar dataKey="receita" fill="#2C5F5D" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              {/* Reservations by Source */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Reservas por Origem</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={sourceData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {sourceData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Revenue by Accommodation */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Desempenho por Acomodação</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {revenueByAccommodation.map((acc, index) => (
+                    <div key={index} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#2C5F5D] to-[#3A7A77] flex items-center justify-center">
+                          <Home className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-slate-800">{acc.name}</h4>
+                          <p className="text-sm text-slate-500">{acc.reservas} reservas</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-slate-800">
+                          R$ {acc.receita.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Form Dialog */}
