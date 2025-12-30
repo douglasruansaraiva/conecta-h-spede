@@ -293,27 +293,27 @@ export default function PublicBooking() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Header */}
-      <div className="bg-slate-900/50 backdrop-blur-lg border-b border-slate-700">
+      <div className="bg-white/80 backdrop-blur-lg border-b border-slate-200 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
           <div className="flex items-center gap-3 sm:gap-4">
             {company.logo_url && (
               <img src={company.logo_url} alt={company.name} className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg object-cover ring-2 ring-emerald-500/20" />
             )}
             <div>
-              <h1 className="text-lg sm:text-2xl font-bold text-white">{company.name}</h1>
+              <h1 className="text-lg sm:text-2xl font-bold text-slate-800">{company.name}</h1>
               {(company.city || company.state) && (
-                <p className="text-slate-400 flex items-center gap-1">
+                <p className="text-slate-600 flex items-center gap-1">
                   <MapPin className="w-4 h-4" />
                   {[company.city, company.state].filter(Boolean).join(', ')}
                 </p>
               )}
             </div>
-          </div>
-          {company.description && (
-            <p className="text-slate-300 mt-4">{company.description}</p>
-          )}
+            </div>
+            {company.description && (
+            <p className="text-slate-600 mt-4">{company.description}</p>
+            )}
         </div>
       </div>
 
@@ -324,14 +324,14 @@ export default function PublicBooking() {
             {[1, 2, 3].map((s) => (
               <div key={s} className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
                 <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-medium shadow-sm ${
-                  step >= s ? 'bg-gradient-to-br from-[#2C5F5D] to-[#3A7A77] text-white' : 'bg-slate-700 text-slate-400'
+                  step >= s ? 'bg-gradient-to-br from-[#2C5F5D] to-[#3A7A77] text-white' : 'bg-slate-200 text-slate-500'
                 }`}>
                   {s}
                 </div>
-                <span className={`text-xs sm:text-sm whitespace-nowrap ${step >= s ? 'text-white' : 'text-slate-500'}`}>
+                <span className={`text-xs sm:text-sm whitespace-nowrap ${step >= s ? 'text-slate-800' : 'text-slate-500'}`}>
                   {s === 1 ? 'Escolha' : s === 2 ? 'Datas' : 'Dados'}
                 </span>
-                {s < 3 && <div className="w-8 sm:w-12 h-0.5 bg-slate-700" />}
+                {s < 3 && <div className="w-8 sm:w-12 h-0.5 bg-slate-300" />}
               </div>
             ))}
           </div>
@@ -340,12 +340,12 @@ export default function PublicBooking() {
         {/* Step 1: Choose Accommodation */}
         {step === 1 && (
           <div>
-            <h2 className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6">Escolha sua Acomodação</h2>
+            <h2 className="text-lg sm:text-xl font-semibold text-slate-800 mb-4 sm:mb-6">Escolha sua Acomodação</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {accommodations.map(acc => (
                 <Card 
                   key={acc.id} 
-                  className="group cursor-pointer transition-all hover:shadow-2xl hover:shadow-emerald-500/10 bg-slate-800/50 backdrop-blur border-slate-700 overflow-hidden"
+                  className="group cursor-pointer transition-all hover:shadow-xl bg-white border-slate-200 overflow-hidden"
                   onClick={() => {
                     setSelectedAccommodation(acc);
                     setCurrentImageIndex(0);
@@ -363,12 +363,12 @@ export default function PublicBooking() {
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-60" />
                   </div>
                   <CardContent className="p-4">
-                    <h3 className="font-semibold text-lg text-white">{acc.name}</h3>
+                    <h3 className="font-semibold text-lg text-slate-800">{acc.name}</h3>
                     {acc.description && (
-                      <p className="text-sm text-slate-400 mt-1 line-clamp-2">{acc.description}</p>
+                      <p className="text-sm text-slate-600 mt-1 line-clamp-2">{acc.description}</p>
                     )}
                     <div className="flex items-center justify-between mt-4">
-                      <div className="flex items-center gap-1 text-sm text-slate-400">
+                      <div className="flex items-center gap-1 text-sm text-slate-600">
                         <Users className="w-4 h-4" />
                         Até {acc.max_guests} hóspedes
                       </div>
@@ -382,7 +382,7 @@ export default function PublicBooking() {
                     {acc.amenities?.length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-3">
                         {acc.amenities.slice(0, 3).map(amenity => (
-                          <Badge key={amenity} className="text-xs bg-slate-700/50 text-slate-300 border-slate-600">
+                          <Badge key={amenity} className="text-xs bg-emerald-100 text-emerald-700 border-emerald-200">
                             {amenity}
                           </Badge>
                         ))}
@@ -401,7 +401,7 @@ export default function PublicBooking() {
             <Button 
               variant="ghost" 
               onClick={() => setStep(1)}
-              className="mb-4 text-slate-400 hover:text-white text-sm"
+              className="mb-4 text-slate-600 hover:text-slate-800 text-sm"
             >
               <ChevronLeft className="w-4 h-4 mr-1" />
               Voltar
@@ -463,14 +463,14 @@ export default function PublicBooking() {
             )}
 
             {/* Info Card */}
-            <Card className="bg-slate-800/50 backdrop-blur border-slate-700">
+            <Card className="bg-white border-slate-200 shadow-sm">
               <CardContent className="p-4 sm:p-6 lg:p-8">
                 <div className="flex flex-col gap-4 mb-6">
                   <div>
-                    <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-2">
+                    <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-800 mb-2">
                       {selectedAccommodation.name}
                     </h1>
-                    <div className="flex items-center gap-3 sm:gap-4 text-sm sm:text-base text-slate-400">
+                    <div className="flex items-center gap-3 sm:gap-4 text-sm sm:text-base text-slate-600">
                       <span className="flex items-center gap-1">
                         <Users className="w-4 h-4" />
                         Até {selectedAccommodation.max_guests} hóspedes
@@ -481,9 +481,9 @@ export default function PublicBooking() {
                     <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-emerald-400">
                       R$ {selectedAccommodation.base_price?.toFixed(2)}
                     </p>
-                    <p className="text-sm sm:text-base text-slate-400">por noite</p>
+                    <p className="text-sm sm:text-base text-slate-600">por noite</p>
                     {selectedAccommodation.weekend_price && selectedAccommodation.weekend_price !== selectedAccommodation.base_price && (
-                      <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                      <p className="text-xs sm:text-sm text-slate-600 mt-1">
                         Fins de semana: R$ {selectedAccommodation.weekend_price.toFixed(2)}
                       </p>
                     )}
@@ -492,8 +492,8 @@ export default function PublicBooking() {
 
                 {selectedAccommodation.description && (
                   <div className="mb-6">
-                    <h3 className="text-base sm:text-lg font-semibold text-white mb-2">Descrição</h3>
-                    <p className="text-sm sm:text-base text-slate-300 leading-relaxed whitespace-pre-line">
+                    <h3 className="text-base sm:text-lg font-semibold text-slate-800 mb-2">Descrição</h3>
+                    <p className="text-sm sm:text-base text-slate-600 leading-relaxed whitespace-pre-line">
                       {selectedAccommodation.description}
                     </p>
                   </div>
@@ -501,10 +501,10 @@ export default function PublicBooking() {
 
                 {selectedAccommodation.amenities?.length > 0 && (
                   <div className="mb-6">
-                    <h3 className="text-base sm:text-lg font-semibold text-white mb-3">Comodidades</h3>
+                    <h3 className="text-base sm:text-lg font-semibold text-slate-800 mb-3">Comodidades</h3>
                     <div className="flex flex-wrap gap-1.5 sm:gap-2">
                       {selectedAccommodation.amenities.map(amenity => (
-                        <Badge key={amenity} className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 px-2.5 sm:px-3 py-1 text-xs sm:text-sm">
+                        <Badge key={amenity} className="bg-emerald-100 text-emerald-700 border-emerald-200 px-2.5 sm:px-3 py-1 text-xs sm:text-sm">
                           {amenity}
                         </Badge>
                       ))}
@@ -513,8 +513,8 @@ export default function PublicBooking() {
                 )}
 
                 {selectedAccommodation.min_nights > 1 && (
-                  <div className="mb-6 p-3 sm:p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
-                    <p className="text-amber-300 text-xs sm:text-sm">
+                  <div className="mb-6 p-3 sm:p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                    <p className="text-amber-700 text-xs sm:text-sm">
                       <strong>Mínimo:</strong> {selectedAccommodation.min_nights} noites
                     </p>
                   </div>
@@ -536,7 +536,7 @@ export default function PublicBooking() {
         {/* Step 2: Choose Dates */}
         {step === 2 && (
           <div>
-            <h2 className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6">Selecione as Datas</h2>
+            <h2 className="text-lg sm:text-xl font-semibold text-slate-800 mb-4 sm:mb-6">Selecione as Datas</h2>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
               <div className="lg:col-span-2">
                 <CalendarGrid
@@ -548,9 +548,9 @@ export default function PublicBooking() {
                 />
               </div>
               <div>
-                <Card className="bg-slate-800/50 backdrop-blur border-slate-700">
+                <Card className="bg-white border-slate-200 shadow-sm">
                   <CardHeader>
-                    <CardTitle className="text-lg text-white">Resumo</CardTitle>
+                    <CardTitle className="text-lg text-slate-800">Resumo</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
@@ -563,8 +563,8 @@ export default function PublicBooking() {
                           />
                         )}
                         <div>
-                          <p className="font-medium text-white">{selectedAccommodation?.name}</p>
-                          <p className="text-sm text-slate-400">
+                          <p className="font-medium text-slate-800">{selectedAccommodation?.name}</p>
+                          <p className="text-sm text-slate-600">
                             R$ {selectedAccommodation?.base_price?.toFixed(2)}/noite
                           </p>
                         </div>
@@ -572,27 +572,27 @@ export default function PublicBooking() {
 
                       {selectedDates && (
                         <>
-                          <div className="border-t border-slate-700 pt-4">
+                          <div className="border-t border-slate-200 pt-4">
                             <div className="flex justify-between text-sm mb-2">
-                              <span className="text-slate-400">Check-in</span>
-                              <span className="font-medium text-white">
+                              <span className="text-slate-600">Check-in</span>
+                              <span className="font-medium text-slate-800">
                                 {format(selectedDates.start, "dd 'de' MMM", { locale: ptBR })}
                               </span>
                             </div>
                             <div className="flex justify-between text-sm mb-2">
-                              <span className="text-slate-400">Check-out</span>
-                              <span className="font-medium text-white">
+                              <span className="text-slate-600">Check-out</span>
+                              <span className="font-medium text-slate-800">
                                 {format(selectedDates.end, "dd 'de' MMM", { locale: ptBR })}
                               </span>
                             </div>
                             <div className="flex justify-between text-sm">
-                              <span className="text-slate-400">Noites</span>
-                              <span className="font-medium text-white">{nights}</span>
+                              <span className="text-slate-600">Noites</span>
+                              <span className="font-medium text-slate-800">{nights}</span>
                             </div>
-                          </div>
-                          <div className="border-t border-slate-700 pt-4">
+                            </div>
+                            <div className="border-t border-slate-200 pt-4">
                             <div className="flex justify-between">
-                              <span className="font-semibold text-white">Total</span>
+                              <span className="font-semibold text-slate-800">Total</span>
                               <span className="font-bold text-xl text-emerald-400">
                                 R$ {calculateTotal().toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                               </span>
@@ -625,68 +625,68 @@ export default function PublicBooking() {
         {/* Step 3: Guest Data */}
         {step === 3 && (
           <div>
-            <h2 className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6">Seus Dados</h2>
+            <h2 className="text-lg sm:text-xl font-semibold text-slate-800 mb-4 sm:mb-6">Seus Dados</h2>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
               <div className="lg:col-span-2">
-                <Card className="bg-slate-800/50 backdrop-blur border-slate-700">
+                <Card className="bg-white border-slate-200 shadow-sm">
                   <CardContent className="p-6">
                     <form onSubmit={handleSubmit} className="space-y-4">
                       <div>
-                        <Label className="text-slate-200 mb-2 block">Nome Completo *</Label>
+                        <Label className="text-slate-700 mb-2 block">Nome Completo *</Label>
                         <Input
                           value={formData.guest_name}
                           onChange={(e) => setFormData({ ...formData, guest_name: e.target.value })}
                           required
-                          className="bg-slate-900/50 border-slate-600 text-white placeholder:text-slate-500 focus:border-emerald-500 focus:ring-emerald-500"
+                          className="bg-white border-slate-300"
                         />
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                          <Label className="text-slate-200 mb-2 block">Email *</Label>
+                          <Label className="text-slate-700 mb-2 block">Email *</Label>
                           <Input
                             type="email"
                             value={formData.guest_email}
                             onChange={(e) => setFormData({ ...formData, guest_email: e.target.value })}
                             required
-                            className="bg-slate-900/50 border-slate-600 text-white placeholder:text-slate-500 focus:border-emerald-500 focus:ring-emerald-500"
+                            className="bg-white border-slate-300"
                           />
                         </div>
                         <div>
-                          <Label className="text-slate-200 mb-2 block">Telefone *</Label>
+                          <Label className="text-slate-700 mb-2 block">Telefone *</Label>
                           <Input
                             value={formData.guest_phone}
                             onChange={(e) => setFormData({ ...formData, guest_phone: e.target.value })}
                             placeholder="(00) 00000-0000"
                             required
-                            className="bg-slate-900/50 border-slate-600 text-white placeholder:text-slate-500 focus:border-emerald-500 focus:ring-emerald-500"
+                            className="bg-white border-slate-300"
                           />
                         </div>
                       </div>
                       <div>
-                        <Label className="text-slate-200 mb-2 block">Número de Hóspedes</Label>
+                        <Label className="text-slate-700 mb-2 block">Número de Hóspedes</Label>
                         <Input
                           type="number"
                           min="1"
                           max={selectedAccommodation?.max_guests || 10}
                           value={formData.guests_count}
                           onChange={(e) => setFormData({ ...formData, guests_count: e.target.value })}
-                          className="bg-slate-900/50 border-slate-600 text-white placeholder:text-slate-500 focus:border-emerald-500 focus:ring-emerald-500"
+                          className="bg-white border-slate-300"
                         />
                       </div>
                       <div>
-                        <Label className="text-slate-200 mb-2 block">Observações</Label>
+                        <Label className="text-slate-700 mb-2 block">Observações</Label>
                         <Input
                           value={formData.notes}
                           onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                           placeholder="Alguma observação especial?"
-                          className="bg-slate-900/50 border-slate-600 text-white placeholder:text-slate-500 focus:border-emerald-500 focus:ring-emerald-500"
+                          className="bg-white border-slate-300"
                         />
                       </div>
 
                       {company.cancellation_policy && (
-                        <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-lg">
-                          <p className="text-sm font-medium text-emerald-300 mb-1">Política de Cancelamento</p>
-                          <p className="text-sm text-slate-300 whitespace-pre-line">{company.cancellation_policy}</p>
+                        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
+                          <p className="text-sm font-medium text-emerald-700 mb-1">Política de Cancelamento</p>
+                          <p className="text-sm text-slate-700 whitespace-pre-line">{company.cancellation_policy}</p>
                         </div>
                       )}
 
@@ -711,32 +711,32 @@ export default function PublicBooking() {
 
               {/* Summary */}
               <div>
-                <Card className="bg-slate-800/50 backdrop-blur border-slate-700">
+                <Card className="bg-white border-slate-200 shadow-sm">
                   <CardHeader>
-                    <CardTitle className="text-lg text-white">Resumo da Reserva</CardTitle>
+                    <CardTitle className="text-lg text-slate-800">Resumo da Reserva</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
                       <div>
-                        <p className="font-medium text-white">{selectedAccommodation?.name}</p>
+                        <p className="font-medium text-slate-800">{selectedAccommodation?.name}</p>
                       </div>
-                      <div className="border-t border-slate-700 pt-4 space-y-2">
+                      <div className="border-t border-slate-200 pt-4 space-y-2">
                         <div className="flex justify-between text-sm">
-                          <span className="text-slate-400">Check-in</span>
-                          <span className="text-white">{format(selectedDates.start, "dd/MM/yyyy")} às {company.check_in_time || '14:00'}</span>
+                          <span className="text-slate-600">Check-in</span>
+                          <span className="text-slate-800">{format(selectedDates.start, "dd/MM/yyyy")} às {company.check_in_time || '14:00'}</span>
                         </div>
                         <div className="flex justify-between text-sm">
-                          <span className="text-slate-400">Check-out</span>
-                          <span className="text-white">{format(selectedDates.end, "dd/MM/yyyy")} às {company.check_out_time || '12:00'}</span>
+                          <span className="text-slate-600">Check-out</span>
+                          <span className="text-slate-800">{format(selectedDates.end, "dd/MM/yyyy")} às {company.check_out_time || '12:00'}</span>
                         </div>
                         <div className="flex justify-between text-sm">
-                          <span className="text-slate-400">{nights} noite(s)</span>
-                          <span className="text-white">R$ {calculateTotal().toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                          <span className="text-slate-600">{nights} noite(s)</span>
+                          <span className="text-slate-800">R$ {calculateTotal().toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                         </div>
                       </div>
-                      <div className="border-t border-slate-700 pt-4">
+                      <div className="border-t border-slate-200 pt-4">
                         <div className="flex justify-between">
-                          <span className="font-semibold text-white">Total</span>
+                          <span className="font-semibold text-slate-800">Total</span>
                           <span className="font-bold text-xl text-emerald-400">
                             R$ {calculateTotal().toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                           </span>
@@ -752,17 +752,17 @@ export default function PublicBooking() {
       </div>
 
       {/* Footer */}
-      <div className="bg-slate-900/50 backdrop-blur border-t border-slate-700 mt-8 sm:mt-12">
+      <div className="bg-white/80 backdrop-blur border-t border-slate-200 mt-8 sm:mt-12">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
-          <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-slate-400">
+          <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-slate-600">
             {company.phone && (
-              <a href={`tel:${company.phone}`} className="flex items-center gap-1 hover:text-emerald-400 transition-colors">
+              <a href={`tel:${company.phone}`} className="flex items-center gap-1 hover:text-[#2C5F5D] transition-colors">
                 <Phone className="w-4 h-4" />
                 {company.phone}
               </a>
             )}
             {company.email && (
-              <a href={`mailto:${company.email}`} className="flex items-center gap-1 hover:text-emerald-400 transition-colors">
+              <a href={`mailto:${company.email}`} className="flex items-center gap-1 hover:text-[#2C5F5D] transition-colors">
                 <Mail className="w-4 h-4" />
                 {company.email}
               </a>
