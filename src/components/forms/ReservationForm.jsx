@@ -20,6 +20,7 @@ export default function ReservationForm({
   onSave 
 }) {
   const [loading, setLoading] = useState(false);
+  const [dateError, setDateError] = useState('');
   const [formData, setFormData] = useState({
     accommodation_id: '',
     check_in: '',
@@ -66,6 +67,68 @@ export default function ReservationForm({
     }
   }, [reservation, preselectedAccommodation, preselectedDates, open]);
 
+  const checkDateAvailability = async () => {
+    if (!formData.check_in || !formData.check_out || !formData.accommodation_id) {
+      setDateError('');
+      return true;
+    }
+
+    const checkIn = parseISO(formData.check_in);
+    const checkOut = parseISO(formData.check_out);
+
+    // Get all reservations for this accommodation
+    const allReservations = await base44.entities.Reservation.filter({ 
+      company_id: companyId,
+      accommodation_id: formData.accommodation_id
+    });
+
+    // Get blocked dates for this accommodation
+    const allBlockedDates = await base44.entities.BlockedDate.filter({ 
+      company_id: companyId,
+      accommodation_id: formData.accommodation_id
+    });
+
+    // Check conflicts with other reservations (exclude current if editing)
+    const hasReservationConflict = allReservations.some(r => {
+      if (reservation && r.id === reservation.id) return false; // Skip current reservation
+      if (r.status === 'cancelled') return false;
+
+      const rCheckIn = parseISO(r.check_in);
+      const rCheckOut = parseISO(r.check_out);
+
+      return (
+        (checkIn >= rCheckIn && checkIn < rCheckOut) ||
+        (checkOut > rCheckIn && checkOut <= rCheckOut) ||
+        (checkIn <= rCheckIn && checkOut >= rCheckOut)
+      );
+    });
+
+    if (hasReservationConflict) {
+      setDateError('Período indisponível - já existe uma reserva nessas datas');
+      return false;
+    }
+
+    // Check conflicts with blocked dates
+    const hasBlockedConflict = allBlockedDates.some(b => {
+      const bStart = parseISO(b.start_date);
+      const bEnd = parseISO(b.end_date);
+
+      return (
+        (checkIn >= bStart && checkIn <= bEnd) ||
+        (checkOut >= bStart && checkOut <= bEnd) ||
+        (checkIn <= bStart && checkOut >= bEnd)
+      );
+    });
+
+    if (hasBlockedConflict) {
+      setDateError('Período bloqueado - não é possível reservar nessas datas');
+      return false;
+    }
+
+    setDateError('');
+    return true;
+  };
+
   const calculateTotal = () => {
     if (!formData.check_in || !formData.check_out || !formData.accommodation_id) return;
     
@@ -91,6 +154,13 @@ export default function ReservationForm({
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+
+    // Check date availability
+    const isAvailable = await checkDateAvailability();
+    if (!isAvailable) {
+      setLoading(false);
+      return;
+    }
 
     // Find or create guest if email is provided
     let guestId = reservation?.guest_id;
@@ -175,7 +245,11 @@ export default function ReservationForm({
               <Input
                 type="date"
                 value={formData.check_in}
-                onChange={(e) => setFormData({ ...formData, check_in: e.target.value })}
+                onChange={(e) => {
+                  setFormData({ ...formData, check_in: e.target.value });
+                  setDateError('');
+                }}
+                onBlur={checkDateAvailability}
                 required
               />
             </div>
@@ -184,14 +258,27 @@ export default function ReservationForm({
               <Input
                 type="date"
                 value={formData.check_out}
-                onChange={(e) => setFormData({ ...formData, check_out: e.target.value })}
+                onChange={(e) => {
+                  setFormData({ ...formData, check_out: e.target.value });
+                  setDateError('');
+                }}
+                onBlur={checkDateAvailability}
                 min={formData.check_in}
                 required
               />
             </div>
           </div>
 
-          {nights > 0 && (
+          {dateError && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-600 flex items-center gap-2">
+              <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+              {dateError}
+            </div>
+          )}
+
+          {nights > 0 && !dateError && (
             <div className="bg-slate-50 rounded-lg p-3 text-sm text-slate-600">
               {nights} {nights === 1 ? 'noite' : 'noites'} de hospedagem
             </div>
@@ -313,7 +400,7 @@ export default function ReservationForm({
             <Button type="button" variant="outline" onClick={onClose}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={loading} className="bg-gradient-to-r from-[#2C5F5D] to-[#3A7A77] hover:from-[#234B49] hover:to-[#2C5F5D] text-white shadow-md">
+            <Button type="submit" disabled={loading || !!dateError} className="bg-gradient-to-r from-[#2C5F5D] to-[#3A7A77] hover:from-[#234B49] hover:to-[#2C5F5D] text-white shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
               {loading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
               {reservation ? 'Salvar' : 'Criar Reserva'}
             </Button>
