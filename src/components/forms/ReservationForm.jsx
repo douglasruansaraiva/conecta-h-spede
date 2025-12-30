@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Calculator } from "lucide-react";
 import { format, differenceInDays, parseISO, isWeekend, eachDayOfInterval } from 'date-fns';
 import { base44 } from "@/api/base44Client";
@@ -21,6 +23,8 @@ export default function ReservationForm({
 }) {
   const [loading, setLoading] = useState(false);
   const [dateError, setDateError] = useState('');
+  const [guestMode, setGuestMode] = useState('new'); // 'new' or 'existing'
+  const [selectedGuestId, setSelectedGuestId] = useState('');
   const [formData, setFormData] = useState({
     accommodation_id: '',
     check_in: '',
@@ -34,6 +38,28 @@ export default function ReservationForm({
     status: 'pending',
     notes: ''
   });
+
+  const { data: existingGuests = [] } = useQuery({
+    queryKey: ['guests', companyId],
+    queryFn: async () => {
+      if (!companyId) return [];
+      return await base44.entities.Guest.filter({ company_id: companyId });
+    },
+    enabled: !!companyId && open
+  });
+
+  const handleGuestSelect = (guestId) => {
+    setSelectedGuestId(guestId);
+    const guest = existingGuests.find(g => g.id === guestId);
+    if (guest) {
+      setFormData(prev => ({
+        ...prev,
+        guest_name: guest.name || '',
+        guest_email: guest.email || '',
+        guest_phone: guest.phone || ''
+      }));
+    }
+  };
 
   useEffect(() => {
     if (reservation) {
@@ -285,8 +311,41 @@ export default function ReservationForm({
           )}
 
           <div className="border-t pt-4">
-            <h4 className="font-medium text-slate-800 mb-3">Dados do Hóspede</h4>
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="font-medium text-slate-800">Dados do Hóspede</h4>
+              <Tabs value={guestMode} onValueChange={setGuestMode}>
+                <TabsList className="h-8">
+                  <TabsTrigger value="new" className="text-xs">Novo</TabsTrigger>
+                  <TabsTrigger value="existing" className="text-xs">Existente</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+            
             <div className="space-y-3">
+              {guestMode === 'existing' && existingGuests.length > 0 && (
+                <div>
+                  <Label>Selecionar Hóspede</Label>
+                  <Select value={selectedGuestId} onValueChange={handleGuestSelect}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Escolha um hóspede..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {existingGuests.map(guest => (
+                        <SelectItem key={guest.id} value={guest.id}>
+                          {guest.name} {guest.email ? `(${guest.email})` : ''}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              
+              {guestMode === 'existing' && existingGuests.length === 0 && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-700">
+                  Nenhum hóspede cadastrado ainda. Mude para "Novo" para cadastrar.
+                </div>
+              )}
+              
               <div>
                 <Label>Nome *</Label>
                 <Input
@@ -294,6 +353,7 @@ export default function ReservationForm({
                   onChange={(e) => setFormData({ ...formData, guest_name: e.target.value })}
                   placeholder="Nome completo"
                   required
+                  disabled={guestMode === 'existing' && !selectedGuestId}
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -304,6 +364,7 @@ export default function ReservationForm({
                     value={formData.guest_email}
                     onChange={(e) => setFormData({ ...formData, guest_email: e.target.value })}
                     placeholder="email@exemplo.com"
+                    disabled={guestMode === 'existing' && !selectedGuestId}
                   />
                 </div>
                 <div>
@@ -312,6 +373,7 @@ export default function ReservationForm({
                     value={formData.guest_phone}
                     onChange={(e) => setFormData({ ...formData, guest_phone: e.target.value })}
                     placeholder="(00) 00000-0000"
+                    disabled={guestMode === 'existing' && !selectedGuestId}
                   />
                 </div>
               </div>
