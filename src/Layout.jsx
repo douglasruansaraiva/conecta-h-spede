@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import { Button } from "@/components/ui/button";
+import NotificationBell from '@/components/notifications/NotificationBell';
 import { 
   LayoutDashboard, 
   Home, 
@@ -34,12 +35,21 @@ const navigation = [
 
 export default function Layout({ children, currentPageName }) {
   const [user, setUser] = useState(null);
+  const [company, setCompany] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     const loadUser = async () => {
       const userData = await base44.auth.me();
       setUser(userData);
+      
+      // Load company for notifications
+      if (userData?.email) {
+        const companies = await base44.entities.Company.filter({ owner_email: userData.email });
+        if (companies.length > 0) {
+          setCompany(companies[0]);
+        }
+      }
     };
     loadUser();
   }, []);
@@ -169,7 +179,9 @@ export default function Layout({ children, currentPageName }) {
                 <span className="font-bold text-[#2C5F5D] text-xs">HÓSPEDE</span>
               </div>
             </Link>
-            <div className="w-10" />
+            {user && company && (
+              <NotificationBell userEmail={user.email} companyId={company.id} />
+            )}
           </div>
         </header>
 

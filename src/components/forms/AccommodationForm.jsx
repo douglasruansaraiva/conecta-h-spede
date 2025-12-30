@@ -26,6 +26,9 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
     base_price: '',
     weekend_price: '',
     min_nights: 1,
+    min_nights_weekend: '',
+    allowed_checkin_days: [],
+    allowed_checkout_days: [],
     amenities: [],
     images: [],
     ical_urls: [],
@@ -42,6 +45,9 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
         base_price: accommodation.base_price || '',
         weekend_price: accommodation.weekend_price || '',
         min_nights: accommodation.min_nights || 1,
+        min_nights_weekend: accommodation.min_nights_weekend || '',
+        allowed_checkin_days: accommodation.allowed_checkin_days || [],
+        allowed_checkout_days: accommodation.allowed_checkout_days || [],
         amenities: accommodation.amenities || [],
         images: accommodation.images || [],
         ical_urls: accommodation.ical_urls || [],
@@ -56,6 +62,9 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
         base_price: '',
         weekend_price: '',
         min_nights: 1,
+        min_nights_weekend: '',
+        allowed_checkin_days: [],
+        allowed_checkout_days: [],
         amenities: [],
         images: [],
         ical_urls: [],
@@ -238,7 +247,8 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
       base_price: parseFloat(formData.base_price) || 0,
       weekend_price: parseFloat(formData.weekend_price) || parseFloat(formData.base_price) || 0,
       max_guests: parseInt(formData.max_guests) || 2,
-      min_nights: parseInt(formData.min_nights) || 1
+      min_nights: parseInt(formData.min_nights) || 1,
+      min_nights_weekend: formData.min_nights_weekend ? parseInt(formData.min_nights_weekend) : null
     };
 
     if (accommodation) {
@@ -338,6 +348,93 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
                 value={formData.min_nights}
                 onChange={(e) => setFormData({ ...formData, min_nights: e.target.value })}
               />
+            </div>
+          </div>
+
+          <div className="border-t pt-4">
+            <h4 className="font-medium text-slate-800 mb-3">Configurações Avançadas de Disponibilidade</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label>Mín. noites (fins de semana)</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  value={formData.min_nights_weekend}
+                  onChange={(e) => setFormData({ ...formData, min_nights_weekend: e.target.value })}
+                  placeholder="Ex: 2"
+                />
+                <p className="text-xs text-slate-500 mt-1">Deixe vazio para usar o mínimo padrão</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+              <div>
+                <Label className="mb-2 block">Dias permitidos para Check-in</Label>
+                <div className="space-y-2">
+                  {[
+                    { value: 0, label: 'Domingo' },
+                    { value: 1, label: 'Segunda' },
+                    { value: 2, label: 'Terça' },
+                    { value: 3, label: 'Quarta' },
+                    { value: 4, label: 'Quinta' },
+                    { value: 5, label: 'Sexta' },
+                    { value: 6, label: 'Sábado' }
+                  ].map(day => (
+                    <div key={day.value} className="flex items-center gap-2">
+                      <Checkbox
+                        id={`checkin-${day.value}`}
+                        checked={formData.allowed_checkin_days.includes(day.value)}
+                        onCheckedChange={(checked) => {
+                          setFormData(prev => ({
+                            ...prev,
+                            allowed_checkin_days: checked
+                              ? [...prev.allowed_checkin_days, day.value]
+                              : prev.allowed_checkin_days.filter(d => d !== day.value)
+                          }));
+                        }}
+                      />
+                      <Label htmlFor={`checkin-${day.value}`} className="text-sm cursor-pointer">
+                        {day.label}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-slate-500 mt-2">Deixe vazio para permitir todos os dias</p>
+              </div>
+
+              <div>
+                <Label className="mb-2 block">Dias permitidos para Check-out</Label>
+                <div className="space-y-2">
+                  {[
+                    { value: 0, label: 'Domingo' },
+                    { value: 1, label: 'Segunda' },
+                    { value: 2, label: 'Terça' },
+                    { value: 3, label: 'Quarta' },
+                    { value: 4, label: 'Quinta' },
+                    { value: 5, label: 'Sexta' },
+                    { value: 6, label: 'Sábado' }
+                  ].map(day => (
+                    <div key={day.value} className="flex items-center gap-2">
+                      <Checkbox
+                        id={`checkout-${day.value}`}
+                        checked={formData.allowed_checkout_days.includes(day.value)}
+                        onCheckedChange={(checked) => {
+                          setFormData(prev => ({
+                            ...prev,
+                            allowed_checkout_days: checked
+                              ? [...prev.allowed_checkout_days, day.value]
+                              : prev.allowed_checkout_days.filter(d => d !== day.value)
+                          }));
+                        }}
+                      />
+                      <Label htmlFor={`checkout-${day.value}`} className="text-sm cursor-pointer">
+                        {day.label}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-slate-500 mt-2">Deixe vazio para permitir todos os dias</p>
+              </div>
             </div>
           </div>
 

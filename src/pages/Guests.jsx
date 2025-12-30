@@ -6,6 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Plus, 
   Search,
@@ -18,8 +21,11 @@ import {
   Edit,
   Trash2,
   MoreHorizontal,
-  Loader2
+  Loader2,
+  Eye,
+  Star
 } from "lucide-react";
+import GuestDetailsModal from '@/components/guests/GuestDetailsModal';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,6 +50,7 @@ function GuestsContent({ user, company }) {
   const [editingGuest, setEditingGuest] = useState(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [detailsGuest, setDetailsGuest] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -54,7 +61,11 @@ function GuestsContent({ user, company }) {
     state: '',
     country: 'Brasil',
     birth_date: '',
-    notes: ''
+    notes: '',
+    preferred_room_type: '',
+    dietary_restrictions: '',
+    special_requests: '',
+    vip: false
   });
   const queryClient = useQueryClient();
 
@@ -86,7 +97,11 @@ function GuestsContent({ user, company }) {
       state: guest.state || '',
       country: guest.country || 'Brasil',
       birth_date: guest.birth_date || '',
-      notes: guest.notes || ''
+      notes: guest.notes || '',
+      preferred_room_type: guest.preferred_room_type || '',
+      dietary_restrictions: guest.dietary_restrictions || '',
+      special_requests: guest.special_requests || '',
+      vip: guest.vip || false
     });
     setFormOpen(true);
   };
@@ -125,7 +140,11 @@ function GuestsContent({ user, company }) {
       state: '',
       country: 'Brasil',
       birth_date: '',
-      notes: ''
+      notes: '',
+      preferred_room_type: '',
+      dietary_restrictions: '',
+      special_requests: '',
+      vip: false
     });
   };
 
@@ -151,7 +170,11 @@ function GuestsContent({ user, company }) {
                 state: '',
                 country: 'Brasil',
                 birth_date: '',
-                notes: ''
+                notes: '',
+                preferred_room_type: '',
+                dietary_restrictions: '',
+                special_requests: '',
+                vip: false
               });
               setFormOpen(true);
             }}
@@ -197,7 +220,12 @@ function GuestsContent({ user, company }) {
                         </span>
                       </div>
                       <div>
-                        <h3 className="font-semibold text-slate-800">{guest.name}</h3>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold text-slate-800">{guest.name}</h3>
+                          {guest.vip && (
+                            <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                          )}
+                        </div>
                         {guest.document && (
                           <p className="text-xs text-slate-400">{guest.document}</p>
                         )}
@@ -210,6 +238,10 @@ function GuestsContent({ user, company }) {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => setDetailsGuest(guest)}>
+                          <Eye className="w-4 h-4 mr-2" />
+                          Ver Detalhes
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleEdit(guest)}>
                           <Edit className="w-4 h-4 mr-2" />
                           Editar
@@ -346,9 +378,76 @@ function GuestsContent({ user, company }) {
                   onChange={(e) => setFormData({ ...formData, country: e.target.value })}
                 />
               </div>
-            </div>
+              </div>
 
-            <DialogFooter>
+              <div>
+              <Label>Observações</Label>
+              <Textarea
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                placeholder="Observações gerais..."
+                rows={2}
+              />
+              </div>
+
+              <div className="border-t pt-4">
+              <h4 className="font-medium text-slate-800 mb-3">Preferências</h4>
+              <div className="space-y-4">
+                <div>
+                  <Label>Tipo de Acomodação Preferida</Label>
+                  <Select 
+                    value={formData.preferred_room_type} 
+                    onValueChange={(v) => setFormData({ ...formData, preferred_room_type: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={null}>Nenhuma</SelectItem>
+                      <SelectItem value="quarto">Quarto</SelectItem>
+                      <SelectItem value="suite">Suíte</SelectItem>
+                      <SelectItem value="chale">Chalé</SelectItem>
+                      <SelectItem value="apartamento">Apartamento</SelectItem>
+                      <SelectItem value="casa">Casa</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label>Restrições Alimentares</Label>
+                  <Textarea
+                    value={formData.dietary_restrictions}
+                    onChange={(e) => setFormData({ ...formData, dietary_restrictions: e.target.value })}
+                    placeholder="Ex: vegetariano, alergia a frutos do mar..."
+                    rows={2}
+                  />
+                </div>
+
+                <div>
+                  <Label>Pedidos Especiais</Label>
+                  <Textarea
+                    value={formData.special_requests}
+                    onChange={(e) => setFormData({ ...formData, special_requests: e.target.value })}
+                    placeholder="Ex: andar alto, vista para o mar..."
+                    rows={2}
+                  />
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="vip"
+                    checked={formData.vip}
+                    onCheckedChange={(checked) => setFormData({ ...formData, vip: checked })}
+                  />
+                  <Label htmlFor="vip" className="flex items-center gap-2 cursor-pointer">
+                    <Star className="w-4 h-4 text-amber-500" />
+                    Marcar como Hóspede VIP
+                  </Label>
+                </div>
+              </div>
+              </div>
+
+              <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setFormOpen(false)}>
                 Cancelar
               </Button>
@@ -378,6 +477,14 @@ function GuestsContent({ user, company }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Guest Details Modal */}
+      <GuestDetailsModal
+        guest={detailsGuest}
+        open={!!detailsGuest}
+        onClose={() => setDetailsGuest(null)}
+        companyId={company?.id}
+      />
     </div>
   );
 }
