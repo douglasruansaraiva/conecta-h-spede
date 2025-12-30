@@ -157,49 +157,56 @@ export default function PublicBooking() {
     e.preventDefault();
     setLoading(true);
 
-    // Find or create guest
-    const existingGuests = await base44.entities.Guest.filter({ 
-      company_id: company.id, 
-      email: formData.guest_email 
-    });
-
-    let guestId;
-    if (existingGuests.length > 0) {
-      guestId = existingGuests[0].id;
-      // Update guest info
-      await base44.entities.Guest.update(guestId, {
-        name: formData.guest_name,
-        phone: formData.guest_phone
+    try {
+      // Find or create guest
+      const existingGuests = await base44.entities.Guest.filter({ 
+        company_id: company.id, 
+        email: formData.guest_email 
       });
-    } else {
-      // Create new guest
-      const newGuest = await base44.entities.Guest.create({
+
+      let guestId;
+      if (existingGuests.length > 0) {
+        guestId = existingGuests[0].id;
+        // Update guest info
+        await base44.entities.Guest.update(guestId, {
+          name: formData.guest_name,
+          phone: formData.guest_phone
+        });
+      } else {
+        // Create new guest
+        const newGuest = await base44.entities.Guest.create({
+          company_id: company.id,
+          name: formData.guest_name,
+          email: formData.guest_email,
+          phone: formData.guest_phone
+        });
+        guestId = newGuest.id;
+      }
+
+      // Create reservation
+      await base44.entities.Reservation.create({
         company_id: company.id,
-        name: formData.guest_name,
-        email: formData.guest_email,
-        phone: formData.guest_phone
+        accommodation_id: selectedAccommodation.id,
+        guest_id: guestId,
+        check_in: format(selectedDates.start, 'yyyy-MM-dd'),
+        check_out: format(selectedDates.end, 'yyyy-MM-dd'),
+        guest_name: formData.guest_name,
+        guest_email: formData.guest_email,
+        guest_phone: formData.guest_phone,
+        guests_count: parseInt(formData.guests_count) || 1,
+        notes: formData.notes,
+        total_amount: calculateTotal(),
+        source: 'direct',
+        status: 'pending'
       });
-      guestId = newGuest.id;
+
+      setLoading(false);
+      setSuccess(true);
+    } catch (error) {
+      console.error('Erro ao criar reserva:', error);
+      setLoading(false);
+      alert('Erro ao processar reserva. Por favor, tente novamente.');
     }
-
-    await base44.entities.Reservation.create({
-      company_id: company.id,
-      accommodation_id: selectedAccommodation.id,
-      guest_id: guestId,
-      check_in: format(selectedDates.start, 'yyyy-MM-dd'),
-      check_out: format(selectedDates.end, 'yyyy-MM-dd'),
-      guest_name: formData.guest_name,
-      guest_email: formData.guest_email,
-      guest_phone: formData.guest_phone,
-      guests_count: parseInt(formData.guests_count) || 1,
-      notes: formData.notes,
-      total_amount: calculateTotal(),
-      source: 'direct',
-      status: 'pending'
-    });
-
-    setLoading(false);
-    setSuccess(true);
   };
 
   if (checkingAuth || !user) {
