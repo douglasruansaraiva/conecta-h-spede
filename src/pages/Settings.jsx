@@ -52,7 +52,8 @@ export default function Settings() {
     payment_instructions: '',
     testimonials: [],
     benefits: [],
-    faqs: []
+    faqs: [],
+    facebook_pixel_id: ''
   });
   const queryClient = useQueryClient();
 
@@ -104,7 +105,8 @@ export default function Settings() {
         payment_instructions: comp.payment_instructions || '',
         testimonials: comp.testimonials || [],
         benefits: comp.benefits || [],
-        faqs: comp.faqs || []
+        faqs: comp.faqs || [],
+        facebook_pixel_id: comp.facebook_pixel_id || ''
       });
     }
   }, [companies]);
@@ -449,6 +451,27 @@ export default function Settings() {
 
             {/* Marketing Tab */}
             <TabsContent value="marketing" className="space-y-6">
+              {/* Facebook Pixel */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Pixel do Facebook</CardTitle>
+                  <CardDescription>Rastreie conversões e visualizações de página</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div>
+                    <Label>ID do Pixel do Facebook</Label>
+                    <Input
+                      value={formData.facebook_pixel_id}
+                      onChange={(e) => setFormData({ ...formData, facebook_pixel_id: e.target.value })}
+                      placeholder="123456789012345"
+                    />
+                    <p className="text-xs text-slate-500 mt-2">
+                      O Pixel rastreará automaticamente visualizações de página e leads (reservas concluídas)
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
               {/* Testimonials */}
               <Card>
                 <CardHeader>

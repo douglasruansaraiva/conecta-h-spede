@@ -53,6 +53,26 @@ export default function PublicBooking() {
   const urlParams = new URLSearchParams(window.location.search);
   const companySlug = urlParams.get('c');
 
+  // Facebook Pixel tracking
+  useEffect(() => {
+    if (company?.facebook_pixel_id) {
+      // Initialize Facebook Pixel
+      if (!window.fbq) {
+        (function(f,b,e,v,n,t,s)
+        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+        n.queue=[];t=b.createElement(e);t.async=!0;
+        t.src=v;s=b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t,s)}(window, document,'script',
+        'https://connect.facebook.net/en_US/fbevents.js'));
+      }
+      
+      window.fbq('init', company.facebook_pixel_id);
+      window.fbq('track', 'PageView');
+    }
+  }, [company]);
+
   useEffect(() => {
     let hasRedirected = false;
     
@@ -213,6 +233,15 @@ export default function PublicBooking() {
 
       setLoading(false);
       setSuccess(true);
+      
+      // Track Lead event on Facebook Pixel
+      if (company?.facebook_pixel_id && window.fbq) {
+        window.fbq('track', 'Lead', {
+          content_name: selectedAccommodation.name,
+          value: calculateTotal(),
+          currency: 'BRL'
+        });
+      }
     } catch (error) {
       console.error('Erro ao criar reserva:', error);
       setLoading(false);
