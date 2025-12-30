@@ -108,7 +108,10 @@ export default function Financial() {
 
   const { data: transactions = [], isLoading } = useQuery({
     queryKey: ['transactions', company?.id],
-    queryFn: () => base44.entities.Transaction.filter({ company_id: company?.id }, '-date'),
+    queryFn: async () => {
+      if (!company?.id) return [];
+      return await base44.entities.Transaction.filter({ company_id: company.id }, '-date');
+    },
     enabled: !!company?.id
   });
 

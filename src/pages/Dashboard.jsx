@@ -51,25 +51,37 @@ export default function Dashboard() {
 
   const { data: accommodations = [] } = useQuery({
     queryKey: ['accommodations', company?.id],
-    queryFn: () => base44.entities.Accommodation.filter({ company_id: company?.id }),
+    queryFn: async () => {
+      if (!company?.id) return [];
+      return await base44.entities.Accommodation.filter({ company_id: company.id });
+    },
     enabled: !!company?.id
   });
 
   const { data: reservations = [] } = useQuery({
     queryKey: ['reservations', company?.id],
-    queryFn: () => base44.entities.Reservation.filter({ company_id: company?.id }),
+    queryFn: async () => {
+      if (!company?.id) return [];
+      return await base44.entities.Reservation.filter({ company_id: company.id });
+    },
     enabled: !!company?.id
   });
 
   const { data: transactions = [] } = useQuery({
     queryKey: ['transactions', company?.id],
-    queryFn: () => base44.entities.Transaction.filter({ company_id: company?.id }),
+    queryFn: async () => {
+      if (!company?.id) return [];
+      return await base44.entities.Transaction.filter({ company_id: company.id });
+    },
     enabled: !!company?.id
   });
 
   const { data: blockedDates = [] } = useQuery({
     queryKey: ['blockedDates', company?.id],
-    queryFn: () => base44.entities.BlockedDate.filter({ company_id: company?.id }),
+    queryFn: async () => {
+      if (!company?.id) return [];
+      return await base44.entities.BlockedDate.filter({ company_id: company.id });
+    },
     enabled: !!company?.id
   });
 

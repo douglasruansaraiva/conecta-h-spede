@@ -83,7 +83,10 @@ export default function Guests() {
 
   const { data: guests = [], isLoading } = useQuery({
     queryKey: ['guests', company?.id],
-    queryFn: () => base44.entities.Guest.filter({ company_id: company?.id }),
+    queryFn: async () => {
+      if (!company?.id) return [];
+      return await base44.entities.Guest.filter({ company_id: company.id });
+    },
     enabled: !!company?.id
   });
 

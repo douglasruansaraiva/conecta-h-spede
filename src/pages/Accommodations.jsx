@@ -95,7 +95,10 @@ export default function Accommodations() {
 
   const { data: accommodations = [], isLoading } = useQuery({
     queryKey: ['accommodations', company?.id],
-    queryFn: () => base44.entities.Accommodation.filter({ company_id: company?.id }),
+    queryFn: async () => {
+      if (!company?.id) return [];
+      return await base44.entities.Accommodation.filter({ company_id: company.id });
+    },
     enabled: !!company?.id
   });
 

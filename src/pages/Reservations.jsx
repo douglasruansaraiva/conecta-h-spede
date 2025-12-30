@@ -52,19 +52,28 @@ export default function Reservations() {
 
   const { data: accommodations = [] } = useQuery({
     queryKey: ['accommodations', company?.id],
-    queryFn: () => base44.entities.Accommodation.filter({ company_id: company?.id }),
+    queryFn: async () => {
+      if (!company?.id) return [];
+      return await base44.entities.Accommodation.filter({ company_id: company.id });
+    },
     enabled: !!company?.id
   });
 
   const { data: reservations = [], isLoading } = useQuery({
     queryKey: ['reservations', company?.id],
-    queryFn: () => base44.entities.Reservation.filter({ company_id: company?.id }, '-created_date'),
+    queryFn: async () => {
+      if (!company?.id) return [];
+      return await base44.entities.Reservation.filter({ company_id: company.id }, '-created_date');
+    },
     enabled: !!company?.id
   });
 
   const { data: blockedDates = [] } = useQuery({
     queryKey: ['blockedDates', company?.id],
-    queryFn: () => base44.entities.BlockedDate.filter({ company_id: company?.id }),
+    queryFn: async () => {
+      if (!company?.id) return [];
+      return await base44.entities.BlockedDate.filter({ company_id: company.id });
+    },
     enabled: !!company?.id
   });
 

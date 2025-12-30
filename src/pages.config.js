@@ -5,6 +5,8 @@ import Guests from './pages/Guests';
 import Financial from './pages/Financial';
 import Settings from './pages/Settings';
 import PublicBooking from './pages/PublicBooking';
+import Home from './pages/Home';
+import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
@@ -15,9 +17,11 @@ export const PAGES = {
     "Financial": Financial,
     "Settings": Settings,
     "PublicBooking": PublicBooking,
+    "Home": Home,
 }
 
 export const pagesConfig = {
     mainPage: "Dashboard",
     Pages: PAGES,
+    Layout: __Layout,
 };
