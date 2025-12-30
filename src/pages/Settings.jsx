@@ -18,11 +18,13 @@ import {
   ExternalLink,
   Copy,
   Check,
-  Calendar
+  Calendar,
+  Megaphone
 } from "lucide-react";
 import { createPageUrl } from '@/utils';
 import { toast } from "sonner";
 import SeasonalPricing from '@/components/settings/SeasonalPricing';
+import MarketingSettings from '@/components/settings/MarketingSettings';
 
 export default function Settings() {
   const [user, setUser] = useState(null);
@@ -181,6 +183,10 @@ export default function Settings() {
               <TabsTrigger value="policies">
                 <FileText className="w-4 h-4 mr-2" />
                 Políticas
+              </TabsTrigger>
+              <TabsTrigger value="marketing">
+                <Megaphone className="w-4 h-4 mr-2" />
+                Marketing
               </TabsTrigger>
             </TabsList>
 
@@ -431,6 +437,11 @@ export default function Settings() {
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            {/* Marketing Tab */}
+            <TabsContent value="marketing">
+              <MarketingSettings companyId={company?.id} />
             </TabsContent>
           </Tabs>
 
