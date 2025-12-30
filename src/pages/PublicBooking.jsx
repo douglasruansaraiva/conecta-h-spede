@@ -387,14 +387,16 @@ export default function PublicBooking() {
               {accommodations.map(acc => (
                 <Card 
                   key={acc.id} 
-                  className="group cursor-pointer transition-all hover:shadow-xl bg-white border-slate-200 overflow-hidden"
-                  onClick={() => {
-                    setSelectedAccommodation(acc);
-                    setCurrentImageIndex(0);
-                    setStep(1.5);
-                  }}
+                  className="group transition-all hover:shadow-xl bg-white border-slate-200 overflow-hidden flex flex-col"
                 >
-                  <div className="aspect-video relative bg-slate-900 overflow-hidden">
+                  <div 
+                    className="aspect-video relative bg-slate-900 overflow-hidden cursor-pointer"
+                    onClick={() => {
+                      setSelectedAccommodation(acc);
+                      setCurrentImageIndex(0);
+                      setStep(1.5);
+                    }}
+                  >
                     {acc.images?.[0] ? (
                       <img src={acc.images[0]} alt={acc.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
                     ) : (
@@ -404,7 +406,7 @@ export default function PublicBooking() {
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-60" />
                   </div>
-                  <CardContent className="p-4">
+                  <CardContent className="p-4 flex-1 flex flex-col">
                     <h3 className="font-semibold text-lg text-slate-800">{acc.name}</h3>
                     {acc.description && (
                       <p className="text-sm text-slate-600 mt-1 line-clamp-2">{acc.description}</p>
@@ -415,7 +417,7 @@ export default function PublicBooking() {
                         Até {acc.max_guests} hóspedes
                       </div>
                       <div className="text-right">
-                        <p className="text-lg font-bold text-emerald-400">
+                        <p className="text-lg font-bold text-emerald-600">
                           R$ {acc.base_price?.toFixed(2)}
                         </p>
                         <p className="text-xs text-slate-500">por noite</p>
@@ -430,6 +432,17 @@ export default function PublicBooking() {
                         ))}
                       </div>
                     )}
+                    <Button 
+                      onClick={() => {
+                        setSelectedAccommodation(acc);
+                        setCurrentImageIndex(0);
+                        setStep(1.5);
+                      }}
+                      className="w-full mt-4 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-md font-semibold group-hover:shadow-lg transition-all"
+                    >
+                      Ver Detalhes e Reservar
+                      <ChevronRight className="w-4 h-4 ml-2" />
+                    </Button>
                   </CardContent>
                 </Card>
               ))}
