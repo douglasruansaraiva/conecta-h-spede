@@ -21,9 +21,9 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Header */}
-      <header className="border-b border-slate-700 bg-slate-900/50 backdrop-blur-lg sticky top-0 z-50">
+      <header className="border-b border-slate-200 bg-white/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <img 
@@ -32,13 +32,13 @@ export default function Landing() {
               className="w-10 h-10 object-contain"
             />
             <div className="flex flex-col leading-none">
-              <span className="font-bold text-[#3A7A77] text-sm">CONECTA</span>
-              <span className="font-bold text-[#3A7A77] text-sm">HÓSPEDE</span>
+              <span className="font-bold text-[#2C5F5D] text-sm">CONECTA</span>
+              <span className="font-bold text-[#2C5F5D] text-sm">HÓSPEDE</span>
             </div>
           </div>
           <Button 
             onClick={handleLogin}
-            className="bg-gradient-to-r from-[#2C5F5D] to-[#3A7A77] hover:from-[#234B49] hover:to-[#2C5F5D] text-white shadow-lg"
+            className="bg-gradient-to-r from-[#2C5F5D] to-[#3A7A77] hover:from-[#234B49] hover:to-[#2C5F5D] text-white shadow-md"
           >
             Entrar
           </Button>
@@ -48,14 +48,14 @@ export default function Landing() {
       {/* Hero Section */}
       <section className="py-20 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto text-center">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-800 mb-6 leading-tight">
             Gerencie suas Hospedagens
             <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2C5F5D] to-[#3A7A77]">
               de Forma Simples
             </span>
           </h1>
-          <p className="text-xl text-slate-300 mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-slate-600 mb-8 max-w-2xl mx-auto">
             Sistema completo para gestão de pousadas, hotéis e chalés. 
             Controle reservas, hóspedes e finanças em um só lugar.
           </p>
@@ -67,84 +67,84 @@ export default function Landing() {
             Começar Gratuitamente
             <ArrowRight className="w-5 h-5 ml-2" />
           </Button>
-          <p className="text-sm text-slate-400 mt-4">Comece agora com sua conta Google</p>
+          <p className="text-sm text-slate-500 mt-4">Comece agora com sua conta Google</p>
         </div>
       </section>
 
       {/* Features Grid */}
-      <section className="py-20 px-4 sm:px-6 bg-slate-800/30">
+      <section className="py-20 px-4 sm:px-6 bg-white">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold text-white text-center mb-12">
+          <h2 className="text-3xl font-bold text-slate-800 text-center mb-12">
             Tudo que você precisa para gerenciar suas hospedagens
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card className="bg-slate-800/50 border-slate-700 backdrop-blur">
+            <Card className="bg-slate-50 border-slate-200 hover:shadow-lg transition-shadow">
               <CardContent className="p-6">
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#2C5F5D] to-[#3A7A77] flex items-center justify-center mb-4">
                   <Home className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-2">Gestão de Acomodações</h3>
-                <p className="text-slate-400">
+                <h3 className="text-xl font-semibold text-slate-800 mb-2">Gestão de Acomodações</h3>
+                <p className="text-slate-600">
                   Cadastre e gerencie todos os seus quartos, suítes e chalés com fotos e detalhes completos.
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="bg-slate-800/50 border-slate-700 backdrop-blur">
+            <Card className="bg-slate-50 border-slate-200 hover:shadow-lg transition-shadow">
               <CardContent className="p-6">
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#2C5F5D] to-[#3A7A77] flex items-center justify-center mb-4">
                   <Calendar className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-2">Calendário Inteligente</h3>
-                <p className="text-slate-400">
+                <h3 className="text-xl font-semibold text-slate-800 mb-2">Calendário Inteligente</h3>
+                <p className="text-slate-600">
                   Visualize e gerencie reservas com calendário interativo. Integração com Airbnb, Booking e VRBO.
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="bg-slate-800/50 border-slate-700 backdrop-blur">
+            <Card className="bg-slate-50 border-slate-200 hover:shadow-lg transition-shadow">
               <CardContent className="p-6">
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#2C5F5D] to-[#3A7A77] flex items-center justify-center mb-4">
                   <Users className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-2">Cadastro de Hóspedes</h3>
-                <p className="text-slate-400">
+                <h3 className="text-xl font-semibold text-slate-800 mb-2">Cadastro de Hóspedes</h3>
+                <p className="text-slate-600">
                   Mantenha histórico completo dos seus hóspedes e suas preferências.
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="bg-slate-800/50 border-slate-700 backdrop-blur">
+            <Card className="bg-slate-50 border-slate-200 hover:shadow-lg transition-shadow">
               <CardContent className="p-6">
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#2C5F5D] to-[#3A7A77] flex items-center justify-center mb-4">
                   <DollarSign className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-2">Controle Financeiro</h3>
-                <p className="text-slate-400">
+                <h3 className="text-xl font-semibold text-slate-800 mb-2">Controle Financeiro</h3>
+                <p className="text-slate-600">
                   Acompanhe receitas, despesas e lucros com relatórios completos e gráficos detalhados.
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="bg-slate-800/50 border-slate-700 backdrop-blur">
+            <Card className="bg-slate-50 border-slate-200 hover:shadow-lg transition-shadow">
               <CardContent className="p-6">
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#2C5F5D] to-[#3A7A77] flex items-center justify-center mb-4">
                   <BarChart3 className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-2">Relatórios e Análises</h3>
-                <p className="text-slate-400">
+                <h3 className="text-xl font-semibold text-slate-800 mb-2">Relatórios e Análises</h3>
+                <p className="text-slate-600">
                   Tome decisões baseadas em dados com relatórios de desempenho e ocupação.
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="bg-slate-800/50 border-slate-700 backdrop-blur">
+            <Card className="bg-slate-50 border-slate-200 hover:shadow-lg transition-shadow">
               <CardContent className="p-6">
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#2C5F5D] to-[#3A7A77] flex items-center justify-center mb-4">
                   <Zap className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-2">Reservas Online</h3>
-                <p className="text-slate-400">
+                <h3 className="text-xl font-semibold text-slate-800 mb-2">Reservas Online</h3>
+                <p className="text-slate-600">
                   Link personalizado para seus hóspedes fazerem reservas diretamente online.
                 </p>
               </CardContent>
@@ -154,9 +154,9 @@ export default function Landing() {
       </section>
 
       {/* Benefits */}
-      <section className="py-20 px-4 sm:px-6">
+      <section className="py-20 px-4 sm:px-6 bg-slate-50">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold text-white text-center mb-12">
+          <h2 className="text-3xl font-bold text-slate-800 text-center mb-12">
             Por que escolher o Conecta Hóspede?
           </h2>
           <div className="space-y-6">
@@ -168,11 +168,11 @@ export default function Landing() {
               { icon: BarChart3, text: "Decisões baseadas em dados reais" },
               { icon: DollarSign, text: "Aumente sua receita e controle seus gastos" }
             ].map((item, index) => (
-              <div key={index} className="flex items-center gap-4 bg-slate-800/30 p-6 rounded-xl border border-slate-700">
+              <div key={index} className="flex items-center gap-4 bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#2C5F5D] to-[#3A7A77] flex items-center justify-center flex-shrink-0">
                   <item.icon className="w-6 h-6 text-white" />
                 </div>
-                <p className="text-lg text-slate-200">{item.text}</p>
+                <p className="text-lg text-slate-700">{item.text}</p>
               </div>
             ))}
           </div>
@@ -200,9 +200,9 @@ export default function Landing() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-slate-700 bg-slate-900/50 py-8 px-4 sm:px-6">
+      <footer className="border-t border-slate-200 bg-white py-8 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto text-center">
-          <p className="text-slate-400">
+          <p className="text-slate-500">
             © 2025 Conecta Hóspede. Sistema de gestão para hospedagens.
           </p>
         </div>
