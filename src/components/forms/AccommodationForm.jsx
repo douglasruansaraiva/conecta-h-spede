@@ -5,8 +5,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { X, Plus, Upload, Loader2 } from "lucide-react";
+import { X, Plus, Upload, Loader2, RefreshCw } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { toast } from "sonner";
 
 const AMENITIES = [
   'WiFi', 'Ar Condicionado', 'TV', 'Frigobar', 'Cofre', 'Secador', 
@@ -16,6 +17,7 @@ const AMENITIES = [
 export default function AccommodationForm({ open, onClose, accommodation, companyId, onSave }) {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     type: 'quarto',
@@ -89,6 +91,84 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
         ? prev.amenities.filter(a => a !== amenity)
         : [...prev.amenities, amenity]
     }));
+  };
+
+  const syncIcal = async () => {
+    if (!formData.ical_import_url) return;
+    
+    setSyncing(true);
+    try {
+      const response = await fetch(formData.ical_import_url);
+      const icalData = await response.text();
+      
+      // Parse iCal data
+      const events = [];
+      const lines = icalData.split('\n');
+      let currentEvent = null;
+      
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (trimmed === 'BEGIN:VEVENT') {
+          currentEvent = {};
+        } else if (trimmed === 'END:VEVENT' && currentEvent) {
+          if (currentEvent.start && currentEvent.end) {
+            events.push(currentEvent);
+          }
+          currentEvent = null;
+        } else if (currentEvent) {
+          if (trimmed.startsWith('DTSTART')) {
+            const match = trimmed.match(/DTSTART[;:](.+)/);
+            if (match) {
+              const dateStr = match[1].split('T')[0];
+              currentEvent.start = `${dateStr.slice(0,4)}-${dateStr.slice(4,6)}-${dateStr.slice(6,8)}`;
+            }
+          } else if (trimmed.startsWith('DTEND')) {
+            const match = trimmed.match(/DTEND[;:](.+)/);
+            if (match) {
+              const dateStr = match[1].split('T')[0];
+              currentEvent.end = `${dateStr.slice(0,4)}-${dateStr.slice(4,6)}-${dateStr.slice(6,8)}`;
+            }
+          } else if (trimmed.startsWith('SUMMARY')) {
+            currentEvent.summary = trimmed.split(':')[1];
+          }
+        }
+      }
+
+      // Create blocked dates if accommodation exists
+      if (accommodation && events.length > 0) {
+        // Delete existing ical blocks for this accommodation
+        const existingBlocks = await base44.entities.BlockedDate.filter({ 
+          company_id: companyId,
+          accommodation_id: accommodation.id,
+          source: 'ical_import'
+        });
+        
+        for (const block of existingBlocks) {
+          await base44.entities.BlockedDate.delete(block.id);
+        }
+
+        // Create new blocks
+        for (const event of events) {
+          await base44.entities.BlockedDate.create({
+            company_id: companyId,
+            accommodation_id: accommodation.id,
+            start_date: event.start,
+            end_date: event.end,
+            reason: event.summary || 'Reserva iCal',
+            source: 'ical_import'
+          });
+        }
+
+        toast.success(`${events.length} datas bloqueadas importadas do iCal`);
+        onSave();
+      } else {
+        toast.info(`${events.length} eventos encontrados. Salve a acomodação primeiro para sincronizar.`);
+      }
+    } catch (error) {
+      console.error('Erro ao sincronizar iCal:', error);
+      toast.error('Erro ao sincronizar iCal. Verifique a URL.');
+    }
+    setSyncing(false);
   };
 
   const handleSubmit = async (e) => {
@@ -255,13 +335,30 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
 
           <div>
             <Label>URL iCal (importar de Airbnb, Booking, etc)</Label>
-            <Input
-              value={formData.ical_import_url}
-              onChange={(e) => setFormData({ ...formData, ical_import_url: e.target.value })}
-              placeholder="https://..."
-            />
+            <div className="flex gap-2">
+              <Input
+                value={formData.ical_import_url}
+                onChange={(e) => setFormData({ ...formData, ical_import_url: e.target.value })}
+                placeholder="https://..."
+                className="flex-1"
+              />
+              {formData.ical_import_url && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={syncIcal}
+                  disabled={syncing}
+                >
+                  {syncing ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <RefreshCw className="w-4 h-4" />
+                  )}
+                </Button>
+              )}
+            </div>
             <p className="text-xs text-slate-500 mt-1">
-              Cole aqui a URL do calendário iCal para sincronizar reservas externas
+              Cole a URL do iCal e clique em sincronizar para importar datas bloqueadas
             </p>
           </div>
 
