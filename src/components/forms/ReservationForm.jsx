@@ -92,9 +92,37 @@ export default function ReservationForm({
     e.preventDefault();
     setLoading(true);
 
+    // Find or create guest if email is provided
+    let guestId = reservation?.guest_id;
+    if (formData.guest_email) {
+      const existingGuests = await base44.entities.Guest.filter({ 
+        company_id: companyId, 
+        email: formData.guest_email 
+      });
+
+      if (existingGuests.length > 0) {
+        guestId = existingGuests[0].id;
+        // Update guest info
+        await base44.entities.Guest.update(guestId, {
+          name: formData.guest_name,
+          phone: formData.guest_phone
+        });
+      } else {
+        // Create new guest
+        const newGuest = await base44.entities.Guest.create({
+          company_id: companyId,
+          name: formData.guest_name,
+          email: formData.guest_email,
+          phone: formData.guest_phone
+        });
+        guestId = newGuest.id;
+      }
+    }
+
     const data = {
       ...formData,
       company_id: companyId,
+      guest_id: guestId,
       guests_count: parseInt(formData.guests_count) || 1,
       total_amount: parseFloat(formData.total_amount) || 0
     };
