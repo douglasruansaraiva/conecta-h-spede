@@ -112,21 +112,23 @@ function DashboardContent({ user, company }) {
               {format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })}
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
+          <div className="flex flex-col gap-2 w-full sm:w-auto">
             {bookingUrl && (
-              <div className="flex items-center gap-2 bg-white rounded-lg border border-slate-200 px-3 py-2">
-                <span className="text-xs sm:text-sm text-slate-600 truncate max-w-[150px] sm:max-w-[200px]">{bookingUrl}</span>
-                <Button size="icon" variant="ghost" className="h-8 w-8" onClick={copyBookingUrl}>
-                  {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-                </Button>
-                <a href={bookingUrl} target="_blank" rel="noopener noreferrer">
-                  <Button size="icon" variant="ghost" className="h-8 w-8">
-                    <ExternalLink className="w-4 h-4" />
+              <div className="flex items-center gap-2 bg-white rounded-lg border border-slate-200 p-2 shadow-sm">
+                <span className="text-xs text-slate-600 truncate flex-1 min-w-0">{bookingUrl}</span>
+                <div className="flex gap-1 flex-shrink-0">
+                  <Button size="icon" variant="ghost" className="h-7 w-7" onClick={copyBookingUrl}>
+                    {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
                   </Button>
-                </a>
+                  <a href={bookingUrl} target="_blank" rel="noopener noreferrer">
+                    <Button size="icon" variant="ghost" className="h-7 w-7">
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </Button>
+                  </a>
+                </div>
               </div>
             )}
-            <Link to={createPageUrl('Reservations')} className="w-full sm:w-auto">
+            <Link to={createPageUrl('Reservations')}>
               <Button className="bg-gradient-to-r from-[#2C5F5D] to-[#3A7A77] hover:from-[#234B49] hover:to-[#2C5F5D] text-white w-full shadow-md">
                 <Plus className="w-4 h-4 mr-2" />
                 Nova Reserva
