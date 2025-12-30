@@ -3,6 +3,7 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSam
 import { ptBR } from 'date-fns/locale';
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 export default function CalendarGrid({ 
@@ -43,7 +44,9 @@ export default function CalendarGrid({
     });
 
     if (reservation) {
-      return { status: 'reserved', reservation };
+      // Extract source from reservation
+      const source = reservation.source || 'direct';
+      return { status: 'reserved', reservation, source };
     }
 
     // Check blocked dates
@@ -55,7 +58,14 @@ export default function CalendarGrid({
     });
 
     if (blocked) {
-      return { status: 'blocked', blocked };
+      // Extract source from blocked reason (format: "Airbnb: reservation name")
+      let source = 'blocked';
+      if (blocked.reason) {
+        if (blocked.reason.toLowerCase().includes('airbnb')) source = 'airbnb';
+        else if (blocked.reason.toLowerCase().includes('booking')) source = 'booking';
+        else if (blocked.reason.toLowerCase().includes('vrbo')) source = 'vrbo';
+      }
+      return { status: 'blocked', blocked, source };
     }
 
     return { status: 'available' };
@@ -70,6 +80,10 @@ export default function CalendarGrid({
 
   const handleDateClick = (date) => {
     if (minDate && isBefore(date, startOfDay(minDate))) return;
+    
+    const { status } = getDateStatus(date);
+    // Block clicks on reserved or blocked dates
+    if (status !== 'available') return;
     
     if (onDateRangeSelect) {
       if (!selectingRange || !rangeStart) {
@@ -89,11 +103,30 @@ export default function CalendarGrid({
 
   const statusColors = {
     available: 'bg-white hover:bg-emerald-50 text-slate-700',
-    reserved: 'bg-blue-100 text-blue-800 hover:bg-blue-200',
+    reserved: 'bg-blue-100 text-blue-800',
     blocked: 'bg-slate-200 text-slate-500'
   };
 
+  const sourceLabels = {
+    direct: 'Reserva Direta',
+    airbnb: 'Airbnb',
+    booking: 'Booking',
+    vrbo: 'VRBO',
+    other: 'Outra plataforma',
+    blocked: 'Bloqueado'
+  };
+
+  const sourceColors = {
+    direct: 'bg-emerald-500',
+    airbnb: 'bg-pink-500',
+    booking: 'bg-blue-600',
+    vrbo: 'bg-red-500',
+    other: 'bg-purple-500',
+    blocked: 'bg-slate-500'
+  };
+
   return (
+    <TooltipProvider>
     <div className="bg-white rounded-2xl border border-slate-200 p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
@@ -131,14 +164,15 @@ export default function CalendarGrid({
           <div key={`empty-${i}`} />
         ))}
         {days.map(day => {
-          const { status, reservation } = getDateStatus(day);
+          const { status, reservation, blocked, source } = getDateStatus(day);
           const isPast = minDate && isBefore(day, startOfDay(minDate));
           const isSelected = isInSelectedRange(day);
+          const isUnavailable = status !== 'available';
           
-          return (
+          const dayButton = (
             <button
               key={day.toISOString()}
-              disabled={isPast || (status !== 'available' && onDateRangeSelect)}
+              disabled={isPast || isUnavailable}
               onClick={() => handleDateClick(day)}
               onMouseEnter={() => selectingRange && setHoverDate(day)}
               className={cn(
@@ -146,36 +180,82 @@ export default function CalendarGrid({
                 statusColors[status],
                 isToday(day) && "ring-2 ring-emerald-500 ring-offset-1",
                 isPast && "opacity-40 cursor-not-allowed",
+                isUnavailable && "cursor-not-allowed",
                 isSelected && "bg-emerald-100 ring-2 ring-emerald-500",
                 isSameDay(day, rangeStart) && "bg-emerald-500 text-white"
               )}
             >
               {format(day, 'd')}
-              {reservation && (
-                <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-blue-500" />
+              {(reservation || blocked) && source && (
+                <span className={cn(
+                  "absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full",
+                  sourceColors[source] || 'bg-slate-500'
+                )} />
               )}
             </button>
           );
+
+          // Wrap with tooltip if unavailable
+          if (isUnavailable && (reservation || blocked)) {
+            const tooltipText = reservation 
+              ? `${sourceLabels[source] || source} - ${reservation.guest_name || 'Reserva'}`
+              : `${sourceLabels[source] || 'Bloqueado'} - ${blocked.reason || ''}`;
+            
+            return (
+              <Tooltip key={day.toISOString()}>
+                <TooltipTrigger asChild>
+                  {dayButton}
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs">{tooltipText}</p>
+                </TooltipContent>
+              </Tooltip>
+            );
+          }
+
+          return dayButton;
         })}
       </div>
 
       {/* Legend */}
       {showLegend && (
-        <div className="flex items-center gap-4 mt-6 pt-4 border-t border-slate-100">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded bg-white border border-slate-200" />
-            <span className="text-xs text-slate-600">Disponível</span>
+        <div className="mt-6 pt-4 border-t border-slate-100 space-y-3">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded bg-white border border-slate-200" />
+              <span className="text-xs text-slate-600">Disponível</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded bg-blue-100" />
+              <span className="text-xs text-slate-600">Reservado</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded bg-slate-200" />
+              <span className="text-xs text-slate-600">Bloqueado</span>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded bg-blue-100" />
-            <span className="text-xs text-slate-600">Reservado</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded bg-slate-200" />
-            <span className="text-xs text-slate-600">Bloqueado</span>
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-xs font-medium text-slate-500">Origem:</span>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span className="text-xs text-slate-600">Direta</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-pink-500" />
+              <span className="text-xs text-slate-600">Airbnb</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-blue-600" />
+              <span className="text-xs text-slate-600">Booking</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-red-500" />
+              <span className="text-xs text-slate-600">VRBO</span>
+            </div>
           </div>
         </div>
       )}
     </div>
+    </TooltipProvider>
   );
 }
