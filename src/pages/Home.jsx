@@ -6,8 +6,8 @@ export default function Home() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Redirect to Dashboard
-    window.location.href = createPageUrl('Dashboard');
+    // Redirect to Landing
+    window.location.href = createPageUrl('Landing');
   }, []);
 
   return (
