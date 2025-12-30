@@ -59,8 +59,12 @@ export default function Settings() {
 
   useEffect(() => {
     const loadUser = async () => {
-      const userData = await base44.auth.me();
-      setUser(userData);
+      try {
+        const userData = await base44.auth.me();
+        setUser(userData);
+      } catch (error) {
+        console.error('Erro ao carregar usuário:', error);
+      }
     };
     loadUser();
   }, []);
