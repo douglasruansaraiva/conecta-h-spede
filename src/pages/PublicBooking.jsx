@@ -106,7 +106,10 @@ export default function PublicBooking() {
     queryKey: ['company-public', companySlug],
     queryFn: async () => {
       if (!companySlug) return [];
-      return await base44.entities.Company.filter({ slug: companySlug });
+      console.log('Buscando empresa com slug:', companySlug);
+      const result = await base44.entities.Company.filter({ slug: companySlug });
+      console.log('Empresas encontradas:', result);
+      return result;
     },
     enabled: !!companySlug && !!user,
     retry: 1
@@ -249,10 +252,23 @@ export default function PublicBooking() {
     }
   };
 
-  if (checkingAuth || !user) {
+  if (checkingAuth) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-emerald-600 animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <Card className="max-w-md w-full">
+          <CardContent className="p-8 text-center">
+            <Loader2 className="w-8 h-8 text-emerald-600 animate-spin mx-auto mb-4" />
+            <p className="text-slate-600">Autenticando...</p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
