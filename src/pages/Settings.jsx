@@ -17,10 +17,12 @@ import {
   FileText,
   ExternalLink,
   Copy,
-  Check
+  Check,
+  Calendar
 } from "lucide-react";
 import { createPageUrl } from '@/utils';
 import { toast } from "sonner";
+import SeasonalPricing from '@/components/settings/SeasonalPricing';
 
 export default function Settings() {
   const [user, setUser] = useState(null);
@@ -62,6 +64,15 @@ export default function Settings() {
       return await base44.entities.Company.filter({ owner_email: user.email });
     },
     enabled: !!user?.email
+  });
+
+  const { data: accommodations = [] } = useQuery({
+    queryKey: ['accommodations', company?.id],
+    queryFn: async () => {
+      if (!company?.id) return [];
+      return await base44.entities.Accommodation.filter({ company_id: company.id });
+    },
+    enabled: !!company?.id
   });
 
   useEffect(() => {
@@ -162,6 +173,10 @@ export default function Settings() {
               <TabsTrigger value="booking">
                 <LinkIcon className="w-4 h-4 mr-2" />
                 Reservas Online
+              </TabsTrigger>
+              <TabsTrigger value="seasonal">
+                <Calendar className="w-4 h-4 mr-2" />
+                Temporadas
               </TabsTrigger>
               <TabsTrigger value="policies">
                 <FileText className="w-4 h-4 mr-2" />
@@ -390,6 +405,11 @@ export default function Settings() {
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            {/* Seasonal Pricing Tab */}
+            <TabsContent value="seasonal">
+              <SeasonalPricing companyId={company?.id} accommodations={accommodations} />
             </TabsContent>
 
             {/* Policies Tab */}
