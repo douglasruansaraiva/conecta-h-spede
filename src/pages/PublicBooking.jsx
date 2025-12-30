@@ -295,7 +295,7 @@ export default function PublicBooking() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-6">
         <Card className="max-w-md w-full">
           <CardContent className="p-8 text-center">
             <div className="w-16 h-16 bg-gradient-to-br from-[#2C5F5D] to-[#3A7A77] rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
