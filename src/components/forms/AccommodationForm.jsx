@@ -464,7 +464,7 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
               <div className="flex gap-2">
                 <Input
                   readOnly
-                  value={`${window.location.origin}/ExportCalendar?accommodation_id=${accommodation.id}&company_id=${companyId}`}
+                  value={`${window.location.origin}/api/exportCalendar?accommodation_id=${accommodation.id}&company_id=${companyId}`}
                   className="flex-1 text-xs bg-white"
                 />
                 <Button
@@ -472,7 +472,7 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    navigator.clipboard.writeText(`${window.location.origin}/ExportCalendar?accommodation_id=${accommodation.id}&company_id=${companyId}`);
+                    navigator.clipboard.writeText(`${window.location.origin}/api/exportCalendar?accommodation_id=${accommodation.id}&company_id=${companyId}`);
                     toast.success('URL copiada!');
                   }}
                 >

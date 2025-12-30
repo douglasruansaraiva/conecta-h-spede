@@ -6,7 +6,6 @@ import Home from './pages/Home';
 import PublicBooking from './pages/PublicBooking';
 import Reservations from './pages/Reservations';
 import Settings from './pages/Settings';
-import ExportCalendar from './pages/ExportCalendar';
 import __Layout from './Layout.jsx';
 
 
@@ -19,7 +18,6 @@ export const PAGES = {
     "PublicBooking": PublicBooking,
     "Reservations": Reservations,
     "Settings": Settings,
-    "ExportCalendar": ExportCalendar,
 }
 
 export const pagesConfig = {
