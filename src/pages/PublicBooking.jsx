@@ -43,7 +43,7 @@ export default function PublicBooking() {
   const urlParams = new URLSearchParams(window.location.search);
   const companySlug = urlParams.get('c');
 
-  const { data: companies = [] } = useQuery({
+  const { data: companies = [], isLoading: loadingCompany } = useQuery({
     queryKey: ['company-public', companySlug],
     queryFn: () => base44.entities.Company.filter({ slug: companySlug }),
     enabled: !!companySlug
@@ -155,10 +155,24 @@ export default function PublicBooking() {
     );
   }
 
-  if (!company) {
+  if (loadingCompany) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-emerald-600 animate-spin" />
+      </div>
+    );
+  }
+
+  if (!company) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+        <Card className="max-w-md w-full">
+          <CardContent className="p-8 text-center">
+            <Home className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-slate-800 mb-2">Empresa não encontrada</h2>
+            <p className="text-slate-500">Não foi possível encontrar uma empresa com este link. Verifique se o link está correto.</p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
