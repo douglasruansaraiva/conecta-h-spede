@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { format, parseISO, isToday, isTomorrow, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
+import { format, parseISO, isToday, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   CalendarDays, 
-  Users, 
   DollarSign, 
   Home, 
   TrendingUp,
@@ -23,31 +22,10 @@ import { createPageUrl } from '@/utils';
 import StatsCard from '@/components/dashboard/StatsCard';
 import ReservationCard from '@/components/reservations/ReservationCard';
 import CalendarGrid from '@/components/reservations/CalendarGrid';
+import CompanyGuard from '@/components/auth/CompanyGuard';
 
-export default function Dashboard() {
-  const [user, setUser] = useState(null);
-  const [company, setCompany] = useState(null);
+function DashboardContent({ user, company }) {
   const [copied, setCopied] = useState(false);
-
-  useEffect(() => {
-    const loadUser = async () => {
-      const userData = await base44.auth.me();
-      setUser(userData);
-    };
-    loadUser();
-  }, []);
-
-  const { data: companies = [] } = useQuery({
-    queryKey: ['companies', user?.email],
-    queryFn: () => base44.entities.Company.filter({ owner_email: user?.email }),
-    enabled: !!user?.email
-  });
-
-  useEffect(() => {
-    if (companies.length > 0 && !company) {
-      setCompany(companies[0]);
-    }
-  }, [companies]);
 
   const { data: accommodations = [] } = useQuery({
     queryKey: ['accommodations', company?.id],
@@ -122,30 +100,6 @@ export default function Dashboard() {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
-
-  if (!company) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-6">
-        <Card className="max-w-md w-full">
-          <CardContent className="p-8 text-center">
-            <div className="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Home className="w-8 h-8 text-emerald-600" />
-            </div>
-            <h2 className="text-2xl font-bold text-slate-800 mb-2">Bem-vindo ao Motor de Reservas</h2>
-            <p className="text-slate-600 mb-6">
-              Você ainda não tem uma empresa cadastrada. Configure sua pousada ou hotel para começar.
-            </p>
-            <Link to={createPageUrl('Settings')}>
-              <Button className="bg-emerald-600 hover:bg-emerald-700">
-                <Plus className="w-4 h-4 mr-2" />
-                Configurar Minha Empresa
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
@@ -283,5 +237,13 @@ export default function Dashboard() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Dashboard() {
+  return (
+    <CompanyGuard>
+      {({ user, company }) => <DashboardContent user={user} company={company} />}
+    </CompanyGuard>
   );
 }

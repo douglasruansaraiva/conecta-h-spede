@@ -1,12 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { format, parseISO, startOfMonth, endOfMonth, subMonths, isWithinInterval } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -19,7 +17,6 @@ import {
   DollarSign,
   ArrowUpRight,
   ArrowDownRight,
-  Calendar,
   Loader2,
   Edit,
   Trash2
@@ -44,6 +41,7 @@ import {
   Tooltip,
   ResponsiveContainer
 } from 'recharts';
+import CompanyGuard from '@/components/auth/CompanyGuard';
 
 const categoryLabels = {
   reservation: 'Reserva',
@@ -67,9 +65,7 @@ const paymentMethodLabels = {
   other: 'Outro'
 };
 
-export default function Financial() {
-  const [user, setUser] = useState(null);
-  const [company, setCompany] = useState(null);
+function FinancialContent({ user, company }) {
   const [typeFilter, setTypeFilter] = useState('all');
   const [formOpen, setFormOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
@@ -85,26 +81,6 @@ export default function Financial() {
     status: 'completed'
   });
   const queryClient = useQueryClient();
-
-  useEffect(() => {
-    const loadUser = async () => {
-      const userData = await base44.auth.me();
-      setUser(userData);
-    };
-    loadUser();
-  }, []);
-
-  const { data: companies = [] } = useQuery({
-    queryKey: ['companies', user?.email],
-    queryFn: () => base44.entities.Company.filter({ owner_email: user?.email }),
-    enabled: !!user?.email
-  });
-
-  useEffect(() => {
-    if (companies.length > 0 && !company) {
-      setCompany(companies[0]);
-    }
-  }, [companies]);
 
   const { data: transactions = [], isLoading } = useQuery({
     queryKey: ['transactions', company?.id],
@@ -500,5 +476,13 @@ export default function Financial() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+  );
+}
+
+export default function Financial() {
+  return (
+    <CompanyGuard>
+      {({ user, company }) => <FinancialContent user={user} company={company} />}
+    </CompanyGuard>
   );
 }

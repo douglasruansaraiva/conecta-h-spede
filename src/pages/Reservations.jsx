@@ -1,8 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { format, parseISO } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -16,10 +14,9 @@ import ReservationCard from '@/components/reservations/ReservationCard';
 import CalendarGrid from '@/components/reservations/CalendarGrid';
 import ReservationForm from '@/components/forms/ReservationForm';
 import PaymentForm from '@/components/forms/PaymentForm';
+import CompanyGuard from '@/components/auth/CompanyGuard';
 
-export default function Reservations() {
-  const [user, setUser] = useState(null);
-  const [company, setCompany] = useState(null);
+function ReservationsContent({ user, company }) {
   const [view, setView] = useState('list');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -29,26 +26,6 @@ export default function Reservations() {
   const [selectedAccommodation, setSelectedAccommodation] = useState(null);
   const [selectedDates, setSelectedDates] = useState(null);
   const queryClient = useQueryClient();
-
-  useEffect(() => {
-    const loadUser = async () => {
-      const userData = await base44.auth.me();
-      setUser(userData);
-    };
-    loadUser();
-  }, []);
-
-  const { data: companies = [] } = useQuery({
-    queryKey: ['companies', user?.email],
-    queryFn: () => base44.entities.Company.filter({ owner_email: user?.email }),
-    enabled: !!user?.email
-  });
-
-  useEffect(() => {
-    if (companies.length > 0 && !company) {
-      setCompany(companies[0]);
-    }
-  }, [companies]);
 
   const { data: accommodations = [] } = useQuery({
     queryKey: ['accommodations', company?.id],

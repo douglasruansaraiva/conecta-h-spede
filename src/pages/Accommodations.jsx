@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Button } from "@/components/ui/button";
@@ -35,6 +35,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import AccommodationForm from '@/components/forms/AccommodationForm';
+import CompanyGuard from '@/components/auth/CompanyGuard';
 
 const typeLabels = {
   quarto: 'Quarto',
@@ -65,33 +66,11 @@ const amenityIcons = {
   'Piscina': Waves
 };
 
-export default function Accommodations() {
-  const [user, setUser] = useState(null);
-  const [company, setCompany] = useState(null);
+function AccommodationsContent({ user, company }) {
   const [formOpen, setFormOpen] = useState(false);
   const [editingAccommodation, setEditingAccommodation] = useState(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const queryClient = useQueryClient();
-
-  useEffect(() => {
-    const loadUser = async () => {
-      const userData = await base44.auth.me();
-      setUser(userData);
-    };
-    loadUser();
-  }, []);
-
-  const { data: companies = [] } = useQuery({
-    queryKey: ['companies', user?.email],
-    queryFn: () => base44.entities.Company.filter({ owner_email: user?.email }),
-    enabled: !!user?.email
-  });
-
-  useEffect(() => {
-    if (companies.length > 0 && !company) {
-      setCompany(companies[0]);
-    }
-  }, [companies]);
 
   const { data: accommodations = [], isLoading } = useQuery({
     queryKey: ['accommodations', company?.id],
@@ -283,5 +262,13 @@ export default function Accommodations() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+  );
+}
+
+export default function Accommodations() {
+  return (
+    <CompanyGuard>
+      {({ user, company }) => <AccommodationsContent user={user} company={company} />}
+    </CompanyGuard>
   );
 }

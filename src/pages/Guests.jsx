@@ -1,12 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { format, parseISO } from 'date-fns';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { 
   Plus, 
@@ -38,10 +36,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import CompanyGuard from '@/components/auth/CompanyGuard';
 
-export default function Guests() {
-  const [user, setUser] = useState(null);
-  const [company, setCompany] = useState(null);
+function GuestsContent({ user, company }) {
   const [search, setSearch] = useState('');
   const [formOpen, setFormOpen] = useState(false);
   const [editingGuest, setEditingGuest] = useState(null);
@@ -60,26 +57,6 @@ export default function Guests() {
     notes: ''
   });
   const queryClient = useQueryClient();
-
-  useEffect(() => {
-    const loadUser = async () => {
-      const userData = await base44.auth.me();
-      setUser(userData);
-    };
-    loadUser();
-  }, []);
-
-  const { data: companies = [] } = useQuery({
-    queryKey: ['companies', user?.email],
-    queryFn: () => base44.entities.Company.filter({ owner_email: user?.email }),
-    enabled: !!user?.email
-  });
-
-  useEffect(() => {
-    if (companies.length > 0 && !company) {
-      setCompany(companies[0]);
-    }
-  }, [companies]);
 
   const { data: guests = [], isLoading } = useQuery({
     queryKey: ['guests', company?.id],
@@ -402,5 +379,13 @@ export default function Guests() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+  );
+}
+
+export default function Guests() {
+  return (
+    <CompanyGuard>
+      {({ user, company }) => <GuestsContent user={user} company={company} />}
+    </CompanyGuard>
   );
 }

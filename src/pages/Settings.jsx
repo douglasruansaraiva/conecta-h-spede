@@ -57,7 +57,10 @@ export default function Settings() {
 
   const { data: companies = [] } = useQuery({
     queryKey: ['companies', user?.email],
-    queryFn: () => base44.entities.Company.filter({ owner_email: user?.email }),
+    queryFn: async () => {
+      if (!user?.email) return [];
+      return await base44.entities.Company.filter({ owner_email: user.email });
+    },
     enabled: !!user?.email
   });
 
