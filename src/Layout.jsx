@@ -31,7 +31,6 @@ const navigation = [
   { name: 'Reservas', href: 'Reservations', icon: CalendarDays },
   { name: 'Hóspedes', href: 'Guests', icon: Users },
   { name: 'Financeiro', href: 'Financial', icon: DollarSign },
-  { name: 'Relatórios', href: 'Reports', icon: BarChart3 },
   { name: 'Configurações', href: 'Settings', icon: Settings },
 ];
 
