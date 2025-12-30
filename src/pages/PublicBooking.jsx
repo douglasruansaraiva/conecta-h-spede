@@ -32,6 +32,8 @@ export default function PublicBooking() {
   const [selectedDates, setSelectedDates] = useState(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [showGallery, setShowGallery] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [user, setUser] = useState(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [formData, setFormData] = useState({
@@ -258,7 +260,7 @@ export default function PublicBooking() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-slate-50 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-6">
         <Card className="max-w-md w-full">
           <CardContent className="p-8 text-center">
             <div className="w-16 h-16 bg-gradient-to-br from-[#2C5F5D] to-[#3A7A77] rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
@@ -291,18 +293,18 @@ export default function PublicBooking() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       {/* Header */}
-      <div className="bg-white border-b">
+      <div className="bg-slate-900/50 backdrop-blur-lg border-b border-slate-700">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
           <div className="flex items-center gap-3 sm:gap-4">
             {company.logo_url && (
-              <img src={company.logo_url} alt={company.name} className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg object-cover" />
+              <img src={company.logo_url} alt={company.name} className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg object-cover ring-2 ring-emerald-500/20" />
             )}
             <div>
-              <h1 className="text-lg sm:text-2xl font-bold text-slate-800">{company.name}</h1>
+              <h1 className="text-lg sm:text-2xl font-bold text-white">{company.name}</h1>
               {(company.city || company.state) && (
-                <p className="text-slate-500 flex items-center gap-1">
+                <p className="text-slate-400 flex items-center gap-1">
                   <MapPin className="w-4 h-4" />
                   {[company.city, company.state].filter(Boolean).join(', ')}
                 </p>
@@ -310,7 +312,7 @@ export default function PublicBooking() {
             </div>
           </div>
           {company.description && (
-            <p className="text-slate-600 mt-4">{company.description}</p>
+            <p className="text-slate-300 mt-4">{company.description}</p>
           )}
         </div>
       </div>
@@ -333,49 +335,140 @@ export default function PublicBooking() {
           ))}
         </div>
 
+        {/* Gallery Modal */}
+        {showGallery && selectedAccommodation && (
+          <div className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4">
+            <button
+              onClick={() => setShowGallery(false)}
+              className="absolute top-4 right-4 text-white hover:text-emerald-400 transition-colors"
+            >
+              <X className="w-8 h-8" />
+            </button>
+
+            <div className="max-w-6xl w-full">
+              {/* Gallery */}
+              <div className="relative aspect-video mb-6 rounded-2xl overflow-hidden">
+                <img
+                  src={selectedAccommodation.images?.[currentImageIndex] || ''}
+                  alt={selectedAccommodation.name}
+                  className="w-full h-full object-cover"
+                />
+
+                {selectedAccommodation.images?.length > 1 && (
+                  <>
+                    <button
+                      onClick={() => setCurrentImageIndex(Math.max(0, currentImageIndex - 1))}
+                      disabled={currentImageIndex === 0}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full disabled:opacity-30"
+                    >
+                      <ChevronLeft className="w-6 h-6" />
+                    </button>
+                    <button
+                      onClick={() => setCurrentImageIndex(Math.min(selectedAccommodation.images.length - 1, currentImageIndex + 1))}
+                      disabled={currentImageIndex === selectedAccommodation.images.length - 1}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full disabled:opacity-30"
+                    >
+                      <ChevronRight className="w-6 h-6" />
+                    </button>
+                  </>
+                )}
+              </div>
+
+              {/* Info */}
+              <div className="bg-slate-900/80 backdrop-blur-xl rounded-2xl p-6 border border-slate-700">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <h2 className="text-2xl font-bold text-white mb-2">{selectedAccommodation.name}</h2>
+                    <div className="flex items-center gap-4 text-slate-400">
+                      <span className="flex items-center gap-1">
+                        <Users className="w-4 h-4" />
+                        Até {selectedAccommodation.max_guests} hóspedes
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-3xl font-bold text-emerald-400">
+                      R$ {selectedAccommodation.base_price?.toFixed(2)}
+                    </p>
+                    <p className="text-slate-400">por noite</p>
+                  </div>
+                </div>
+
+                {selectedAccommodation.description && (
+                  <p className="text-slate-300 mb-4">{selectedAccommodation.description}</p>
+                )}
+
+                {selectedAccommodation.amenities?.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    {selectedAccommodation.amenities.map(amenity => (
+                      <Badge key={amenity} className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30">
+                        {amenity}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+
+                <Button 
+                  onClick={() => {
+                    setShowGallery(false);
+                    setStep(2);
+                  }}
+                  className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-lg shadow-emerald-500/20"
+                >
+                  Escolher Datas
+                  <ChevronRight className="w-5 h-5 ml-2" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Step 1: Choose Accommodation */}
         {step === 1 && (
           <div>
-            <h2 className="text-lg sm:text-xl font-semibold text-slate-800 mb-4 sm:mb-6">Escolha sua Acomodação</h2>
+            <h2 className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6">Escolha sua Acomodação</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {accommodations.map(acc => (
                 <Card 
                   key={acc.id} 
-                  className={`cursor-pointer transition-all hover:shadow-lg ${
-                    selectedAccommodation?.id === acc.id ? 'ring-2 ring-emerald-500' : ''
-                  }`}
-                  onClick={() => setSelectedAccommodation(acc)}
+                  className="group cursor-pointer transition-all hover:shadow-2xl hover:shadow-emerald-500/10 bg-slate-800/50 backdrop-blur border-slate-700 overflow-hidden"
+                  onClick={() => {
+                    setSelectedAccommodation(acc);
+                    setCurrentImageIndex(0);
+                    setShowGallery(true);
+                  }}
                 >
-                  <div className="aspect-video relative bg-slate-100">
+                  <div className="aspect-video relative bg-slate-900 overflow-hidden">
                     {acc.images?.[0] ? (
-                      <img src={acc.images[0]} alt={acc.name} className="w-full h-full object-cover" />
+                      <img src={acc.images[0]} alt={acc.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <Home className="w-12 h-12 text-slate-300" />
+                        <Home className="w-12 h-12 text-slate-600" />
                       </div>
                     )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-60" />
                   </div>
                   <CardContent className="p-4">
-                    <h3 className="font-semibold text-lg text-slate-800">{acc.name}</h3>
+                    <h3 className="font-semibold text-lg text-white">{acc.name}</h3>
                     {acc.description && (
-                      <p className="text-sm text-slate-500 mt-1 line-clamp-2">{acc.description}</p>
+                      <p className="text-sm text-slate-400 mt-1 line-clamp-2">{acc.description}</p>
                     )}
                     <div className="flex items-center justify-between mt-4">
-                      <div className="flex items-center gap-1 text-sm text-slate-600">
+                      <div className="flex items-center gap-1 text-sm text-slate-400">
                         <Users className="w-4 h-4" />
                         Até {acc.max_guests} hóspedes
                       </div>
                       <div className="text-right">
-                        <p className="text-lg font-bold text-emerald-600">
+                        <p className="text-lg font-bold text-emerald-400">
                           R$ {acc.base_price?.toFixed(2)}
                         </p>
-                        <p className="text-xs text-slate-400">por noite</p>
+                        <p className="text-xs text-slate-500">por noite</p>
                       </div>
                     </div>
                     {acc.amenities?.length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-3">
-                        {acc.amenities.slice(0, 4).map(amenity => (
-                          <Badge key={amenity} variant="secondary" className="text-xs">
+                        {acc.amenities.slice(0, 3).map(amenity => (
+                          <Badge key={amenity} className="text-xs bg-slate-700/50 text-slate-300 border-slate-600">
                             {amenity}
                           </Badge>
                         ))}
@@ -385,23 +478,13 @@ export default function PublicBooking() {
                 </Card>
               ))}
             </div>
-            <div className="mt-8 flex justify-end">
-              <Button 
-                onClick={() => setStep(2)} 
-                disabled={!selectedAccommodation}
-                className="bg-gradient-to-r from-[#2C5F5D] to-[#3A7A77] hover:from-[#234B49] hover:to-[#2C5F5D] text-white shadow-md"
-              >
-                Continuar
-                <ChevronRight className="w-4 h-4 ml-2" />
-              </Button>
-            </div>
           </div>
         )}
 
         {/* Step 2: Choose Dates */}
         {step === 2 && (
           <div>
-            <h2 className="text-lg sm:text-xl font-semibold text-slate-800 mb-4 sm:mb-6">Selecione as Datas</h2>
+            <h2 className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6">Selecione as Datas</h2>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
               <div className="lg:col-span-2">
                 <CalendarGrid
@@ -413,9 +496,9 @@ export default function PublicBooking() {
                 />
               </div>
               <div>
-                <Card>
+                <Card className="bg-slate-800/50 backdrop-blur border-slate-700">
                   <CardHeader>
-                    <CardTitle className="text-lg">Resumo</CardTitle>
+                    <CardTitle className="text-lg text-white">Resumo</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
@@ -428,8 +511,8 @@ export default function PublicBooking() {
                           />
                         )}
                         <div>
-                          <p className="font-medium text-slate-800">{selectedAccommodation?.name}</p>
-                          <p className="text-sm text-slate-500">
+                          <p className="font-medium text-white">{selectedAccommodation?.name}</p>
+                          <p className="text-sm text-slate-400">
                             R$ {selectedAccommodation?.base_price?.toFixed(2)}/noite
                           </p>
                         </div>
@@ -437,28 +520,28 @@ export default function PublicBooking() {
 
                       {selectedDates && (
                         <>
-                          <div className="border-t pt-4">
+                          <div className="border-t border-slate-700 pt-4">
                             <div className="flex justify-between text-sm mb-2">
-                              <span className="text-slate-600">Check-in</span>
-                              <span className="font-medium">
+                              <span className="text-slate-400">Check-in</span>
+                              <span className="font-medium text-white">
                                 {format(selectedDates.start, "dd 'de' MMM", { locale: ptBR })}
                               </span>
                             </div>
                             <div className="flex justify-between text-sm mb-2">
-                              <span className="text-slate-600">Check-out</span>
-                              <span className="font-medium">
+                              <span className="text-slate-400">Check-out</span>
+                              <span className="font-medium text-white">
                                 {format(selectedDates.end, "dd 'de' MMM", { locale: ptBR })}
                               </span>
                             </div>
                             <div className="flex justify-between text-sm">
-                              <span className="text-slate-600">Noites</span>
-                              <span className="font-medium">{nights}</span>
+                              <span className="text-slate-400">Noites</span>
+                              <span className="font-medium text-white">{nights}</span>
                             </div>
                           </div>
-                          <div className="border-t pt-4">
+                          <div className="border-t border-slate-700 pt-4">
                             <div className="flex justify-between">
-                              <span className="font-semibold text-slate-800">Total</span>
-                              <span className="font-bold text-xl text-emerald-600">
+                              <span className="font-semibold text-white">Total</span>
+                              <span className="font-bold text-xl text-emerald-400">
                                 R$ {calculateTotal().toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                               </span>
                             </div>
@@ -490,14 +573,14 @@ export default function PublicBooking() {
         {/* Step 3: Guest Data */}
         {step === 3 && (
           <div>
-            <h2 className="text-lg sm:text-xl font-semibold text-slate-800 mb-4 sm:mb-6">Seus Dados</h2>
+            <h2 className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6">Seus Dados</h2>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
               <div className="lg:col-span-2">
-                <Card>
+                <Card className="bg-slate-800/50 backdrop-blur border-slate-700">
                   <CardContent className="p-6">
                     <form onSubmit={handleSubmit} className="space-y-4">
                       <div>
-                        <Label>Nome Completo *</Label>
+                        <Label className="text-white">Nome Completo *</Label>
                         <Input
                           value={formData.guest_name}
                           onChange={(e) => setFormData({ ...formData, guest_name: e.target.value })}
@@ -506,7 +589,7 @@ export default function PublicBooking() {
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <Label>Email *</Label>
+                          <Label className="text-white">Email *</Label>
                           <Input
                             type="email"
                             value={formData.guest_email}
@@ -515,7 +598,7 @@ export default function PublicBooking() {
                           />
                         </div>
                         <div>
-                          <Label>Telefone *</Label>
+                          <Label className="text-white">Telefone *</Label>
                           <Input
                             value={formData.guest_phone}
                             onChange={(e) => setFormData({ ...formData, guest_phone: e.target.value })}
@@ -525,7 +608,7 @@ export default function PublicBooking() {
                         </div>
                       </div>
                       <div>
-                        <Label>Número de Hóspedes</Label>
+                        <Label className="text-white">Número de Hóspedes</Label>
                         <Input
                           type="number"
                           min="1"
@@ -535,7 +618,7 @@ export default function PublicBooking() {
                         />
                       </div>
                       <div>
-                        <Label>Observações</Label>
+                        <Label className="text-white">Observações</Label>
                         <Input
                           value={formData.notes}
                           onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
@@ -571,33 +654,33 @@ export default function PublicBooking() {
 
               {/* Summary */}
               <div>
-                <Card>
+                <Card className="bg-slate-800/50 backdrop-blur border-slate-700">
                   <CardHeader>
-                    <CardTitle className="text-lg">Resumo da Reserva</CardTitle>
+                    <CardTitle className="text-lg text-white">Resumo da Reserva</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
                       <div>
-                        <p className="font-medium text-slate-800">{selectedAccommodation?.name}</p>
+                        <p className="font-medium text-white">{selectedAccommodation?.name}</p>
                       </div>
-                      <div className="border-t pt-4 space-y-2">
+                      <div className="border-t border-slate-700 pt-4 space-y-2">
                         <div className="flex justify-between text-sm">
-                          <span className="text-slate-600">Check-in</span>
-                          <span>{format(selectedDates.start, "dd/MM/yyyy")} às {company.check_in_time || '14:00'}</span>
+                          <span className="text-slate-400">Check-in</span>
+                          <span className="text-white">{format(selectedDates.start, "dd/MM/yyyy")} às {company.check_in_time || '14:00'}</span>
                         </div>
                         <div className="flex justify-between text-sm">
-                          <span className="text-slate-600">Check-out</span>
-                          <span>{format(selectedDates.end, "dd/MM/yyyy")} às {company.check_out_time || '12:00'}</span>
+                          <span className="text-slate-400">Check-out</span>
+                          <span className="text-white">{format(selectedDates.end, "dd/MM/yyyy")} às {company.check_out_time || '12:00'}</span>
                         </div>
                         <div className="flex justify-between text-sm">
-                          <span className="text-slate-600">{nights} noite(s)</span>
-                          <span>R$ {calculateTotal().toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                          <span className="text-slate-400">{nights} noite(s)</span>
+                          <span className="text-white">R$ {calculateTotal().toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                         </div>
                       </div>
-                      <div className="border-t pt-4">
+                      <div className="border-t border-slate-700 pt-4">
                         <div className="flex justify-between">
-                          <span className="font-semibold">Total</span>
-                          <span className="font-bold text-xl text-emerald-600">
+                          <span className="font-semibold text-white">Total</span>
+                          <span className="font-bold text-xl text-emerald-400">
                             R$ {calculateTotal().toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                           </span>
                         </div>
@@ -612,17 +695,17 @@ export default function PublicBooking() {
       </div>
 
       {/* Footer */}
-      <div className="bg-white border-t mt-8 sm:mt-12">
+      <div className="bg-slate-900/50 backdrop-blur border-t border-slate-700 mt-8 sm:mt-12">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
-          <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-slate-500">
+          <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-slate-400">
             {company.phone && (
-              <a href={`tel:${company.phone}`} className="flex items-center gap-1 hover:text-emerald-600">
+              <a href={`tel:${company.phone}`} className="flex items-center gap-1 hover:text-emerald-400 transition-colors">
                 <Phone className="w-4 h-4" />
                 {company.phone}
               </a>
             )}
             {company.email && (
-              <a href={`mailto:${company.email}`} className="flex items-center gap-1 hover:text-emerald-600">
+              <a href={`mailto:${company.email}`} className="flex items-center gap-1 hover:text-emerald-400 transition-colors">
                 <Mail className="w-4 h-4" />
                 {company.email}
               </a>
