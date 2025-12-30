@@ -402,43 +402,7 @@ function FinancialContent({ user, company }) {
               />
             </div>
 
-            {/* Chart */}
-            <Card>
-          <CardHeader>
-            <CardTitle>Fluxo de Caixa</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                  <XAxis dataKey="month" stroke="#94a3b8" />
-                  <YAxis stroke="#94a3b8" />
-                  <Tooltip 
-                    formatter={(value) => `R$ ${value.toLocaleString('pt-BR')}`}
-                    contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0' }}
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="receita" 
-                    stackId="1" 
-                    stroke="#10b981" 
-                    fill="#d1fae5" 
-                    name="Receita"
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="despesa" 
-                    stackId="2" 
-                    stroke="#ef4444" 
-                    fill="#fee2e2" 
-                    name="Despesa"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-            </Card>
+
 
             {/* Transactions */}
             <Card>
@@ -577,24 +541,55 @@ function FinancialContent({ user, company }) {
             </div>
 
             {/* Charts */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Receita por Mês</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={revenueByMonth}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip 
-                      formatter={(value) => `R$ ${value.toLocaleString('pt-BR')}`}
-                    />
-                    <Bar dataKey="receita" fill="#2C5F5D" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Revenue by Month */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Receita por Mês</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={revenueByMonth}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis />
+                      <Tooltip 
+                        formatter={(value) => `R$ ${value.toLocaleString('pt-BR')}`}
+                      />
+                      <Bar dataKey="receita" fill="#2C5F5D" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              {/* Reservations by Source */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Reservas por Origem</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={sourceData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {sourceData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </div>
 
             {/* Revenue by Accommodation */}
             <Card>
