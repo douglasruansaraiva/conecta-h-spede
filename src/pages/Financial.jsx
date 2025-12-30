@@ -382,19 +382,19 @@ function FinancialContent({ user, company }) {
           <TabsContent value="transactions" className="space-y-6 mt-6">
 
             {/* Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-          <StatsCard
-            title="Receita do Mês"
-            value={`R$ ${currentIncome.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-            icon={TrendingUp}
-            trend={lastIncome > 0 ? `${((currentIncome - lastIncome) / lastIncome * 100).toFixed(0)}% vs mês anterior` : undefined}
-            trendUp={currentIncome >= lastIncome}
-          />
-          <StatsCard
-            title="Despesas do Mês"
-            value={`R$ ${currentExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-            icon={TrendingDown}
-          />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <StatsCard
+                title="Receita do Mês"
+                value={`R$ ${currentIncome.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+                icon={TrendingUp}
+                trend={lastIncome > 0 ? `${((currentIncome - lastIncome) / lastIncome * 100).toFixed(0)}% vs mês anterior` : undefined}
+                trendUp={currentIncome >= lastIncome}
+              />
+              <StatsCard
+                title="Despesas do Mês"
+                value={`R$ ${currentExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+                icon={TrendingDown}
+              />
               <StatsCard
                 title="Lucro do Mês"
                 value={`R$ ${(currentIncome - currentExpenses).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
@@ -402,7 +402,43 @@ function FinancialContent({ user, company }) {
               />
             </div>
 
-
+            {/* Chart */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Fluxo de Caixa</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={chartData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis dataKey="month" stroke="#94a3b8" />
+                      <YAxis stroke="#94a3b8" />
+                      <Tooltip 
+                        formatter={(value) => `R$ ${value.toLocaleString('pt-BR')}`}
+                        contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                      />
+                      <Area 
+                        type="monotone" 
+                        dataKey="receita" 
+                        stackId="1" 
+                        stroke="#10b981" 
+                        fill="#d1fae5" 
+                        name="Receita"
+                      />
+                      <Area 
+                        type="monotone" 
+                        dataKey="despesa" 
+                        stackId="2" 
+                        stroke="#ef4444" 
+                        fill="#fee2e2" 
+                        name="Despesa"
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Transactions */}
             <Card>
