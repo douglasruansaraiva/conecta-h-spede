@@ -32,6 +32,8 @@ export default function PublicBooking() {
   const [selectedDates, setSelectedDates] = useState(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [user, setUser] = useState(null);
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const [formData, setFormData] = useState({
     guest_name: '',
     guest_email: '',
@@ -42,6 +44,30 @@ export default function PublicBooking() {
 
   const urlParams = new URLSearchParams(window.location.search);
   const companySlug = urlParams.get('c');
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const isAuth = await base44.auth.isAuthenticated();
+        if (!isAuth) {
+          base44.auth.redirectToLogin(window.location.href);
+          return;
+        }
+        const userData = await base44.auth.me();
+        setUser(userData);
+        setFormData(prev => ({
+          ...prev,
+          guest_name: userData.full_name || '',
+          guest_email: userData.email || ''
+        }));
+      } catch (error) {
+        base44.auth.redirectToLogin(window.location.href);
+      } finally {
+        setCheckingAuth(false);
+      }
+    };
+    checkAuth();
+  }, []);
 
   const { data: companies = [], isLoading: loadingCompany, error: companyError } = useQuery({
     queryKey: ['company-public', companySlug],
@@ -126,7 +152,7 @@ export default function PublicBooking() {
     e.preventDefault();
     setLoading(true);
 
-    await base44.asServiceRole.entities.Reservation.create({
+    await base44.entities.Reservation.create({
       company_id: company.id,
       accommodation_id: selectedAccommodation.id,
       check_in: format(selectedDates.start, 'yyyy-MM-dd'),
@@ -144,6 +170,14 @@ export default function PublicBooking() {
     setLoading(false);
     setSuccess(true);
   };
+
+  if (checkingAuth || !user) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-emerald-600 animate-spin" />
+      </div>
+    );
+  }
 
   if (!companySlug) {
     return (
