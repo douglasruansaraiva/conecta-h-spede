@@ -1,0 +1,295 @@
+import React, { useState, useEffect } from 'react';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { X, Plus, Upload, Loader2 } from "lucide-react";
+import { base44 } from "@/api/base44Client";
+
+const AMENITIES = [
+  'WiFi', 'Ar Condicionado', 'TV', 'Frigobar', 'Cofre', 'Secador', 
+  'Varanda', 'Vista Mar', 'Banheira', 'Cozinha', 'Churrasqueira', 'Piscina Privativa'
+];
+
+export default function AccommodationForm({ open, onClose, accommodation, companyId, onSave }) {
+  const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    type: 'quarto',
+    description: '',
+    max_guests: 2,
+    base_price: '',
+    weekend_price: '',
+    min_nights: 1,
+    amenities: [],
+    images: [],
+    ical_import_url: '',
+    status: 'active'
+  });
+
+  useEffect(() => {
+    if (accommodation) {
+      setFormData({
+        name: accommodation.name || '',
+        type: accommodation.type || 'quarto',
+        description: accommodation.description || '',
+        max_guests: accommodation.max_guests || 2,
+        base_price: accommodation.base_price || '',
+        weekend_price: accommodation.weekend_price || '',
+        min_nights: accommodation.min_nights || 1,
+        amenities: accommodation.amenities || [],
+        images: accommodation.images || [],
+        ical_import_url: accommodation.ical_import_url || '',
+        status: accommodation.status || 'active'
+      });
+    } else {
+      setFormData({
+        name: '',
+        type: 'quarto',
+        description: '',
+        max_guests: 2,
+        base_price: '',
+        weekend_price: '',
+        min_nights: 1,
+        amenities: [],
+        images: [],
+        ical_import_url: '',
+        status: 'active'
+      });
+    }
+  }, [accommodation, open]);
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploading(true);
+    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    setFormData(prev => ({
+      ...prev,
+      images: [...prev.images, file_url]
+    }));
+    setUploading(false);
+  };
+
+  const removeImage = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index)
+    }));
+  };
+
+  const toggleAmenity = (amenity) => {
+    setFormData(prev => ({
+      ...prev,
+      amenities: prev.amenities.includes(amenity)
+        ? prev.amenities.filter(a => a !== amenity)
+        : [...prev.amenities, amenity]
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    const data = {
+      ...formData,
+      company_id: companyId,
+      base_price: parseFloat(formData.base_price) || 0,
+      weekend_price: parseFloat(formData.weekend_price) || parseFloat(formData.base_price) || 0,
+      max_guests: parseInt(formData.max_guests) || 2,
+      min_nights: parseInt(formData.min_nights) || 1
+    };
+
+    if (accommodation) {
+      await base44.entities.Accommodation.update(accommodation.id, data);
+    } else {
+      await base44.entities.Accommodation.create(data);
+    }
+
+    setLoading(false);
+    onSave();
+    onClose();
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{accommodation ? 'Editar Acomodação' : 'Nova Acomodação'}</DialogTitle>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2 sm:col-span-1">
+              <Label>Nome *</Label>
+              <Input
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="Suíte Master"
+                required
+              />
+            </div>
+            <div className="col-span-2 sm:col-span-1">
+              <Label>Tipo</Label>
+              <Select value={formData.type} onValueChange={(v) => setFormData({ ...formData, type: v })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="quarto">Quarto</SelectItem>
+                  <SelectItem value="suite">Suíte</SelectItem>
+                  <SelectItem value="chale">Chalé</SelectItem>
+                  <SelectItem value="apartamento">Apartamento</SelectItem>
+                  <SelectItem value="casa">Casa</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div>
+            <Label>Descrição</Label>
+            <Textarea
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              placeholder="Descreva a acomodação..."
+              rows={3}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div>
+              <Label>Preço (diária) *</Label>
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                value={formData.base_price}
+                onChange={(e) => setFormData({ ...formData, base_price: e.target.value })}
+                placeholder="200.00"
+                required
+              />
+            </div>
+            <div>
+              <Label>Preço (fim de semana)</Label>
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                value={formData.weekend_price}
+                onChange={(e) => setFormData({ ...formData, weekend_price: e.target.value })}
+                placeholder="250.00"
+              />
+            </div>
+            <div>
+              <Label>Máx. hóspedes</Label>
+              <Input
+                type="number"
+                min="1"
+                value={formData.max_guests}
+                onChange={(e) => setFormData({ ...formData, max_guests: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label>Mín. noites</Label>
+              <Input
+                type="number"
+                min="1"
+                value={formData.min_nights}
+                onChange={(e) => setFormData({ ...formData, min_nights: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div>
+            <Label className="mb-3 block">Comodidades</Label>
+            <div className="flex flex-wrap gap-2">
+              {AMENITIES.map(amenity => (
+                <button
+                  key={amenity}
+                  type="button"
+                  onClick={() => toggleAmenity(amenity)}
+                  className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                    formData.amenities.includes(amenity)
+                      ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  } border`}
+                >
+                  {amenity}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <Label className="mb-3 block">Imagens</Label>
+            <div className="flex flex-wrap gap-3">
+              {formData.images.map((img, i) => (
+                <div key={i} className="relative w-24 h-24 rounded-lg overflow-hidden group">
+                  <img src={img} alt="" className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => removeImage(i)}
+                    className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                  >
+                    <X className="w-5 h-5 text-white" />
+                  </button>
+                </div>
+              ))}
+              <label className="w-24 h-24 rounded-lg border-2 border-dashed border-slate-300 hover:border-emerald-400 flex flex-col items-center justify-center cursor-pointer transition-colors">
+                {uploading ? (
+                  <Loader2 className="w-6 h-6 text-slate-400 animate-spin" />
+                ) : (
+                  <>
+                    <Upload className="w-6 h-6 text-slate-400" />
+                    <span className="text-xs text-slate-500 mt-1">Upload</span>
+                  </>
+                )}
+                <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+              </label>
+            </div>
+          </div>
+
+          <div>
+            <Label>URL iCal (importar de Airbnb, Booking, etc)</Label>
+            <Input
+              value={formData.ical_import_url}
+              onChange={(e) => setFormData({ ...formData, ical_import_url: e.target.value })}
+              placeholder="https://..."
+            />
+            <p className="text-xs text-slate-500 mt-1">
+              Cole aqui a URL do calendário iCal para sincronizar reservas externas
+            </p>
+          </div>
+
+          <div>
+            <Label>Status</Label>
+            <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">Ativo</SelectItem>
+                <SelectItem value="inactive">Inativo</SelectItem>
+                <SelectItem value="maintenance">Em Manutenção</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={loading} className="bg-emerald-600 hover:bg-emerald-700">
+              {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              {accommodation ? 'Salvar' : 'Criar Acomodação'}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
