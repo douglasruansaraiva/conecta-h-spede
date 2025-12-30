@@ -382,7 +382,7 @@ function FinancialContent({ user, company }) {
           <TabsContent value="transactions" className="space-y-6 mt-6">
 
             {/* Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           <StatsCard
             title="Receita do Mês"
             value={`R$ ${currentIncome.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
