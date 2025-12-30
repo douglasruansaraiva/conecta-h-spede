@@ -22,7 +22,8 @@ import {
   Check,
   Loader2,
   Calendar,
-  Home
+  Home,
+  X
 } from "lucide-react";
 import CalendarGrid from '@/components/reservations/CalendarGrid';
 
