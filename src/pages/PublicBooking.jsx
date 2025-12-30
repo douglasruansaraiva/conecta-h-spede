@@ -47,12 +47,7 @@ export default function PublicBooking() {
     queryKey: ['company-public', companySlug],
     queryFn: async () => {
       if (!companySlug) return [];
-      try {
-        return await base44.entities.Company.filter({ slug: companySlug });
-      } catch (error) {
-        console.error('Error loading company:', error);
-        return [];
-      }
+      return await base44.asServiceRole.entities.Company.filter({ slug: companySlug });
     },
     enabled: !!companySlug,
     retry: 1
@@ -64,7 +59,7 @@ export default function PublicBooking() {
     queryKey: ['accommodations-public', company?.id],
     queryFn: async () => {
       if (!company?.id) return [];
-      return await base44.entities.Accommodation.filter({ company_id: company.id, status: 'active' });
+      return await base44.asServiceRole.entities.Accommodation.filter({ company_id: company.id, status: 'active' });
     },
     enabled: !!company?.id
   });
@@ -73,7 +68,7 @@ export default function PublicBooking() {
     queryKey: ['reservations-public', company?.id],
     queryFn: async () => {
       if (!company?.id) return [];
-      return await base44.entities.Reservation.filter({ company_id: company.id });
+      return await base44.asServiceRole.entities.Reservation.filter({ company_id: company.id });
     },
     enabled: !!company?.id
   });
@@ -82,7 +77,7 @@ export default function PublicBooking() {
     queryKey: ['blocked-public', company?.id],
     queryFn: async () => {
       if (!company?.id) return [];
-      return await base44.entities.BlockedDate.filter({ company_id: company.id });
+      return await base44.asServiceRole.entities.BlockedDate.filter({ company_id: company.id });
     },
     enabled: !!company?.id
   });
@@ -131,7 +126,7 @@ export default function PublicBooking() {
     e.preventDefault();
     setLoading(true);
 
-    await base44.entities.Reservation.create({
+    await base44.asServiceRole.entities.Reservation.create({
       company_id: company.id,
       accommodation_id: selectedAccommodation.id,
       check_in: format(selectedDates.start, 'yyyy-MM-dd'),
