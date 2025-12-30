@@ -158,29 +158,32 @@ export default function PublicBooking() {
     setLoading(true);
 
     try {
-      // Find or create guest
-      const existingGuests = await base44.entities.Guest.filter({ 
-        company_id: company.id, 
-        email: formData.guest_email 
-      });
+      // Find or create guest - always create/update if email provided
+      let guestId = null;
+      
+      if (formData.guest_email) {
+        const existingGuests = await base44.entities.Guest.filter({ 
+          company_id: company.id, 
+          email: formData.guest_email 
+        });
 
-      let guestId;
-      if (existingGuests.length > 0) {
-        guestId = existingGuests[0].id;
-        // Update guest info
-        await base44.entities.Guest.update(guestId, {
-          name: formData.guest_name,
-          phone: formData.guest_phone
-        });
-      } else {
-        // Create new guest
-        const newGuest = await base44.entities.Guest.create({
-          company_id: company.id,
-          name: formData.guest_name,
-          email: formData.guest_email,
-          phone: formData.guest_phone
-        });
-        guestId = newGuest.id;
+        if (existingGuests.length > 0) {
+          guestId = existingGuests[0].id;
+          // Update guest info
+          await base44.entities.Guest.update(guestId, {
+            name: formData.guest_name,
+            phone: formData.guest_phone
+          });
+        } else {
+          // Create new guest
+          const newGuest = await base44.entities.Guest.create({
+            company_id: company.id,
+            name: formData.guest_name,
+            email: formData.guest_email,
+            phone: formData.guest_phone
+          });
+          guestId = newGuest.id;
+        }
       }
 
       // Create reservation
