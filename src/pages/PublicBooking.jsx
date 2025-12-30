@@ -157,9 +157,35 @@ export default function PublicBooking() {
     e.preventDefault();
     setLoading(true);
 
+    // Find or create guest
+    const existingGuests = await base44.entities.Guest.filter({ 
+      company_id: company.id, 
+      email: formData.guest_email 
+    });
+
+    let guestId;
+    if (existingGuests.length > 0) {
+      guestId = existingGuests[0].id;
+      // Update guest info
+      await base44.entities.Guest.update(guestId, {
+        name: formData.guest_name,
+        phone: formData.guest_phone
+      });
+    } else {
+      // Create new guest
+      const newGuest = await base44.entities.Guest.create({
+        company_id: company.id,
+        name: formData.guest_name,
+        email: formData.guest_email,
+        phone: formData.guest_phone
+      });
+      guestId = newGuest.id;
+    }
+
     await base44.entities.Reservation.create({
       company_id: company.id,
       accommodation_id: selectedAccommodation.id,
+      guest_id: guestId,
       check_in: format(selectedDates.start, 'yyyy-MM-dd'),
       check_out: format(selectedDates.end, 'yyyy-MM-dd'),
       guest_name: formData.guest_name,
