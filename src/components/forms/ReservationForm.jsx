@@ -190,7 +190,12 @@ export default function ReservationForm({
 
     // Find or create guest if email is provided
     let guestId = reservation?.guest_id;
-    if (formData.guest_email) {
+    
+    if (guestMode === 'existing' && selectedGuestId) {
+      // Use selected existing guest
+      guestId = selectedGuestId;
+    } else if (formData.guest_email) {
+      // Check if guest already exists
       const existingGuests = await base44.entities.Guest.filter({ 
         company_id: companyId, 
         email: formData.guest_email 
@@ -204,7 +209,7 @@ export default function ReservationForm({
           phone: formData.guest_phone
         });
       } else {
-        // Create new guest
+        // Create new guest only if doesn't exist
         const newGuest = await base44.entities.Guest.create({
           company_id: companyId,
           name: formData.guest_name,
