@@ -103,19 +103,19 @@ function DashboardContent({ user, company }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      <div className="max-w-7xl mx-auto p-6">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-slate-800">{company.name}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-800">{company.name}</h1>
             <p className="text-slate-500">
               {format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })}
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
             {bookingUrl && (
               <div className="flex items-center gap-2 bg-white rounded-lg border border-slate-200 px-3 py-2">
-                <span className="text-sm text-slate-600 truncate max-w-[200px]">{bookingUrl}</span>
+                <span className="text-xs sm:text-sm text-slate-600 truncate max-w-[150px] sm:max-w-[200px]">{bookingUrl}</span>
                 <Button size="icon" variant="ghost" className="h-8 w-8" onClick={copyBookingUrl}>
                   {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
                 </Button>
@@ -126,8 +126,8 @@ function DashboardContent({ user, company }) {
                 </a>
               </div>
             )}
-            <Link to={createPageUrl('Reservations')}>
-              <Button className="bg-emerald-600 hover:bg-emerald-700">
+            <Link to={createPageUrl('Reservations')} className="w-full sm:w-auto">
+              <Button className="bg-emerald-600 hover:bg-emerald-700 w-full">
                 <Plus className="w-4 h-4 mr-2" />
                 Nova Reserva
               </Button>

@@ -94,16 +94,16 @@ function ReservationsContent({ user, company }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      <div className="max-w-7xl mx-auto p-6">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-slate-800">Reservas</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-800">Reservas</h1>
             <p className="text-slate-500">Gerencie todas as reservas</p>
           </div>
           <Button 
             onClick={() => setFormOpen(true)}
-            className="bg-emerald-600 hover:bg-emerald-700"
+            className="bg-emerald-600 hover:bg-emerald-700 w-full sm:w-auto"
           >
             <Plus className="w-4 h-4 mr-2" />
             Nova Reserva

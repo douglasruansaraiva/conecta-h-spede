@@ -204,11 +204,11 @@ function FinancialContent({ user, company }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      <div className="max-w-7xl mx-auto p-6">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-slate-800">Financeiro</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-800">Financeiro</h1>
             <p className="text-slate-500">Controle de receitas e despesas</p>
           </div>
           <Button 
@@ -217,7 +217,7 @@ function FinancialContent({ user, company }) {
               setEditingTransaction(null);
               setFormOpen(true);
             }}
-            className="bg-emerald-600 hover:bg-emerald-700"
+            className="bg-emerald-600 hover:bg-emerald-700 w-full sm:w-auto"
           >
             <Plus className="w-4 h-4 mr-2" />
             Nova Transação
@@ -225,7 +225,7 @@ function FinancialContent({ user, company }) {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 sm:mb-8">
           <StatsCard
             title="Receita do Mês"
             value={`R$ ${currentIncome.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
@@ -246,7 +246,7 @@ function FinancialContent({ user, company }) {
         </div>
 
         {/* Chart */}
-        <Card className="mb-8">
+        <Card className="mb-6 sm:mb-8">
           <CardHeader>
             <CardTitle>Fluxo de Caixa</CardTitle>
           </CardHeader>
@@ -305,9 +305,9 @@ function FinancialContent({ user, company }) {
                 filteredTransactions.map(transaction => (
                   <div 
                     key={transaction.id}
-                    className="flex items-center justify-between p-4 bg-white rounded-lg border border-slate-200 hover:border-slate-300 transition-colors"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 p-4 bg-white rounded-lg border border-slate-200 hover:border-slate-300 transition-colors"
                   >
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3 sm:gap-4 flex-1">
                       <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
                         transaction.type === 'income' 
                           ? 'bg-emerald-100' 
@@ -332,14 +332,14 @@ function FinancialContent({ user, company }) {
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <span className={`font-semibold ${
+                    <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4">
+                      <span className={`font-semibold text-sm sm:text-base ${
                         transaction.type === 'income' ? 'text-emerald-600' : 'text-red-600'
                       }`}>
                         {transaction.type === 'income' ? '+' : '-'}
                         R$ {(transaction.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </span>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1 flex-shrink-0">
                         <Button 
                           variant="ghost" 
                           size="icon" 
