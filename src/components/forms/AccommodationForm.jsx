@@ -18,6 +18,7 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [icalFileInput, setIcalFileInput] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     type: 'quarto',
@@ -93,13 +94,18 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
     }));
   };
 
-  const syncIcal = async () => {
-    if (!formData.ical_import_url) return;
+  const handleIcalFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    if (!accommodation) {
+      toast.error('Salve a acomodação primeiro antes de importar o iCal');
+      return;
+    }
     
     setSyncing(true);
     try {
-      const response = await fetch(formData.ical_import_url);
-      const icalData = await response.text();
+      const icalData = await file.text();
       
       // Parse iCal data
       const events = [];
@@ -134,8 +140,7 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
         }
       }
 
-      // Create blocked dates if accommodation exists
-      if (accommodation && events.length > 0) {
+      if (events.length > 0) {
         // Delete existing ical blocks for this accommodation
         const existingBlocks = await base44.entities.BlockedDate.filter({ 
           company_id: companyId,
@@ -154,21 +159,22 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
             accommodation_id: accommodation.id,
             start_date: event.start,
             end_date: event.end,
-            reason: event.summary || 'Reserva iCal',
+            reason: event.summary || 'Reserva externa',
             source: 'ical_import'
           });
         }
 
-        toast.success(`${events.length} datas bloqueadas importadas do iCal`);
+        toast.success(`${events.length} datas bloqueadas importadas!`);
         onSave();
       } else {
-        toast.info(`${events.length} eventos encontrados. Salve a acomodação primeiro para sincronizar.`);
+        toast.warning('Nenhum evento encontrado no arquivo');
       }
     } catch (error) {
-      console.error('Erro ao sincronizar iCal:', error);
-      toast.error('Erro ao sincronizar iCal. Verifique a URL.');
+      console.error('Erro ao importar iCal:', error);
+      toast.error('Erro ao processar arquivo. Verifique se é um arquivo iCal válido.');
     }
     setSyncing(false);
+    if (icalFileInput) icalFileInput.value = '';
   };
 
   const handleSubmit = async (e) => {
@@ -334,32 +340,48 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
           </div>
 
           <div>
-            <Label>URL iCal (importar de Airbnb, Booking, etc)</Label>
-            <div className="flex gap-2">
+            <Label>Sincronizar iCal (Airbnb, Booking, etc)</Label>
+            <div className="space-y-2">
               <Input
                 value={formData.ical_import_url}
                 onChange={(e) => setFormData({ ...formData, ical_import_url: e.target.value })}
-                placeholder="https://..."
-                className="flex-1"
+                placeholder="Cole a URL do iCal aqui (opcional)"
               />
-              {formData.ical_import_url && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={syncIcal}
-                  disabled={syncing}
-                >
-                  {syncing ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <RefreshCw className="w-4 h-4" />
-                  )}
-                </Button>
-              )}
+              <div className="flex items-center gap-2">
+                <label className="flex-1">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={syncing || !accommodation}
+                    className="w-full"
+                    onClick={() => document.getElementById('ical-file-input').click()}
+                  >
+                    {syncing ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                        Importando...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-4 h-4 mr-2" />
+                        Importar arquivo .ics
+                      </>
+                    )}
+                  </Button>
+                  <input
+                    id="ical-file-input"
+                    type="file"
+                    accept=".ics,.ical"
+                    className="hidden"
+                    onChange={handleIcalFileUpload}
+                    ref={setIcalFileInput}
+                  />
+                </label>
+              </div>
+              <p className="text-xs text-slate-500">
+                Baixe o arquivo .ics do Airbnb/Booking e faça upload aqui para bloquear datas automaticamente
+              </p>
             </div>
-            <p className="text-xs text-slate-500 mt-1">
-              Cole a URL do iCal e clique em sincronizar para importar datas bloqueadas
-            </p>
           </div>
 
           <div>
