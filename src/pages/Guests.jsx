@@ -131,11 +131,11 @@ function GuestsContent({ user, company }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      <div className="max-w-7xl mx-auto p-6">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-slate-800">Hóspedes</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-800">Hóspedes</h1>
             <p className="text-slate-500">Base de dados de hóspedes</p>
           </div>
           <Button 
@@ -155,7 +155,7 @@ function GuestsContent({ user, company }) {
               });
               setFormOpen(true);
             }}
-            className="bg-emerald-600 hover:bg-emerald-700"
+            className="bg-gradient-to-r from-[#2C5F5D] to-[#3A7A77] hover:from-[#234B49] hover:to-[#2C5F5D] text-white w-full sm:w-auto shadow-md"
           >
             <Plus className="w-4 h-4 mr-2" />
             Novo Hóspede
@@ -191,8 +191,8 @@ function GuestsContent({ user, company }) {
                 <CardContent className="p-5">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-100 to-emerald-200 flex items-center justify-center">
-                        <span className="text-lg font-bold text-emerald-700">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#2C5F5D] to-[#3A7A77] flex items-center justify-center shadow-sm">
+                        <span className="text-lg font-bold text-white">
                           {guest.name?.charAt(0)?.toUpperCase() || '?'}
                         </span>
                       </div>
@@ -352,7 +352,7 @@ function GuestsContent({ user, company }) {
               <Button type="button" variant="outline" onClick={() => setFormOpen(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={loading} className="bg-emerald-600 hover:bg-emerald-700">
+              <Button type="submit" disabled={loading} className="bg-gradient-to-r from-[#2C5F5D] to-[#3A7A77] hover:from-[#234B49] hover:to-[#2C5F5D] text-white shadow-md">
                 {loading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
                 {editingGuest ? 'Salvar' : 'Cadastrar'}
               </Button>
