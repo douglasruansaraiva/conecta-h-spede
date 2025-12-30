@@ -458,6 +458,33 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
             </p>
           </div>
 
+          {accommodation && (
+            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+              <Label className="mb-2 block text-emerald-800">Exportar Calendário (para VRBO, Booking, etc)</Label>
+              <div className="flex gap-2">
+                <Input
+                  readOnly
+                  value={`${window.location.origin}/ExportCalendar?accommodation_id=${accommodation.id}&company_id=${companyId}`}
+                  className="flex-1 text-xs bg-white"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${window.location.origin}/ExportCalendar?accommodation_id=${accommodation.id}&company_id=${companyId}`);
+                    toast.success('URL copiada!');
+                  }}
+                >
+                  Copiar
+                </Button>
+              </div>
+              <p className="text-xs text-emerald-700 mt-2">
+                Use essa URL para sincronizar este calendário em outras plataformas (Airbnb, Booking, VRBO, etc)
+              </p>
+            </div>
+          )}
+
           <div>
             <Label>Status</Label>
             <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
