@@ -43,10 +43,19 @@ export default function PublicBooking() {
   const urlParams = new URLSearchParams(window.location.search);
   const companySlug = urlParams.get('c');
 
-  const { data: companies = [], isLoading: loadingCompany } = useQuery({
+  const { data: companies = [], isLoading: loadingCompany, error: companyError } = useQuery({
     queryKey: ['company-public', companySlug],
-    queryFn: () => base44.entities.Company.filter({ slug: companySlug }),
-    enabled: !!companySlug
+    queryFn: async () => {
+      if (!companySlug) return [];
+      try {
+        return await base44.entities.Company.filter({ slug: companySlug });
+      } catch (error) {
+        console.error('Error loading company:', error);
+        return [];
+      }
+    },
+    enabled: !!companySlug,
+    retry: 1
   });
 
   const company = companies[0];
