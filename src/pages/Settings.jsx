@@ -34,6 +34,7 @@ export default function Settings() {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [loadingUser, setLoadingUser] = useState(true);
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
@@ -64,6 +65,8 @@ export default function Settings() {
         setUser(userData);
       } catch (error) {
         console.error('Erro ao carregar usuário:', error);
+      } finally {
+        setLoadingUser(false);
       }
     };
     loadUser();
@@ -169,6 +172,14 @@ export default function Settings() {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  if (loadingUser) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-[#2C5F5D] animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
