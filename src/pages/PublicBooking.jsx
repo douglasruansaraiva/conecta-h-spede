@@ -50,7 +50,9 @@ export default function PublicBooking() {
       try {
         const isAuth = await base44.auth.isAuthenticated();
         if (!isAuth) {
-          base44.auth.redirectToLogin(window.location.href);
+          const baseUrl = window.location.origin + window.location.pathname;
+          const targetUrl = companySlug ? `${baseUrl}?c=${companySlug}` : baseUrl;
+          base44.auth.redirectToLogin(targetUrl);
           return;
         }
         const userData = await base44.auth.me();
@@ -61,13 +63,15 @@ export default function PublicBooking() {
           guest_email: userData.email || ''
         }));
       } catch (error) {
-        base44.auth.redirectToLogin(window.location.href);
+        const baseUrl = window.location.origin + window.location.pathname;
+        const targetUrl = companySlug ? `${baseUrl}?c=${companySlug}` : baseUrl;
+        base44.auth.redirectToLogin(targetUrl);
       } finally {
         setCheckingAuth(false);
       }
     };
     checkAuth();
-  }, []);
+  }, [companySlug]);
 
   const { data: companies = [], isLoading: loadingCompany, error: companyError } = useQuery({
     queryKey: ['company-public', companySlug],
