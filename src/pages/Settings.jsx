@@ -167,25 +167,28 @@ export default function Settings() {
 
         <form onSubmit={handleSubmit}>
           <Tabs defaultValue="company" className="space-y-6">
-            <TabsList className="bg-white border">
-              <TabsTrigger value="company">
-                <Building2 className="w-4 h-4 mr-2" />
-                Empresa
+            <TabsList className="bg-white border flex-wrap h-auto gap-1 p-1">
+              <TabsTrigger value="company" className="text-xs sm:text-sm">
+                <Building2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Empresa</span>
+                <span className="sm:hidden">Info</span>
               </TabsTrigger>
-              <TabsTrigger value="booking">
-                <LinkIcon className="w-4 h-4 mr-2" />
-                Reservas Online
+              <TabsTrigger value="booking" className="text-xs sm:text-sm">
+                <LinkIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Reservas Online</span>
+                <span className="sm:hidden">Reservas</span>
               </TabsTrigger>
-              <TabsTrigger value="seasonal">
-                <Calendar className="w-4 h-4 mr-2" />
-                Temporadas
+              <TabsTrigger value="seasonal" className="text-xs sm:text-sm">
+                <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Temporadas</span>
+                <span className="sm:hidden">Preços</span>
               </TabsTrigger>
-              <TabsTrigger value="policies">
-                <FileText className="w-4 h-4 mr-2" />
+              <TabsTrigger value="policies" className="text-xs sm:text-sm">
+                <FileText className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                 Políticas
               </TabsTrigger>
-              <TabsTrigger value="marketing">
-                <Megaphone className="w-4 h-4 mr-2" />
+              <TabsTrigger value="marketing" className="text-xs sm:text-sm">
+                <Megaphone className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                 Marketing
               </TabsTrigger>
             </TabsList>
