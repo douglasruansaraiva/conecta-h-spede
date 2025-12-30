@@ -120,6 +120,15 @@ function FinancialContent({ user, company }) {
     enabled: !!company?.id
   });
 
+  const { data: blockedDates = [] } = useQuery({
+    queryKey: ['blocked-dates', company?.id],
+    queryFn: async () => {
+      if (!company?.id) return [];
+      return await base44.entities.BlockedDate.filter({ company_id: company.id, source: 'ical_import' });
+    },
+    enabled: !!company?.id
+  });
+
   // Calculate stats
   const currentMonth = new Date();
   const lastMonth = subMonths(currentMonth, 1);
@@ -197,6 +206,7 @@ function FinancialContent({ user, company }) {
     };
   }).sort((a, b) => b.receita - a.receita);
 
+  // Count reservations by source including external calendars
   const reservationsBySource = reservations
     .filter(r => r.status !== 'cancelled')
     .reduce((acc, r) => {
@@ -204,6 +214,22 @@ function FinancialContent({ user, company }) {
       acc[source] = (acc[source] || 0) + 1;
       return acc;
     }, {});
+
+  // Add blocked dates from external calendars
+  blockedDates.forEach(block => {
+    if (block.reason) {
+      const reason = block.reason.toLowerCase();
+      if (reason.includes('airbnb')) {
+        reservationsBySource['airbnb'] = (reservationsBySource['airbnb'] || 0) + 1;
+      } else if (reason.includes('booking')) {
+        reservationsBySource['booking'] = (reservationsBySource['booking'] || 0) + 1;
+      } else if (reason.includes('vrbo')) {
+        reservationsBySource['vrbo'] = (reservationsBySource['vrbo'] || 0) + 1;
+      } else {
+        reservationsBySource['other'] = (reservationsBySource['other'] || 0) + 1;
+      }
+    }
+  });
 
   const sourceLabels = {
     direct: 'Direta',
@@ -226,7 +252,7 @@ function FinancialContent({ user, company }) {
     .filter(t => t.type === 'expense' && t.status === 'completed')
     .reduce((sum, t) => sum + (t.amount || 0), 0);
 
-  const totalReservations = reservations.filter(r => r.status !== 'cancelled').length;
+  const totalReservations = reservations.filter(r => r.status !== 'cancelled').length + blockedDates.length;
   const avgReservationValue = totalReservations > 0 ? totalRevenue / totalReservations : 0;
 
   const COLORS = ['#2C5F5D', '#10b981', '#3b82f6', '#f59e0b', '#ef4444'];
