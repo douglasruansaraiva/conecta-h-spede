@@ -31,16 +31,15 @@ export default function CalendarGrid({
   }, [currentMonth]);
 
   const getDateStatus = (date) => {
-    const dateStr = format(date, 'yyyy-MM-dd');
-    
-    // Check reservations
+    // Check reservations - exclude cancelled
     const reservation = reservations.find(r => {
+      if (r.status === 'cancelled') return false;
       if (accommodationId && r.accommodation_id !== accommodationId) return false;
       const checkIn = parseISO(r.check_in);
       const checkOut = parseISO(r.check_out);
-      return isWithinInterval(date, { start: checkIn, end: checkOut }) || 
-             isSameDay(date, checkIn) || 
-             isSameDay(date, checkOut);
+      // Check-out date is available for new check-in
+      if (isSameDay(date, checkOut)) return false;
+      return (isWithinInterval(date, { start: checkIn, end: checkOut }) || isSameDay(date, checkIn));
     });
 
     if (reservation) {
@@ -52,9 +51,7 @@ export default function CalendarGrid({
       if (accommodationId && b.accommodation_id !== accommodationId) return false;
       const start = parseISO(b.start_date);
       const end = parseISO(b.end_date);
-      return isWithinInterval(date, { start, end }) || 
-             isSameDay(date, start) || 
-             isSameDay(date, end);
+      return (isWithinInterval(date, { start, end }) || isSameDay(date, start) || isSameDay(date, end));
     });
 
     if (blocked) {
