@@ -134,7 +134,7 @@ export default function PaymentForm({
             <Button type="button" variant="outline" onClick={onClose}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={loading} className="bg-emerald-600 hover:bg-emerald-700">
+            <Button type="submit" disabled={loading} className="bg-gradient-to-r from-[#2C5F5D] to-[#3A7A77] hover:from-[#234B49] hover:to-[#2C5F5D] text-white shadow-md">
               {loading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
               Registrar Pagamento
             </Button>

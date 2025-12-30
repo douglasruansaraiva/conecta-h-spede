@@ -103,7 +103,7 @@ function ReservationsContent({ user, company }) {
           </div>
           <Button 
             onClick={() => setFormOpen(true)}
-            className="bg-emerald-600 hover:bg-emerald-700 w-full sm:w-auto"
+            className="bg-gradient-to-r from-[#2C5F5D] to-[#3A7A77] hover:from-[#234B49] hover:to-[#2C5F5D] text-white w-full sm:w-auto shadow-md"
           >
             <Plus className="w-4 h-4 mr-2" />
             Nova Reserva
@@ -136,7 +136,7 @@ function ReservationsContent({ user, company }) {
               variant={view === 'list' ? 'default' : 'ghost'}
               size="icon"
               onClick={() => setView('list')}
-              className={view === 'list' ? 'bg-emerald-600' : ''}
+              className={view === 'list' ? 'bg-[#2C5F5D] hover:bg-[#234B49]' : ''}
             >
               <List className="w-4 h-4" />
             </Button>
@@ -144,7 +144,7 @@ function ReservationsContent({ user, company }) {
               variant={view === 'calendar' ? 'default' : 'ghost'}
               size="icon"
               onClick={() => setView('calendar')}
-              className={view === 'calendar' ? 'bg-emerald-600' : ''}
+              className={view === 'calendar' ? 'bg-[#2C5F5D] hover:bg-[#234B49]' : ''}
             >
               <CalendarDays className="w-4 h-4" />
             </Button>

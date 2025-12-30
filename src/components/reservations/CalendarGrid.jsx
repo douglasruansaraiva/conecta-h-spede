@@ -178,11 +178,11 @@ export default function CalendarGrid({
               className={cn(
                 "aspect-square rounded-lg text-xs sm:text-sm font-medium transition-all relative",
                 statusColors[status],
-                isToday(day) && "ring-2 ring-emerald-500 ring-offset-1",
+                isToday(day) && "ring-2 ring-[#2C5F5D] ring-offset-1",
                 isPast && "opacity-40 cursor-not-allowed",
                 isUnavailable && "cursor-not-allowed",
-                isSelected && "bg-emerald-100 ring-2 ring-emerald-500",
-                isSameDay(day, rangeStart) && "bg-emerald-500 text-white"
+                isSelected && "bg-[#2C5F5D]/10 ring-2 ring-[#2C5F5D]",
+                isSameDay(day, rangeStart) && "bg-gradient-to-br from-[#2C5F5D] to-[#3A7A77] text-white shadow-md"
               )}
             >
               {format(day, 'd')}

@@ -55,7 +55,7 @@ export default function CompanyGuard({ children }) {
               Para começar, configure sua empresa (hotel, pousada ou chalé).
             </p>
             <Link to={createPageUrl('Settings')}>
-              <Button className="bg-emerald-600 hover:bg-emerald-700">
+              <Button className="bg-gradient-to-r from-[#2C5F5D] to-[#3A7A77] hover:from-[#234B49] hover:to-[#2C5F5D] text-white shadow-md">
                 <Plus className="w-4 h-4 mr-2" />
                 Configurar Minha Empresa
               </Button>

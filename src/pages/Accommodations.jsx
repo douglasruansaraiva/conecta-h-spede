@@ -114,7 +114,7 @@ function AccommodationsContent({ user, company }) {
           </div>
           <Button 
             onClick={() => setFormOpen(true)}
-            className="bg-emerald-600 hover:bg-emerald-700 w-full sm:w-auto"
+            className="bg-gradient-to-r from-[#2C5F5D] to-[#3A7A77] hover:from-[#234B49] hover:to-[#2C5F5D] text-white w-full sm:w-auto shadow-md"
           >
             <Plus className="w-4 h-4 mr-2" />
             Nova Acomodação
@@ -130,7 +130,7 @@ function AccommodationsContent({ user, company }) {
               </div>
               <h3 className="text-lg font-semibold text-slate-800 mb-2">Nenhuma acomodação</h3>
               <p className="text-slate-500 mb-4">Cadastre suas acomodações para começar a receber reservas.</p>
-              <Button onClick={() => setFormOpen(true)} className="bg-emerald-600 hover:bg-emerald-700">
+              <Button onClick={() => setFormOpen(true)} className="bg-gradient-to-r from-[#2C5F5D] to-[#3A7A77] hover:from-[#234B49] hover:to-[#2C5F5D] text-white shadow-md">
                 <Plus className="w-4 h-4 mr-2" />
                 Adicionar Acomodação
               </Button>
@@ -192,7 +192,7 @@ function AccommodationsContent({ user, company }) {
                       <p className="text-sm text-slate-500">{typeLabels[acc.type]}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-lg font-bold text-emerald-600">
+                      <p className="text-lg font-bold text-[#2C5F5D]">
                         R$ {acc.base_price?.toFixed(2)}
                       </p>
                       <p className="text-xs text-slate-400">por noite</p>

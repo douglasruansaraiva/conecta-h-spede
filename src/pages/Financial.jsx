@@ -217,7 +217,7 @@ function FinancialContent({ user, company }) {
               setEditingTransaction(null);
               setFormOpen(true);
             }}
-            className="bg-emerald-600 hover:bg-emerald-700 w-full sm:w-auto"
+            className="bg-gradient-to-r from-[#2C5F5D] to-[#3A7A77] hover:from-[#234B49] hover:to-[#2C5F5D] text-white w-full sm:w-auto shadow-md"
           >
             <Plus className="w-4 h-4 mr-2" />
             Nova Transação
@@ -450,7 +450,7 @@ function FinancialContent({ user, company }) {
               <Button type="button" variant="outline" onClick={() => setFormOpen(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={loading} className="bg-emerald-600 hover:bg-emerald-700">
+              <Button type="submit" disabled={loading} className="bg-gradient-to-r from-[#2C5F5D] to-[#3A7A77] hover:from-[#234B49] hover:to-[#2C5F5D] text-white shadow-md">
                 {loading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
                 {editingTransaction ? 'Salvar' : 'Criar'}
               </Button>

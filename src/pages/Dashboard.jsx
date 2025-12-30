@@ -127,7 +127,7 @@ function DashboardContent({ user, company }) {
               </div>
             )}
             <Link to={createPageUrl('Reservations')} className="w-full sm:w-auto">
-              <Button className="bg-emerald-600 hover:bg-emerald-700 w-full">
+              <Button className="bg-gradient-to-r from-[#2C5F5D] to-[#3A7A77] hover:from-[#234B49] hover:to-[#2C5F5D] text-white w-full shadow-md">
                 <Plus className="w-4 h-4 mr-2" />
                 Nova Reserva
               </Button>
@@ -139,13 +139,13 @@ function DashboardContent({ user, company }) {
         {(todayCheckIns.length > 0 || todayCheckOuts.length > 0) && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
             {todayCheckIns.length > 0 && (
-              <Card className="border-l-4 border-l-emerald-500 bg-emerald-50/50">
+              <Card className="border-l-4 border-l-[#2C5F5D] bg-gradient-to-r from-[#2C5F5D]/10 to-transparent">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
-                    <ArrowUpRight className="w-5 h-5 text-emerald-600" />
+                    <ArrowUpRight className="w-5 h-5 text-[#2C5F5D]" />
                     <div>
-                      <p className="font-semibold text-emerald-800">Check-ins Hoje</p>
-                      <p className="text-sm text-emerald-600">
+                      <p className="font-semibold text-[#2C5F5D]">Check-ins Hoje</p>
+                      <p className="text-sm text-[#3A7A77]">
                         {todayCheckIns.map(r => r.guest_name).join(', ')}
                       </p>
                     </div>

@@ -70,10 +70,15 @@ export default function Layout({ children, currentPageName }) {
       )}>
         <div className="flex items-center justify-between h-16 px-6 border-b border-slate-200">
           <Link to={createPageUrl('Dashboard')} className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-lg flex items-center justify-center">
-              <Home className="w-4 h-4 text-white" />
+            <img 
+              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6953171ec03673207b7f83ca/f92c42ff8_conedePerfilCONECTAHSPEDE.png" 
+              alt="Conecta Hóspede" 
+              className="w-8 h-8 object-contain"
+            />
+            <div className="flex flex-col leading-none">
+              <span className="font-bold text-[#2C5F5D] text-sm">CONECTA</span>
+              <span className="font-bold text-[#2C5F5D] text-sm">HÓSPEDE</span>
             </div>
-            <span className="font-bold text-slate-800">Reservas</span>
           </Link>
           <Button 
             variant="ghost" 
@@ -94,20 +99,20 @@ export default function Layout({ children, currentPageName }) {
                 to={createPageUrl(item.href)}
                 onClick={() => setSidebarOpen(false)}
                 className={cn(
-                  "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors",
+                  "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
                   isActive
-                    ? "bg-emerald-50 text-emerald-700"
-                    : "text-slate-600 hover:bg-slate-100"
+                    ? "bg-gradient-to-r from-[#2C5F5D] to-[#3A7A77] text-white shadow-md"
+                    : "text-slate-600 hover:bg-slate-50"
                 )}
               >
                 <item.icon className={cn(
                   "w-5 h-5",
-                  isActive ? "text-emerald-600" : "text-slate-400"
+                  isActive ? "text-white" : "text-slate-400"
                 )} />
                 {item.name}
               </Link>
             );
-          })}
+            })}
         </nav>
 
         {/* User section */}
@@ -115,9 +120,9 @@ export default function Layout({ children, currentPageName }) {
           <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-200">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-slate-100 transition-colors">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-100 to-emerald-200 flex items-center justify-center">
-                    <span className="text-sm font-semibold text-emerald-700">
+                <button className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-slate-50 transition-colors">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2C5F5D] to-[#3A7A77] flex items-center justify-center shadow-sm">
+                    <span className="text-sm font-semibold text-white">
                       {user.full_name?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase()}
                     </span>
                   </div>
@@ -154,10 +159,15 @@ export default function Layout({ children, currentPageName }) {
               <Menu className="w-5 h-5" />
             </Button>
             <Link to={createPageUrl('Dashboard')} className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-lg flex items-center justify-center">
-                <Home className="w-4 h-4 text-white" />
+              <img 
+                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6953171ec03673207b7f83ca/f92c42ff8_conedePerfilCONECTAHSPEDE.png" 
+                alt="Conecta Hóspede" 
+                className="w-8 h-8 object-contain"
+              />
+              <div className="flex flex-col leading-none">
+                <span className="font-bold text-[#2C5F5D] text-xs">CONECTA</span>
+                <span className="font-bold text-[#2C5F5D] text-xs">HÓSPEDE</span>
               </div>
-              <span className="font-bold text-slate-800">Reservas</span>
             </Link>
             <div className="w-10" />
           </div>

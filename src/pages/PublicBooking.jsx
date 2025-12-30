@@ -225,8 +225,8 @@ export default function PublicBooking() {
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-slate-50 flex items-center justify-center p-6">
         <Card className="max-w-md w-full">
           <CardContent className="p-8 text-center">
-            <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Check className="w-8 h-8 text-emerald-600" />
+            <div className="w-16 h-16 bg-gradient-to-br from-[#2C5F5D] to-[#3A7A77] rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+              <Check className="w-8 h-8 text-white" />
             </div>
             <h2 className="text-2xl font-bold text-slate-800 mb-2">Reserva Enviada!</h2>
             <p className="text-slate-600 mb-4">
@@ -284,8 +284,8 @@ export default function PublicBooking() {
         <div className="flex items-center gap-2 sm:gap-4 mb-6 sm:mb-8 overflow-x-auto">
           {[1, 2, 3].map((s) => (
             <div key={s} className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-              <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-medium ${
-                step >= s ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-500'
+              <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-medium shadow-sm ${
+                step >= s ? 'bg-gradient-to-br from-[#2C5F5D] to-[#3A7A77] text-white' : 'bg-slate-200 text-slate-500'
               }`}>
                 {s}
               </div>
@@ -353,7 +353,7 @@ export default function PublicBooking() {
               <Button 
                 onClick={() => setStep(2)} 
                 disabled={!selectedAccommodation}
-                className="bg-emerald-600 hover:bg-emerald-700"
+                className="bg-gradient-to-r from-[#2C5F5D] to-[#3A7A77] hover:from-[#234B49] hover:to-[#2C5F5D] text-white shadow-md"
               >
                 Continuar
                 <ChevronRight className="w-4 h-4 ml-2" />
@@ -442,7 +442,7 @@ export default function PublicBooking() {
               <Button 
                 onClick={() => setStep(3)} 
                 disabled={!selectedDates || nights < (selectedAccommodation?.min_nights || 1)}
-                className="bg-emerald-600 hover:bg-emerald-700"
+                className="bg-gradient-to-r from-[#2C5F5D] to-[#3A7A77] hover:from-[#234B49] hover:to-[#2C5F5D] text-white shadow-md"
               >
                 Continuar
                 <ChevronRight className="w-4 h-4 ml-2" />
@@ -522,7 +522,7 @@ export default function PublicBooking() {
                         <Button 
                           type="submit" 
                           disabled={loading}
-                          className="bg-emerald-600 hover:bg-emerald-700"
+                          className="bg-gradient-to-r from-[#2C5F5D] to-[#3A7A77] hover:from-[#234B49] hover:to-[#2C5F5D] text-white shadow-md"
                         >
                           {loading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
                           Confirmar Reserva
