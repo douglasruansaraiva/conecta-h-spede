@@ -147,8 +147,8 @@ export default function Settings() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="max-w-4xl mx-auto p-4 sm:p-6">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-800">Configurações</h1>
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-800">Configurações</h1>
           <p className="text-slate-500">Configure sua empresa e preferências</p>
         </div>
 
@@ -178,7 +178,7 @@ export default function Settings() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {/* Logo and Cover */}
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
                       <Label className="mb-2 block">Logo</Label>
                       <div className="flex items-center gap-4">
@@ -245,7 +245,7 @@ export default function Settings() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <Label>Nome da Empresa *</Label>
                       <Input
@@ -276,8 +276,8 @@ export default function Settings() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="col-span-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="sm:col-span-2">
                       <Label>Endereço</Label>
                       <Input
                         value={formData.address}
@@ -294,7 +294,7 @@ export default function Settings() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
                       <Label>Estado</Label>
                       <Input
@@ -333,18 +333,20 @@ export default function Settings() {
                 <CardContent className="space-y-6">
                   {/* Booking URL */}
                   {bookingUrl && (
-                    <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-200">
-                      <Label className="text-emerald-800 mb-2 block">Link para Reservas</Label>
-                      <div className="flex items-center gap-2">
-                        <Input value={bookingUrl} readOnly className="bg-white" />
-                        <Button type="button" variant="outline" size="icon" onClick={copyBookingUrl}>
+                   <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-200">
+                     <Label className="text-emerald-800 mb-2 block">Link para Reservas</Label>
+                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                       <Input value={bookingUrl} readOnly className="bg-white flex-1" />
+                       <div className="flex gap-2">
+                       <Button type="button" variant="outline" size="icon" onClick={copyBookingUrl} className="flex-shrink-0">
                           {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
                         </Button>
                         <a href={bookingUrl} target="_blank" rel="noopener noreferrer">
-                          <Button type="button" variant="outline" size="icon">
+                          <Button type="button" variant="outline" size="icon" className="flex-shrink-0">
                             <ExternalLink className="w-4 h-4" />
                           </Button>
                         </a>
+                        </div>
                       </div>
                       <p className="text-sm text-emerald-600 mt-2">
                         Envie este link para seus clientes fazerem reservas diretas
@@ -352,7 +354,7 @@ export default function Settings() {
                     </div>
                   )}
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <Label className="flex items-center gap-2">
                         <Clock className="w-4 h-4" />
@@ -413,7 +415,7 @@ export default function Settings() {
           </Tabs>
 
           <div className="mt-6 flex justify-end">
-            <Button type="submit" disabled={loading} className="bg-emerald-600 hover:bg-emerald-700">
+            <Button type="submit" disabled={loading} className="bg-emerald-600 hover:bg-emerald-700 w-full sm:w-auto">
               {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
               Salvar Configurações
             </Button>
