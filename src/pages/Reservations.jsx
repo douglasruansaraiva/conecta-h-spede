@@ -206,3 +206,11 @@ function ReservationsContent({ user, company }) {
     </div>
   );
 }
+
+export default function Reservations() {
+  return (
+    <CompanyGuard>
+      {({ user, company }) => <ReservationsContent user={user} company={company} />}
+    </CompanyGuard>
+  );
+}
