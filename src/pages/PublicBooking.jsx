@@ -46,13 +46,14 @@ export default function PublicBooking() {
   const companySlug = urlParams.get('c');
 
   useEffect(() => {
+    let hasRedirected = false;
+    
     const checkAuth = async () => {
       try {
         const isAuth = await base44.auth.isAuthenticated();
-        if (!isAuth) {
-          const baseUrl = window.location.origin + window.location.pathname;
-          const targetUrl = companySlug ? `${baseUrl}?c=${companySlug}` : baseUrl;
-          base44.auth.redirectToLogin(targetUrl);
+        if (!isAuth && !hasRedirected) {
+          hasRedirected = true;
+          base44.auth.redirectToLogin(`${window.location.origin}/PublicBooking?c=${companySlug || ''}`);
           return;
         }
         const userData = await base44.auth.me();
@@ -62,12 +63,12 @@ export default function PublicBooking() {
           guest_name: userData.full_name || '',
           guest_email: userData.email || ''
         }));
-      } catch (error) {
-        const baseUrl = window.location.origin + window.location.pathname;
-        const targetUrl = companySlug ? `${baseUrl}?c=${companySlug}` : baseUrl;
-        base44.auth.redirectToLogin(targetUrl);
-      } finally {
         setCheckingAuth(false);
+      } catch (error) {
+        if (!hasRedirected) {
+          hasRedirected = true;
+          base44.auth.redirectToLogin(`${window.location.origin}/PublicBooking?c=${companySlug || ''}`);
+        }
       }
     };
     checkAuth();
