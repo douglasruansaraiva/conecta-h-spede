@@ -52,6 +52,10 @@ export default function PublicBooking() {
 
   const urlParams = new URLSearchParams(window.location.search);
   const companySlug = urlParams.get('c');
+  
+  console.log('URL completa:', window.location.href);
+  console.log('Search params:', window.location.search);
+  console.log('Company slug extraído:', companySlug);
 
   useEffect(() => {
     let hasRedirected = false;
