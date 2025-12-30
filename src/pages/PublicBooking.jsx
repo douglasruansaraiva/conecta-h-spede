@@ -632,56 +632,61 @@ export default function PublicBooking() {
                   <CardContent className="p-6">
                     <form onSubmit={handleSubmit} className="space-y-4">
                       <div>
-                        <Label className="text-white">Nome Completo *</Label>
+                        <Label className="text-slate-200 mb-2 block">Nome Completo *</Label>
                         <Input
                           value={formData.guest_name}
                           onChange={(e) => setFormData({ ...formData, guest_name: e.target.value })}
                           required
+                          className="bg-slate-900/50 border-slate-600 text-white placeholder:text-slate-500 focus:border-emerald-500 focus:ring-emerald-500"
                         />
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                          <Label className="text-white">Email *</Label>
+                          <Label className="text-slate-200 mb-2 block">Email *</Label>
                           <Input
                             type="email"
                             value={formData.guest_email}
                             onChange={(e) => setFormData({ ...formData, guest_email: e.target.value })}
                             required
+                            className="bg-slate-900/50 border-slate-600 text-white placeholder:text-slate-500 focus:border-emerald-500 focus:ring-emerald-500"
                           />
                         </div>
                         <div>
-                          <Label className="text-white">Telefone *</Label>
+                          <Label className="text-slate-200 mb-2 block">Telefone *</Label>
                           <Input
                             value={formData.guest_phone}
                             onChange={(e) => setFormData({ ...formData, guest_phone: e.target.value })}
                             placeholder="(00) 00000-0000"
                             required
+                            className="bg-slate-900/50 border-slate-600 text-white placeholder:text-slate-500 focus:border-emerald-500 focus:ring-emerald-500"
                           />
                         </div>
                       </div>
                       <div>
-                        <Label className="text-white">Número de Hóspedes</Label>
+                        <Label className="text-slate-200 mb-2 block">Número de Hóspedes</Label>
                         <Input
                           type="number"
                           min="1"
                           max={selectedAccommodation?.max_guests || 10}
                           value={formData.guests_count}
                           onChange={(e) => setFormData({ ...formData, guests_count: e.target.value })}
+                          className="bg-slate-900/50 border-slate-600 text-white placeholder:text-slate-500 focus:border-emerald-500 focus:ring-emerald-500"
                         />
                       </div>
                       <div>
-                        <Label className="text-white">Observações</Label>
+                        <Label className="text-slate-200 mb-2 block">Observações</Label>
                         <Input
                           value={formData.notes}
                           onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                           placeholder="Alguma observação especial?"
+                          className="bg-slate-900/50 border-slate-600 text-white placeholder:text-slate-500 focus:border-emerald-500 focus:ring-emerald-500"
                         />
                       </div>
 
                       {company.cancellation_policy && (
-                        <div className="p-4 bg-slate-50 rounded-lg">
-                          <p className="text-sm font-medium text-slate-700 mb-1">Política de Cancelamento</p>
-                          <p className="text-sm text-slate-600 whitespace-pre-line">{company.cancellation_policy}</p>
+                        <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-lg">
+                          <p className="text-sm font-medium text-emerald-300 mb-1">Política de Cancelamento</p>
+                          <p className="text-sm text-slate-300 whitespace-pre-line">{company.cancellation_policy}</p>
                         </div>
                       )}
 
