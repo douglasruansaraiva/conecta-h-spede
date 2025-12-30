@@ -258,13 +258,13 @@ export default function PublicBooking() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Header */}
       <div className="bg-white border-b">
-        <div className="max-w-6xl mx-auto px-6 py-6">
-          <div className="flex items-center gap-4">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+          <div className="flex items-center gap-3 sm:gap-4">
             {company.logo_url && (
-              <img src={company.logo_url} alt={company.name} className="w-16 h-16 rounded-lg object-cover" />
+              <img src={company.logo_url} alt={company.name} className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg object-cover" />
             )}
             <div>
-              <h1 className="text-2xl font-bold text-slate-800">{company.name}</h1>
+              <h1 className="text-lg sm:text-2xl font-bold text-slate-800">{company.name}</h1>
               {(company.city || company.state) && (
                 <p className="text-slate-500 flex items-center gap-1">
                   <MapPin className="w-4 h-4" />
@@ -280,19 +280,19 @@ export default function PublicBooking() {
       </div>
 
       {/* Progress */}
-      <div className="max-w-6xl mx-auto px-6 py-6">
-        <div className="flex items-center gap-4 mb-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+        <div className="flex items-center gap-2 sm:gap-4 mb-6 sm:mb-8 overflow-x-auto">
           {[1, 2, 3].map((s) => (
-            <div key={s} className="flex items-center gap-2">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+            <div key={s} className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+              <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-medium ${
                 step >= s ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-500'
               }`}>
                 {s}
               </div>
-              <span className={`text-sm ${step >= s ? 'text-slate-800' : 'text-slate-400'}`}>
+              <span className={`text-xs sm:text-sm whitespace-nowrap ${step >= s ? 'text-slate-800' : 'text-slate-400'}`}>
                 {s === 1 ? 'Escolha' : s === 2 ? 'Datas' : 'Dados'}
               </span>
-              {s < 3 && <div className="w-12 h-0.5 bg-slate-200" />}
+              {s < 3 && <div className="w-8 sm:w-12 h-0.5 bg-slate-200" />}
             </div>
           ))}
         </div>
@@ -300,8 +300,8 @@ export default function PublicBooking() {
         {/* Step 1: Choose Accommodation */}
         {step === 1 && (
           <div>
-            <h2 className="text-xl font-semibold text-slate-800 mb-6">Escolha sua Acomodação</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <h2 className="text-lg sm:text-xl font-semibold text-slate-800 mb-4 sm:mb-6">Escolha sua Acomodação</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {accommodations.map(acc => (
                 <Card 
                   key={acc.id} 
@@ -365,8 +365,8 @@ export default function PublicBooking() {
         {/* Step 2: Choose Dates */}
         {step === 2 && (
           <div>
-            <h2 className="text-xl font-semibold text-slate-800 mb-6">Selecione as Datas</h2>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <h2 className="text-lg sm:text-xl font-semibold text-slate-800 mb-4 sm:mb-6">Selecione as Datas</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
               <div className="lg:col-span-2">
                 <CalendarGrid
                   reservations={filteredReservations}
@@ -454,8 +454,8 @@ export default function PublicBooking() {
         {/* Step 3: Guest Data */}
         {step === 3 && (
           <div>
-            <h2 className="text-xl font-semibold text-slate-800 mb-6">Seus Dados</h2>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <h2 className="text-lg sm:text-xl font-semibold text-slate-800 mb-4 sm:mb-6">Seus Dados</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
               <div className="lg:col-span-2">
                 <Card>
                   <CardContent className="p-6">
@@ -576,8 +576,8 @@ export default function PublicBooking() {
       </div>
 
       {/* Footer */}
-      <div className="bg-white border-t mt-12">
-        <div className="max-w-6xl mx-auto px-6 py-6">
+      <div className="bg-white border-t mt-8 sm:mt-12">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
           <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-slate-500">
             {company.phone && (
               <a href={`tel:${company.phone}`} className="flex items-center gap-1 hover:text-emerald-600">

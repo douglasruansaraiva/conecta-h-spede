@@ -1,23 +1,23 @@
-import Dashboard from './pages/Dashboard';
 import Accommodations from './pages/Accommodations';
-import Reservations from './pages/Reservations';
-import Guests from './pages/Guests';
+import Dashboard from './pages/Dashboard';
 import Financial from './pages/Financial';
-import Settings from './pages/Settings';
-import PublicBooking from './pages/PublicBooking';
+import Guests from './pages/Guests';
 import Home from './pages/Home';
+import PublicBooking from './pages/PublicBooking';
+import Reservations from './pages/Reservations';
+import Settings from './pages/Settings';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
-    "Dashboard": Dashboard,
     "Accommodations": Accommodations,
-    "Reservations": Reservations,
-    "Guests": Guests,
+    "Dashboard": Dashboard,
     "Financial": Financial,
-    "Settings": Settings,
-    "PublicBooking": PublicBooking,
+    "Guests": Guests,
     "Home": Home,
+    "PublicBooking": PublicBooking,
+    "Reservations": Reservations,
+    "Settings": Settings,
 }
 
 export const pagesConfig = {

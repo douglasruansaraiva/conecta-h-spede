@@ -152,7 +152,7 @@ export default function CalendarGrid({
       {/* Weekdays */}
       <div className="grid grid-cols-7 gap-1 mb-2">
         {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(day => (
-          <div key={day} className="text-center text-xs font-medium text-slate-500 py-2">
+          <div key={day} className="text-center text-[10px] sm:text-xs font-medium text-slate-500 py-2">
             {day}
           </div>
         ))}
@@ -176,7 +176,7 @@ export default function CalendarGrid({
               onClick={() => handleDateClick(day)}
               onMouseEnter={() => selectingRange && setHoverDate(day)}
               className={cn(
-                "aspect-square rounded-lg text-sm font-medium transition-all relative",
+                "aspect-square rounded-lg text-xs sm:text-sm font-medium transition-all relative",
                 statusColors[status],
                 isToday(day) && "ring-2 ring-emerald-500 ring-offset-1",
                 isPast && "opacity-40 cursor-not-allowed",
@@ -220,7 +220,7 @@ export default function CalendarGrid({
       {/* Legend */}
       {showLegend && (
         <div className="mt-6 pt-4 border-t border-slate-100 space-y-3">
-          <div className="flex flex-wrap items-center gap-4">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded bg-white border border-slate-200" />
               <span className="text-xs text-slate-600">Disponível</span>
@@ -234,9 +234,9 @@ export default function CalendarGrid({
               <span className="text-xs text-slate-600">Bloqueado</span>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <span className="text-xs font-medium text-slate-500">Origem:</span>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1 sm:gap-1.5">
               <div className="w-2 h-2 rounded-full bg-emerald-500" />
               <span className="text-xs text-slate-600">Direta</span>
             </div>
