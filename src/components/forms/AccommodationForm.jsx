@@ -109,15 +109,22 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
       // Use proxy CORS para evitar bloqueios
       const proxyUrl = 'https://corsproxy.io/?';
       const response = await fetch(proxyUrl + encodeURIComponent(formData.ical_import_url));
-      const icalData = await response.text();
       
-      // Parse iCal data
+      if (!response.ok) {
+        throw new Error('Erro ao buscar iCal');
+      }
+      
+      const icalData = await response.text();
+      console.log('iCal data:', icalData.substring(0, 500)); // Debug
+      
+      // Parse iCal data - melhorado para suportar diferentes formatos
       const events = [];
-      const lines = icalData.split('\n');
+      const lines = icalData.split(/\r?\n/);
       let currentEvent = null;
       
       for (const line of lines) {
         const trimmed = line.trim();
+        
         if (trimmed === 'BEGIN:VEVENT') {
           currentEvent = {};
         } else if (trimmed === 'END:VEVENT' && currentEvent) {
@@ -126,23 +133,31 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
           }
           currentEvent = null;
         } else if (currentEvent) {
+          // DTSTART - suporta formato com VALUE=DATE e com timezone
           if (trimmed.startsWith('DTSTART')) {
-            const match = trimmed.match(/DTSTART[;:](.+)/);
+            const match = trimmed.match(/DTSTART[^:]*:(\d{8})/);
             if (match) {
-              const dateStr = match[1].split('T')[0];
+              const dateStr = match[1];
               currentEvent.start = `${dateStr.slice(0,4)}-${dateStr.slice(4,6)}-${dateStr.slice(6,8)}`;
             }
-          } else if (trimmed.startsWith('DTEND')) {
-            const match = trimmed.match(/DTEND[;:](.+)/);
+          } 
+          // DTEND - suporta formato com VALUE=DATE e com timezone
+          else if (trimmed.startsWith('DTEND')) {
+            const match = trimmed.match(/DTEND[^:]*:(\d{8})/);
             if (match) {
-              const dateStr = match[1].split('T')[0];
+              const dateStr = match[1];
               currentEvent.end = `${dateStr.slice(0,4)}-${dateStr.slice(4,6)}-${dateStr.slice(6,8)}`;
             }
-          } else if (trimmed.startsWith('SUMMARY')) {
-            currentEvent.summary = trimmed.split(':')[1];
+          } 
+          // SUMMARY
+          else if (trimmed.startsWith('SUMMARY')) {
+            const parts = trimmed.split(':');
+            currentEvent.summary = parts.slice(1).join(':').trim();
           }
         }
       }
+
+      console.log('Eventos encontrados:', events); // Debug
 
       if (events.length > 0) {
         // Delete existing ical blocks for this accommodation
@@ -152,30 +167,39 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
           source: 'ical_import'
         });
         
+        console.log('Bloqueios existentes:', existingBlocks.length); // Debug
+        
         for (const block of existingBlocks) {
           await base44.entities.BlockedDate.delete(block.id);
         }
 
         // Create new blocks
+        let created = 0;
         for (const event of events) {
-          await base44.entities.BlockedDate.create({
-            company_id: companyId,
-            accommodation_id: accommodation.id,
-            start_date: event.start,
-            end_date: event.end,
-            reason: event.summary || 'Reserva externa',
-            source: 'ical_import'
-          });
+          try {
+            await base44.entities.BlockedDate.create({
+              company_id: companyId,
+              accommodation_id: accommodation.id,
+              start_date: event.start,
+              end_date: event.end,
+              reason: event.summary || 'Reserva externa',
+              source: 'ical_import'
+            });
+            created++;
+          } catch (err) {
+            console.error('Erro ao criar bloqueio:', err);
+          }
         }
 
-        toast.success(`${events.length} datas bloqueadas importadas!`);
+        console.log('Bloqueios criados:', created); // Debug
+        toast.success(`${created} datas bloqueadas importadas!`);
         onSave();
       } else {
         toast.warning('Nenhum evento encontrado no iCal');
       }
     } catch (error) {
       console.error('Erro ao sincronizar iCal:', error);
-      toast.error('Erro ao sincronizar. Verifique se a URL está correta.');
+      toast.error('Erro ao sincronizar: ' + error.message);
     }
     setSyncing(false);
   };
