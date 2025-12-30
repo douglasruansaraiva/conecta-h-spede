@@ -28,12 +28,11 @@ import {
 import CalendarGrid from '@/components/reservations/CalendarGrid';
 
 export default function PublicBooking() {
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(1); // 1: list, 1.5: details, 2: dates, 3: form
   const [selectedAccommodation, setSelectedAccommodation] = useState(null);
   const [selectedDates, setSelectedDates] = useState(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [showGallery, setShowGallery] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [user, setUser] = useState(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
@@ -320,107 +319,21 @@ export default function PublicBooking() {
 
       {/* Progress */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
-        <div className="flex items-center gap-2 sm:gap-4 mb-6 sm:mb-8 overflow-x-auto">
-          {[1, 2, 3].map((s) => (
-            <div key={s} className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-              <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-medium shadow-sm ${
-                step >= s ? 'bg-gradient-to-br from-[#2C5F5D] to-[#3A7A77] text-white' : 'bg-slate-200 text-slate-500'
-              }`}>
-                {s}
-              </div>
-              <span className={`text-xs sm:text-sm whitespace-nowrap ${step >= s ? 'text-slate-800' : 'text-slate-400'}`}>
-                {s === 1 ? 'Escolha' : s === 2 ? 'Datas' : 'Dados'}
-              </span>
-              {s < 3 && <div className="w-8 sm:w-12 h-0.5 bg-slate-200" />}
-            </div>
-          ))}
-        </div>
-
-        {/* Gallery Modal */}
-        {showGallery && selectedAccommodation && (
-          <div className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4">
-            <button
-              onClick={() => setShowGallery(false)}
-              className="absolute top-4 right-4 text-white hover:text-emerald-400 transition-colors"
-            >
-              <X className="w-8 h-8" />
-            </button>
-
-            <div className="max-w-6xl w-full">
-              {/* Gallery */}
-              <div className="relative aspect-video mb-6 rounded-2xl overflow-hidden">
-                <img
-                  src={selectedAccommodation.images?.[currentImageIndex] || ''}
-                  alt={selectedAccommodation.name}
-                  className="w-full h-full object-cover"
-                />
-
-                {selectedAccommodation.images?.length > 1 && (
-                  <>
-                    <button
-                      onClick={() => setCurrentImageIndex(Math.max(0, currentImageIndex - 1))}
-                      disabled={currentImageIndex === 0}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full disabled:opacity-30"
-                    >
-                      <ChevronLeft className="w-6 h-6" />
-                    </button>
-                    <button
-                      onClick={() => setCurrentImageIndex(Math.min(selectedAccommodation.images.length - 1, currentImageIndex + 1))}
-                      disabled={currentImageIndex === selectedAccommodation.images.length - 1}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full disabled:opacity-30"
-                    >
-                      <ChevronRight className="w-6 h-6" />
-                    </button>
-                  </>
-                )}
-              </div>
-
-              {/* Info */}
-              <div className="bg-slate-900/80 backdrop-blur-xl rounded-2xl p-6 border border-slate-700">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h2 className="text-2xl font-bold text-white mb-2">{selectedAccommodation.name}</h2>
-                    <div className="flex items-center gap-4 text-slate-400">
-                      <span className="flex items-center gap-1">
-                        <Users className="w-4 h-4" />
-                        Até {selectedAccommodation.max_guests} hóspedes
-                      </span>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-3xl font-bold text-emerald-400">
-                      R$ {selectedAccommodation.base_price?.toFixed(2)}
-                    </p>
-                    <p className="text-slate-400">por noite</p>
-                  </div>
+        {step !== 1.5 && (
+          <div className="flex items-center gap-2 sm:gap-4 mb-6 sm:mb-8 overflow-x-auto">
+            {[1, 2, 3].map((s) => (
+              <div key={s} className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+                <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-medium shadow-sm ${
+                  step >= s ? 'bg-gradient-to-br from-[#2C5F5D] to-[#3A7A77] text-white' : 'bg-slate-700 text-slate-400'
+                }`}>
+                  {s}
                 </div>
-
-                {selectedAccommodation.description && (
-                  <p className="text-slate-300 mb-4">{selectedAccommodation.description}</p>
-                )}
-
-                {selectedAccommodation.amenities?.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-6">
-                    {selectedAccommodation.amenities.map(amenity => (
-                      <Badge key={amenity} className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30">
-                        {amenity}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-
-                <Button 
-                  onClick={() => {
-                    setShowGallery(false);
-                    setStep(2);
-                  }}
-                  className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-lg shadow-emerald-500/20"
-                >
-                  Escolher Datas
-                  <ChevronRight className="w-5 h-5 ml-2" />
-                </Button>
+                <span className={`text-xs sm:text-sm whitespace-nowrap ${step >= s ? 'text-white' : 'text-slate-500'}`}>
+                  {s === 1 ? 'Escolha' : s === 2 ? 'Datas' : 'Dados'}
+                </span>
+                {s < 3 && <div className="w-8 sm:w-12 h-0.5 bg-slate-700" />}
               </div>
-            </div>
+            ))}
           </div>
         )}
 
@@ -436,7 +349,7 @@ export default function PublicBooking() {
                   onClick={() => {
                     setSelectedAccommodation(acc);
                     setCurrentImageIndex(0);
-                    setShowGallery(true);
+                    setStep(1.5);
                   }}
                 >
                   <div className="aspect-video relative bg-slate-900 overflow-hidden">
@@ -479,6 +392,144 @@ export default function PublicBooking() {
                 </Card>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Step 1.5: Accommodation Details */}
+        {step === 1.5 && selectedAccommodation && (
+          <div className="max-w-5xl mx-auto">
+            <Button 
+              variant="ghost" 
+              onClick={() => setStep(1)}
+              className="mb-4 text-slate-400 hover:text-white"
+            >
+              <ChevronLeft className="w-4 h-4 mr-2" />
+              Voltar para acomodações
+            </Button>
+
+            {/* Gallery */}
+            <div className="relative aspect-video mb-6 rounded-2xl overflow-hidden bg-slate-900">
+              {selectedAccommodation.images?.[currentImageIndex] ? (
+                <img
+                  src={selectedAccommodation.images[currentImageIndex]}
+                  alt={selectedAccommodation.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <Home className="w-16 h-16 text-slate-600" />
+                </div>
+              )}
+
+              {selectedAccommodation.images?.length > 1 && (
+                <>
+                  <button
+                    onClick={() => setCurrentImageIndex(Math.max(0, currentImageIndex - 1))}
+                    disabled={currentImageIndex === 0}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full disabled:opacity-30 transition-all"
+                  >
+                    <ChevronLeft className="w-6 h-6" />
+                  </button>
+                  <button
+                    onClick={() => setCurrentImageIndex(Math.min(selectedAccommodation.images.length - 1, currentImageIndex + 1))}
+                    disabled={currentImageIndex === selectedAccommodation.images.length - 1}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full disabled:opacity-30 transition-all"
+                  >
+                    <ChevronRight className="w-6 h-6" />
+                  </button>
+                  
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-sm px-4 py-2 rounded-full text-white text-sm">
+                    {currentImageIndex + 1} / {selectedAccommodation.images.length}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Thumbnails */}
+            {selectedAccommodation.images?.length > 1 && (
+              <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+                {selectedAccommodation.images.map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentImageIndex(idx)}
+                    className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                      currentImageIndex === idx ? 'border-emerald-500' : 'border-slate-700 opacity-60 hover:opacity-100'
+                    }`}
+                  >
+                    <img src={img} alt="" className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Info Card */}
+            <Card className="bg-slate-800/50 backdrop-blur border-slate-700">
+              <CardContent className="p-6 sm:p-8">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+                  <div>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+                      {selectedAccommodation.name}
+                    </h1>
+                    <div className="flex items-center gap-4 text-slate-400">
+                      <span className="flex items-center gap-1">
+                        <Users className="w-4 h-4" />
+                        Até {selectedAccommodation.max_guests} hóspedes
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-left sm:text-right">
+                    <p className="text-3xl sm:text-4xl font-bold text-emerald-400">
+                      R$ {selectedAccommodation.base_price?.toFixed(2)}
+                    </p>
+                    <p className="text-slate-400">por noite</p>
+                    {selectedAccommodation.weekend_price && selectedAccommodation.weekend_price !== selectedAccommodation.base_price && (
+                      <p className="text-sm text-slate-500 mt-1">
+                        Fins de semana: R$ {selectedAccommodation.weekend_price.toFixed(2)}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {selectedAccommodation.description && (
+                  <div className="mb-6">
+                    <h3 className="text-lg font-semibold text-white mb-2">Descrição</h3>
+                    <p className="text-slate-300 leading-relaxed whitespace-pre-line">
+                      {selectedAccommodation.description}
+                    </p>
+                  </div>
+                )}
+
+                {selectedAccommodation.amenities?.length > 0 && (
+                  <div className="mb-6">
+                    <h3 className="text-lg font-semibold text-white mb-3">Comodidades</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedAccommodation.amenities.map(amenity => (
+                        <Badge key={amenity} className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 px-3 py-1">
+                          {amenity}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {selectedAccommodation.min_nights > 1 && (
+                  <div className="mb-6 p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                    <p className="text-amber-300 text-sm">
+                      <strong>Mínimo:</strong> {selectedAccommodation.min_nights} noites
+                    </p>
+                  </div>
+                )}
+
+                <Button 
+                  onClick={() => setStep(2)}
+                  size="lg"
+                  className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-lg shadow-emerald-500/20"
+                >
+                  Escolher Datas
+                  <ChevronRight className="w-5 h-5 ml-2" />
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         )}
 
