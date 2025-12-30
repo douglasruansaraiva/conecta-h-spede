@@ -18,11 +18,7 @@ import {
   ExternalLink,
   Copy,
   Check,
-  Calendar,
-  Star,
-  Plus,
-  Trash2,
-  MessageSquare
+  Calendar
 } from "lucide-react";
 import { createPageUrl } from '@/utils';
 import { toast } from "sonner";
@@ -34,7 +30,6 @@ export default function Settings() {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [loadingUser, setLoadingUser] = useState(true);
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
@@ -50,24 +45,14 @@ export default function Settings() {
     check_in_time: '14:00',
     check_out_time: '12:00',
     cancellation_policy: '',
-    payment_instructions: '',
-    testimonials: [],
-    benefits: [],
-    faqs: [],
-    facebook_pixel_id: ''
+    payment_instructions: ''
   });
   const queryClient = useQueryClient();
 
   useEffect(() => {
     const loadUser = async () => {
-      try {
-        const userData = await base44.auth.me();
-        setUser(userData);
-      } catch (error) {
-        console.error('Erro ao carregar usuário:', error);
-      } finally {
-        setLoadingUser(false);
-      }
+      const userData = await base44.auth.me();
+      setUser(userData);
     };
     loadUser();
   }, []);
@@ -109,11 +94,7 @@ export default function Settings() {
         check_in_time: comp.check_in_time || '14:00',
         check_out_time: comp.check_out_time || '12:00',
         cancellation_policy: comp.cancellation_policy || '',
-        payment_instructions: comp.payment_instructions || '',
-        testimonials: comp.testimonials || [],
-        benefits: comp.benefits || [],
-        faqs: comp.faqs || [],
-        facebook_pixel_id: comp.facebook_pixel_id || ''
+        payment_instructions: comp.payment_instructions || ''
       });
     }
   }, [companies]);
@@ -173,14 +154,6 @@ export default function Settings() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  if (loadingUser) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-[#2C5F5D] animate-spin" />
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="max-w-4xl mx-auto p-4 sm:p-6">
@@ -208,10 +181,6 @@ export default function Settings() {
               <TabsTrigger value="policies">
                 <FileText className="w-4 h-4 mr-2" />
                 Políticas
-              </TabsTrigger>
-              <TabsTrigger value="marketing">
-                <MessageSquare className="w-4 h-4 mr-2" />
-                Marketing
               </TabsTrigger>
             </TabsList>
 
@@ -460,284 +429,6 @@ export default function Settings() {
                       rows={6}
                     />
                   </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Marketing Tab */}
-            <TabsContent value="marketing" className="space-y-6">
-              {/* Facebook Pixel */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Pixel do Facebook</CardTitle>
-                  <CardDescription>Rastreie conversões e visualizações de página</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div>
-                    <Label>ID do Pixel do Facebook</Label>
-                    <Input
-                      value={formData.facebook_pixel_id}
-                      onChange={(e) => setFormData({ ...formData, facebook_pixel_id: e.target.value })}
-                      placeholder="123456789012345"
-                    />
-                    <p className="text-xs text-slate-500 mt-2">
-                      O Pixel rastreará automaticamente visualizações de página e leads (reservas concluídas)
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Testimonials */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Star className="w-5 h-5" />
-                    Depoimentos de Hóspedes
-                  </CardTitle>
-                  <CardDescription>Adicione avaliações para aumentar a confiança</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {formData.testimonials?.map((testimonial, index) => (
-                    <div key={index} className="p-4 border rounded-lg space-y-3">
-                      <div className="flex justify-between items-start">
-                        <span className="text-sm font-medium text-slate-700">Depoimento {index + 1}</span>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            const newTestimonials = formData.testimonials.filter((_, i) => i !== index);
-                            setFormData({ ...formData, testimonials: newTestimonials });
-                          }}
-                        >
-                          <Trash2 className="w-4 h-4 text-red-500" />
-                        </Button>
-                      </div>
-                      <div className="grid gap-3">
-                        <div>
-                          <Label className="text-xs">Nome</Label>
-                          <Input
-                            value={testimonial.name}
-                            onChange={(e) => {
-                              const newTestimonials = [...formData.testimonials];
-                              newTestimonials[index].name = e.target.value;
-                              setFormData({ ...formData, testimonials: newTestimonials });
-                            }}
-                            placeholder="Nome do hóspede"
-                          />
-                        </div>
-                        <div>
-                          <Label className="text-xs">Depoimento</Label>
-                          <Textarea
-                            value={testimonial.text}
-                            onChange={(e) => {
-                              const newTestimonials = [...formData.testimonials];
-                              newTestimonials[index].text = e.target.value;
-                              setFormData({ ...formData, testimonials: newTestimonials });
-                            }}
-                            placeholder="O que o hóspede disse..."
-                            rows={2}
-                          />
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <Label className="text-xs">Data</Label>
-                            <Input
-                              value={testimonial.date}
-                              onChange={(e) => {
-                                const newTestimonials = [...formData.testimonials];
-                                newTestimonials[index].date = e.target.value;
-                                setFormData({ ...formData, testimonials: newTestimonials });
-                              }}
-                              placeholder="Janeiro 2025"
-                            />
-                          </div>
-                          <div>
-                            <Label className="text-xs">Avaliação (1-5)</Label>
-                            <Input
-                              type="number"
-                              min="1"
-                              max="5"
-                              value={testimonial.rating}
-                              onChange={(e) => {
-                                const newTestimonials = [...formData.testimonials];
-                                newTestimonials[index].rating = parseInt(e.target.value);
-                                setFormData({ ...formData, testimonials: newTestimonials });
-                              }}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setFormData({
-                        ...formData,
-                        testimonials: [...(formData.testimonials || []), { name: '', text: '', date: '', rating: 5 }]
-                      });
-                    }}
-                    className="w-full"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Adicionar Depoimento
-                  </Button>
-                </CardContent>
-              </Card>
-
-              {/* Benefits */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Benefícios de Reservar Direto</CardTitle>
-                  <CardDescription>Destaque as vantagens de reservar pelo seu site</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {formData.benefits?.map((benefit, index) => (
-                    <div key={index} className="p-4 border rounded-lg space-y-3">
-                      <div className="flex justify-between items-start">
-                        <span className="text-sm font-medium text-slate-700">Benefício {index + 1}</span>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            const newBenefits = formData.benefits.filter((_, i) => i !== index);
-                            setFormData({ ...formData, benefits: newBenefits });
-                          }}
-                        >
-                          <Trash2 className="w-4 h-4 text-red-500" />
-                        </Button>
-                      </div>
-                      <div className="grid gap-3">
-                        <div>
-                          <Label className="text-xs">Título</Label>
-                          <Input
-                            value={benefit.title}
-                            onChange={(e) => {
-                              const newBenefits = [...formData.benefits];
-                              newBenefits[index].title = e.target.value;
-                              setFormData({ ...formData, benefits: newBenefits });
-                            }}
-                            placeholder="Ex: Melhor Preço"
-                          />
-                        </div>
-                        <div>
-                          <Label className="text-xs">Descrição</Label>
-                          <Textarea
-                            value={benefit.description}
-                            onChange={(e) => {
-                              const newBenefits = [...formData.benefits];
-                              newBenefits[index].description = e.target.value;
-                              setFormData({ ...formData, benefits: newBenefits });
-                            }}
-                            placeholder="Descreva o benefício..."
-                            rows={2}
-                          />
-                        </div>
-                        <div>
-                          <Label className="text-xs">Ícone</Label>
-                          <select
-                            value={benefit.icon}
-                            onChange={(e) => {
-                              const newBenefits = [...formData.benefits];
-                              newBenefits[index].icon = e.target.value;
-                              setFormData({ ...formData, benefits: newBenefits });
-                            }}
-                            className="w-full p-2 border rounded-md"
-                          >
-                            <option value="DollarSign">Dólar (Preço)</option>
-                            <option value="Gift">Presente (Benefícios)</option>
-                            <option value="Shield">Escudo (Segurança/Flexibilidade)</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setFormData({
-                        ...formData,
-                        benefits: [...(formData.benefits || []), { title: '', description: '', icon: 'DollarSign' }]
-                      });
-                    }}
-                    className="w-full"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Adicionar Benefício
-                  </Button>
-                </CardContent>
-              </Card>
-
-              {/* FAQs */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Perguntas Frequentes</CardTitle>
-                  <CardDescription>Responda às dúvidas mais comuns dos hóspedes</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {formData.faqs?.map((faq, index) => (
-                    <div key={index} className="p-4 border rounded-lg space-y-3">
-                      <div className="flex justify-between items-start">
-                        <span className="text-sm font-medium text-slate-700">FAQ {index + 1}</span>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            const newFaqs = formData.faqs.filter((_, i) => i !== index);
-                            setFormData({ ...formData, faqs: newFaqs });
-                          }}
-                        >
-                          <Trash2 className="w-4 h-4 text-red-500" />
-                        </Button>
-                      </div>
-                      <div className="grid gap-3">
-                        <div>
-                          <Label className="text-xs">Pergunta</Label>
-                          <Input
-                            value={faq.question}
-                            onChange={(e) => {
-                              const newFaqs = [...formData.faqs];
-                              newFaqs[index].question = e.target.value;
-                              setFormData({ ...formData, faqs: newFaqs });
-                            }}
-                            placeholder="Como funciona o processo de reserva?"
-                          />
-                        </div>
-                        <div>
-                          <Label className="text-xs">Resposta</Label>
-                          <Textarea
-                            value={faq.answer}
-                            onChange={(e) => {
-                              const newFaqs = [...formData.faqs];
-                              newFaqs[index].answer = e.target.value;
-                              setFormData({ ...formData, faqs: newFaqs });
-                            }}
-                            placeholder="Responda a pergunta..."
-                            rows={3}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setFormData({
-                        ...formData,
-                        faqs: [...(formData.faqs || []), { question: '', answer: '' }]
-                      });
-                    }}
-                    className="w-full"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Adicionar Pergunta
-                  </Button>
                 </CardContent>
               </Card>
             </TabsContent>

@@ -23,13 +23,7 @@ import {
   Loader2,
   Calendar,
   Home,
-  X,
-  Star,
-  MessageCircle,
-  Shield,
-  DollarSign,
-  Gift,
-  ChevronDown
+  X
 } from "lucide-react";
 import CalendarGrid from '@/components/reservations/CalendarGrid';
 
@@ -52,10 +46,6 @@ export default function PublicBooking() {
 
   const urlParams = new URLSearchParams(window.location.search);
   const companySlug = urlParams.get('c');
-  
-  console.log('URL completa:', window.location.href);
-  console.log('Search params:', window.location.search);
-  console.log('Company slug extraído:', companySlug);
 
   useEffect(() => {
     let hasRedirected = false;
@@ -90,36 +80,13 @@ export default function PublicBooking() {
     queryKey: ['company-public', companySlug],
     queryFn: async () => {
       if (!companySlug) return [];
-      console.log('Buscando empresa com slug:', companySlug);
-      const result = await base44.entities.Company.filter({ slug: companySlug });
-      console.log('Empresas encontradas:', result);
-      return result;
+      return await base44.entities.Company.filter({ slug: companySlug });
     },
     enabled: !!companySlug && !!user,
     retry: 1
   });
 
   const company = companies[0];
-
-  // Facebook Pixel tracking
-  useEffect(() => {
-    if (company?.facebook_pixel_id) {
-      // Initialize Facebook Pixel
-      if (!window.fbq) {
-        (function(f,b,e,v,n,t,s)
-        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-        n.queue=[];t=b.createElement(e);t.async=!0;
-        t.src=v;s=b.getElementsByTagName(e)[0];
-        s.parentNode.insertBefore(t,s)}(window, document,'script',
-        'https://connect.facebook.net/en_US/fbevents.js'));
-      }
-      
-      window.fbq('init', company.facebook_pixel_id);
-      window.fbq('track', 'PageView');
-    }
-  }, [company]);
 
   const { data: accommodations = [] } = useQuery({
     queryKey: ['accommodations-public', company?.id],
@@ -240,15 +207,6 @@ export default function PublicBooking() {
 
       setLoading(false);
       setSuccess(true);
-      
-      // Track Lead event on Facebook Pixel
-      if (company?.facebook_pixel_id && window.fbq) {
-        window.fbq('track', 'Lead', {
-          content_name: selectedAccommodation.name,
-          value: calculateTotal(),
-          currency: 'BRL'
-        });
-      }
     } catch (error) {
       console.error('Erro ao criar reserva:', error);
       setLoading(false);
@@ -256,23 +214,10 @@ export default function PublicBooking() {
     }
   };
 
-  if (checkingAuth) {
+  if (checkingAuth || !user) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-emerald-600 animate-spin" />
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <Card className="max-w-md w-full">
-          <CardContent className="p-8 text-center">
-            <Loader2 className="w-8 h-8 text-emerald-600 animate-spin mx-auto mb-4" />
-            <p className="text-slate-600">Autenticando...</p>
-          </CardContent>
-        </Card>
       </div>
     );
   }
@@ -315,7 +260,7 @@ export default function PublicBooking() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-6">
         <Card className="max-w-md w-full">
           <CardContent className="p-8 text-center">
             <div className="w-16 h-16 bg-gradient-to-br from-[#2C5F5D] to-[#3A7A77] rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
@@ -395,46 +340,19 @@ export default function PublicBooking() {
         {/* Step 1: Choose Accommodation */}
         {step === 1 && (
           <div>
-            {/* Benefits Section */}
-            {company.benefits?.length > 0 && (
-              <div className="mb-8 sm:mb-12 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-6 sm:p-8 border border-emerald-200">
-                <h2 className="text-xl sm:text-2xl font-bold text-slate-800 mb-4 text-center">
-                  Por que Reservar Direto Conosco?
-                </h2>
-                <div className={`grid grid-cols-1 ${company.benefits.length === 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-3'} gap-4`}>
-                  {company.benefits.map((benefit, index) => {
-                    const IconComponent = benefit.icon === 'DollarSign' ? DollarSign : benefit.icon === 'Gift' ? Gift : Shield;
-                    return (
-                      <div key={index} className="flex items-start gap-3 bg-white/80 p-4 rounded-xl">
-                        <div className="w-10 h-10 rounded-lg bg-emerald-500 flex items-center justify-center flex-shrink-0">
-                          <IconComponent className="w-5 h-5 text-white" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-slate-800 mb-1">{benefit.title}</h3>
-                          <p className="text-sm text-slate-600">{benefit.description}</p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
             <h2 className="text-lg sm:text-xl font-semibold text-slate-800 mb-4 sm:mb-6">Escolha sua Acomodação</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {accommodations.map(acc => (
                 <Card 
                   key={acc.id} 
-                  className="group transition-all hover:shadow-xl bg-white border-slate-200 overflow-hidden flex flex-col"
+                  className="group cursor-pointer transition-all hover:shadow-xl bg-white border-slate-200 overflow-hidden"
+                  onClick={() => {
+                    setSelectedAccommodation(acc);
+                    setCurrentImageIndex(0);
+                    setStep(1.5);
+                  }}
                 >
-                  <div 
-                    className="aspect-video relative bg-slate-900 overflow-hidden cursor-pointer"
-                    onClick={() => {
-                      setSelectedAccommodation(acc);
-                      setCurrentImageIndex(0);
-                      setStep(1.5);
-                    }}
-                  >
+                  <div className="aspect-video relative bg-slate-900 overflow-hidden">
                     {acc.images?.[0] ? (
                       <img src={acc.images[0]} alt={acc.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
                     ) : (
@@ -444,7 +362,7 @@ export default function PublicBooking() {
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-60" />
                   </div>
-                  <CardContent className="p-4 flex-1 flex flex-col">
+                  <CardContent className="p-4">
                     <h3 className="font-semibold text-lg text-slate-800">{acc.name}</h3>
                     {acc.description && (
                       <p className="text-sm text-slate-600 mt-1 line-clamp-2">{acc.description}</p>
@@ -455,7 +373,7 @@ export default function PublicBooking() {
                         Até {acc.max_guests} hóspedes
                       </div>
                       <div className="text-right">
-                        <p className="text-lg font-bold text-emerald-600">
+                        <p className="text-lg font-bold text-emerald-400">
                           R$ {acc.base_price?.toFixed(2)}
                         </p>
                         <p className="text-xs text-slate-500">por noite</p>
@@ -470,70 +388,10 @@ export default function PublicBooking() {
                         ))}
                       </div>
                     )}
-                    <Button 
-                      onClick={() => {
-                        setSelectedAccommodation(acc);
-                        setCurrentImageIndex(0);
-                        setStep(1.5);
-                      }}
-                      className="w-full mt-4 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-md font-semibold group-hover:shadow-lg transition-all"
-                    >
-                      Ver Detalhes e Reservar
-                      <ChevronRight className="w-4 h-4 ml-2" />
-                    </Button>
                   </CardContent>
                 </Card>
               ))}
             </div>
-
-            {/* Testimonials Section */}
-            {company.testimonials?.length > 0 && (
-              <div className="mt-12 sm:mt-16">
-                <h2 className="text-xl sm:text-2xl font-bold text-slate-800 mb-6 text-center">
-                  O que nossos hóspedes dizem
-                </h2>
-                <div className={`grid grid-cols-1 ${company.testimonials.length === 2 ? 'md:grid-cols-2' : 'md:grid-cols-3'} gap-6`}>
-                  {company.testimonials.map((testimonial, index) => (
-                    <Card key={index} className="bg-white border-slate-200">
-                      <CardContent className="p-6">
-                        <div className="flex gap-1 mb-3">
-                          {Array.from({ length: testimonial.rating || 5 }).map((_, i) => (
-                            <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
-                          ))}
-                        </div>
-                        <p className="text-slate-600 text-sm mb-4">
-                          "{testimonial.text}"
-                        </p>
-                        <p className="font-semibold text-slate-800">{testimonial.name}</p>
-                        <p className="text-xs text-slate-500">{testimonial.date}</p>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* FAQ Section */}
-            {company.faqs?.length > 0 && (
-              <div className="mt-12 sm:mt-16">
-                <h2 className="text-xl sm:text-2xl font-bold text-slate-800 mb-6 text-center">
-                  Perguntas Frequentes
-                </h2>
-                <div className="space-y-4 max-w-3xl mx-auto">
-                  {company.faqs.map((faq, index) => (
-                    <details key={index} className="bg-white border border-slate-200 rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow">
-                      <summary className="font-semibold text-slate-800 flex items-center justify-between">
-                        {faq.question}
-                        <ChevronDown className="w-5 h-5 text-slate-400" />
-                      </summary>
-                      <p className="text-slate-600 text-sm mt-3 pl-2 whitespace-pre-line">
-                        {faq.answer}
-                      </p>
-                    </details>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         )}
 
@@ -665,9 +523,9 @@ export default function PublicBooking() {
                 <Button 
                   onClick={() => setStep(2)}
                   size="lg"
-                  className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-lg shadow-emerald-500/20 h-12 sm:h-14 text-sm sm:text-base font-semibold"
+                  className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-lg shadow-emerald-500/20 h-12 sm:h-14 text-sm sm:text-base"
                 >
-                  Reservar Agora - Escolher Datas
+                  Escolher Datas
                   <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
                 </Button>
               </CardContent>
@@ -893,53 +751,22 @@ export default function PublicBooking() {
         )}
       </div>
 
-      {/* WhatsApp Float Button */}
-      {company.phone && (
-        <a
-          href={`https://wa.me/${company.phone.replace(/\D/g, '')}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="fixed bottom-6 right-6 w-14 h-14 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all z-50 animate-bounce"
-          title="Fale conosco no WhatsApp"
-        >
-          <MessageCircle className="w-7 h-7" />
-        </a>
-      )}
-
       {/* Footer */}
       <div className="bg-white/80 backdrop-blur border-t border-slate-200 mt-8 sm:mt-12">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-slate-600">
-              {company.phone && (
-                <a href={`tel:${company.phone}`} className="flex items-center gap-2 hover:text-[#2C5F5D] transition-colors">
-                  <Phone className="w-4 h-4" />
-                  {company.phone}
-                </a>
-              )}
-              {company.email && (
-                <a href={`mailto:${company.email}`} className="flex items-center gap-2 hover:text-[#2C5F5D] transition-colors">
-                  <Mail className="w-4 h-4" />
-                  {company.email}
-                </a>
-              )}
-              {company.phone && (
-                <a 
-                  href={`https://wa.me/${company.phone.replace(/\D/g, '')}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-green-600 hover:text-green-700 transition-colors font-medium"
-                >
-                  <MessageCircle className="w-4 h-4" />
-                  WhatsApp
-                </a>
-              )}
-            </div>
-            <div className="text-center">
-              <p className="text-xs text-slate-500">
-                © {new Date().getFullYear()} {company.name}. Todos os direitos reservados.
-              </p>
-            </div>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+          <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-slate-600">
+            {company.phone && (
+              <a href={`tel:${company.phone}`} className="flex items-center gap-1 hover:text-[#2C5F5D] transition-colors">
+                <Phone className="w-4 h-4" />
+                {company.phone}
+              </a>
+            )}
+            {company.email && (
+              <a href={`mailto:${company.email}`} className="flex items-center gap-1 hover:text-[#2C5F5D] transition-colors">
+                <Mail className="w-4 h-4" />
+                {company.email}
+              </a>
+            )}
           </div>
         </div>
       </div>
