@@ -347,40 +347,29 @@ export default function PublicBooking() {
         {step === 1 && (
           <div>
             {/* Benefits Section */}
-            <div className="mb-8 sm:mb-12 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-6 sm:p-8 border border-emerald-200">
-              <h2 className="text-xl sm:text-2xl font-bold text-slate-800 mb-4 text-center">
-                Por que Reservar Direto Conosco?
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="flex items-start gap-3 bg-white/80 p-4 rounded-xl">
-                  <div className="w-10 h-10 rounded-lg bg-emerald-500 flex items-center justify-center flex-shrink-0">
-                    <DollarSign className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-slate-800 mb-1">Melhor Preço</h3>
-                    <p className="text-sm text-slate-600">Sem taxas de intermediários, economia direta para você</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3 bg-white/80 p-4 rounded-xl">
-                  <div className="w-10 h-10 rounded-lg bg-emerald-500 flex items-center justify-center flex-shrink-0">
-                    <Gift className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-slate-800 mb-1">Benefícios Exclusivos</h3>
-                    <p className="text-sm text-slate-600">Upgrades e cortesias especiais para reservas diretas</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3 bg-white/80 p-4 rounded-xl">
-                  <div className="w-10 h-10 rounded-lg bg-emerald-500 flex items-center justify-center flex-shrink-0">
-                    <Shield className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-slate-800 mb-1">Mais Flexibilidade</h3>
-                    <p className="text-sm text-slate-600">Atendimento personalizado e políticas mais flexíveis</p>
-                  </div>
+            {company.benefits?.length > 0 && (
+              <div className="mb-8 sm:mb-12 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-6 sm:p-8 border border-emerald-200">
+                <h2 className="text-xl sm:text-2xl font-bold text-slate-800 mb-4 text-center">
+                  Por que Reservar Direto Conosco?
+                </h2>
+                <div className={`grid grid-cols-1 ${company.benefits.length === 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-3'} gap-4`}>
+                  {company.benefits.map((benefit, index) => {
+                    const IconComponent = benefit.icon === 'DollarSign' ? DollarSign : benefit.icon === 'Gift' ? Gift : Shield;
+                    return (
+                      <div key={index} className="flex items-start gap-3 bg-white/80 p-4 rounded-xl">
+                        <div className="w-10 h-10 rounded-lg bg-emerald-500 flex items-center justify-center flex-shrink-0">
+                          <IconComponent className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-slate-800 mb-1">{benefit.title}</h3>
+                          <p className="text-sm text-slate-600">{benefit.description}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
-            </div>
+            )}
 
             <h2 className="text-lg sm:text-xl font-semibold text-slate-800 mb-4 sm:mb-6">Escolha sua Acomodação</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
@@ -449,103 +438,53 @@ export default function PublicBooking() {
             </div>
 
             {/* Testimonials Section */}
-            <div className="mt-12 sm:mt-16">
-              <h2 className="text-xl sm:text-2xl font-bold text-slate-800 mb-6 text-center">
-                O que nossos hóspedes dizem
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="bg-white border-slate-200">
-                  <CardContent className="p-6">
-                    <div className="flex gap-1 mb-3">
-                      {[1,2,3,4,5].map(i => <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />)}
-                    </div>
-                    <p className="text-slate-600 text-sm mb-4">
-                      "Experiência maravilhosa! O lugar é exatamente como nas fotos. Atendimento impecável e localização perfeita."
-                    </p>
-                    <p className="font-semibold text-slate-800">Maria Silva</p>
-                    <p className="text-xs text-slate-500">Janeiro 2025</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-white border-slate-200">
-                  <CardContent className="p-6">
-                    <div className="flex gap-1 mb-3">
-                      {[1,2,3,4,5].map(i => <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />)}
-                    </div>
-                    <p className="text-slate-600 text-sm mb-4">
-                      "Lugar perfeito para relaxar! Voltaremos com certeza. A reserva pelo site foi super fácil e rápida."
-                    </p>
-                    <p className="font-semibold text-slate-800">João Santos</p>
-                    <p className="text-xs text-slate-500">Dezembro 2024</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-white border-slate-200">
-                  <CardContent className="p-6">
-                    <div className="flex gap-1 mb-3">
-                      {[1,2,3,4,5].map(i => <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />)}
-                    </div>
-                    <p className="text-slate-600 text-sm mb-4">
-                      "Acomodações limpas e confortáveis. Os anfitriões foram muito atenciosos. Recomendo!"
-                    </p>
-                    <p className="font-semibold text-slate-800">Ana Costa</p>
-                    <p className="text-xs text-slate-500">Novembro 2024</p>
-                  </CardContent>
-                </Card>
+            {company.testimonials?.length > 0 && (
+              <div className="mt-12 sm:mt-16">
+                <h2 className="text-xl sm:text-2xl font-bold text-slate-800 mb-6 text-center">
+                  O que nossos hóspedes dizem
+                </h2>
+                <div className={`grid grid-cols-1 ${company.testimonials.length === 2 ? 'md:grid-cols-2' : 'md:grid-cols-3'} gap-6`}>
+                  {company.testimonials.map((testimonial, index) => (
+                    <Card key={index} className="bg-white border-slate-200">
+                      <CardContent className="p-6">
+                        <div className="flex gap-1 mb-3">
+                          {Array.from({ length: testimonial.rating || 5 }).map((_, i) => (
+                            <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                          ))}
+                        </div>
+                        <p className="text-slate-600 text-sm mb-4">
+                          "{testimonial.text}"
+                        </p>
+                        <p className="font-semibold text-slate-800">{testimonial.name}</p>
+                        <p className="text-xs text-slate-500">{testimonial.date}</p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* FAQ Section */}
-            <div className="mt-12 sm:mt-16">
-              <h2 className="text-xl sm:text-2xl font-bold text-slate-800 mb-6 text-center">
-                Perguntas Frequentes
-              </h2>
-              <div className="space-y-4 max-w-3xl mx-auto">
-                <details className="bg-white border border-slate-200 rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow">
-                  <summary className="font-semibold text-slate-800 flex items-center justify-between">
-                    Como funciona o processo de reserva?
-                    <ChevronDown className="w-5 h-5 text-slate-400" />
-                  </summary>
-                  <p className="text-slate-600 text-sm mt-3 pl-2">
-                    É simples! Escolha sua acomodação, selecione as datas desejadas, preencha seus dados e confirme. Você receberá a confirmação por e-mail com todas as instruções.
-                  </p>
-                </details>
-                <details className="bg-white border border-slate-200 rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow">
-                  <summary className="font-semibold text-slate-800 flex items-center justify-between">
-                    Qual o horário de check-in e check-out?
-                    <ChevronDown className="w-5 h-5 text-slate-400" />
-                  </summary>
-                  <p className="text-slate-600 text-sm mt-3 pl-2">
-                    Check-in: {company.check_in_time || '14:00'}h | Check-out: {company.check_out_time || '12:00'}h. Horários especiais podem ser combinados mediante disponibilidade.
-                  </p>
-                </details>
-                <details className="bg-white border border-slate-200 rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow">
-                  <summary className="font-semibold text-slate-800 flex items-center justify-between">
-                    Como faço o pagamento?
-                    <ChevronDown className="w-5 h-5 text-slate-400" />
-                  </summary>
-                  <p className="text-slate-600 text-sm mt-3 pl-2">
-                    Aceitamos diversas formas de pagamento. Após a confirmação da reserva, você receberá as instruções detalhadas de pagamento por e-mail.
-                  </p>
-                </details>
-                <details className="bg-white border border-slate-200 rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow">
-                  <summary className="font-semibold text-slate-800 flex items-center justify-between">
-                    Posso cancelar minha reserva?
-                    <ChevronDown className="w-5 h-5 text-slate-400" />
-                  </summary>
-                  <p className="text-slate-600 text-sm mt-3 pl-2">
-                    {company.cancellation_policy || 'Entre em contato conosco para informações sobre nossa política de cancelamento.'}
-                  </p>
-                </details>
-                <details className="bg-white border border-slate-200 rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow">
-                  <summary className="font-semibold text-slate-800 flex items-center justify-between">
-                    O que está incluído na estadia?
-                    <ChevronDown className="w-5 h-5 text-slate-400" />
-                  </summary>
-                  <p className="text-slate-600 text-sm mt-3 pl-2">
-                    Cada acomodação possui suas comodidades listadas. Em caso de dúvidas específicas, entre em contato conosco.
-                  </p>
-                </details>
+            {company.faqs?.length > 0 && (
+              <div className="mt-12 sm:mt-16">
+                <h2 className="text-xl sm:text-2xl font-bold text-slate-800 mb-6 text-center">
+                  Perguntas Frequentes
+                </h2>
+                <div className="space-y-4 max-w-3xl mx-auto">
+                  {company.faqs.map((faq, index) => (
+                    <details key={index} className="bg-white border border-slate-200 rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow">
+                      <summary className="font-semibold text-slate-800 flex items-center justify-between">
+                        {faq.question}
+                        <ChevronDown className="w-5 h-5 text-slate-400" />
+                      </summary>
+                      <p className="text-slate-600 text-sm mt-3 pl-2 whitespace-pre-line">
+                        {faq.answer}
+                      </p>
+                    </details>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
 
