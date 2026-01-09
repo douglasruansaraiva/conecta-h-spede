@@ -657,22 +657,29 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
           {accommodation && (
             <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
               <Label className="mb-2 block text-emerald-800">Exportar Calendário (atualização automática 24/7)</Label>
-              <div className="flex gap-2 mb-2">
+              <div className="mb-2">
                 <Input
                   readOnly
                   value={`${window.location.origin}/api/exportCalendar?accommodation_id=${accommodation.id}&company_id=${companyId}`}
-                  className="flex-1 text-xs bg-white"
+                  className="text-xs bg-white mb-2"
+                  onClick={(e) => {
+                    e.target.select();
+                    navigator.clipboard.writeText(e.target.value);
+                    toast.success('URL copiada!');
+                  }}
                 />
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    navigator.clipboard.writeText(`${window.location.origin}/api/exportCalendar?accommodation_id=${accommodation.id}&company_id=${companyId}`);
+                    const url = `${window.location.origin}/api/exportCalendar?accommodation_id=${accommodation.id}&company_id=${companyId}`;
+                    navigator.clipboard.writeText(url);
                     toast.success('URL copiada!');
                   }}
+                  className="w-full"
                 >
-                  <Copy className="w-4 h-4" />
+                  Copiar URL do Calendário
                 </Button>
               </div>
               <p className="text-xs text-emerald-700">
