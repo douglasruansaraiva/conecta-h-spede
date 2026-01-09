@@ -45,6 +45,7 @@ export default async function exportCalendar(request) {
         ical += `DTEND;VALUE=DATE:${dtend}\r\n`;
         ical += `SUMMARY:Reservado\r\n`;
         ical += 'STATUS:CONFIRMED\r\n';
+        ical += 'TRANSP:OPAQUE\r\n';
         ical += 'END:VEVENT\r\n';
       });
 
@@ -63,6 +64,7 @@ export default async function exportCalendar(request) {
       ical += `DTEND;VALUE=DATE:${dtend}\r\n`;
       ical += `SUMMARY:Bloqueado\r\n`;
       ical += 'STATUS:CONFIRMED\r\n';
+      ical += 'TRANSP:OPAQUE\r\n';
       ical += 'END:VEVENT\r\n';
     });
 
