@@ -126,6 +126,86 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
     }));
   };
 
+  const generateAndDownloadIcal = async () => {
+    if (!accommodation) return;
+    
+    try {
+      // Buscar reservas e datas bloqueadas
+      const reservations = await base44.entities.Reservation.filter({
+        company_id: companyId,
+        accommodation_id: accommodation.id
+      });
+      
+      const blockedDates = await base44.entities.BlockedDate.filter({
+        company_id: companyId,
+        accommodation_id: accommodation.id
+      });
+      
+      // Gerar iCal
+      let ical = 'BEGIN:VCALENDAR\r\n';
+      ical += 'VERSION:2.0\r\n';
+      ical += 'PRODID:-//Conecta Hospede//NONSGML v1.0//EN\r\n';
+      ical += 'CALSCALE:GREGORIAN\r\n';
+      ical += 'METHOD:PUBLISH\r\n';
+      
+      // Adicionar reservas
+      reservations
+        .filter(r => r.status !== 'cancelled')
+        .forEach(reservation => {
+          const checkIn = reservation.check_in.replace(/-/g, '');
+          const checkOut = reservation.check_out.replace(/-/g, '');
+          const uid = `res-${reservation.id}@conectahospede.app`;
+          const now = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+          
+          ical += 'BEGIN:VEVENT\r\n';
+          ical += `UID:${uid}\r\n`;
+          ical += `DTSTAMP:${now}\r\n`;
+          ical += `DTSTART;VALUE=DATE:${checkIn}\r\n`;
+          ical += `DTEND;VALUE=DATE:${checkOut}\r\n`;
+          ical += `SUMMARY:Reservado - ${reservation.guest_name || 'Hóspede'}\r\n`;
+          ical += 'STATUS:CONFIRMED\r\n';
+          ical += 'TRANSP:OPAQUE\r\n';
+          ical += 'END:VEVENT\r\n';
+        });
+      
+      // Adicionar bloqueios
+      blockedDates.forEach(block => {
+        const start = block.start_date.replace(/-/g, '');
+        const end = block.end_date.replace(/-/g, '');
+        const uid = `blk-${block.id}@conectahospede.app`;
+        const now = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+        
+        ical += 'BEGIN:VEVENT\r\n';
+        ical += `UID:${uid}\r\n`;
+        ical += `DTSTAMP:${now}\r\n`;
+        ical += `DTSTART;VALUE=DATE:${start}\r\n`;
+        ical += `DTEND;VALUE=DATE:${end}\r\n`;
+        ical += `SUMMARY:Bloqueado${block.reason ? ' - ' + block.reason : ''}\r\n`;
+        ical += 'STATUS:CONFIRMED\r\n';
+        ical += 'TRANSP:OPAQUE\r\n';
+        ical += 'END:VEVENT\r\n';
+      });
+      
+      ical += 'END:VCALENDAR';
+      
+      // Download do arquivo
+      const blob = new Blob([ical], { type: 'text/calendar;charset=utf-8' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `calendario-${accommodation.name.toLowerCase().replace(/\s+/g, '-')}.ics`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('Arquivo iCal baixado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao gerar iCal:', error);
+      toast.error('Erro ao gerar calendário');
+    }
+  };
+
   const syncIcal = async () => {
     if (!formData.ical_urls || formData.ical_urls.length === 0) {
       toast.error('Adicione pelo menos uma URL de iCal primeiro');
