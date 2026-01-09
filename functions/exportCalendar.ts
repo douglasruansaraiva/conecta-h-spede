@@ -23,10 +23,9 @@ export default async function exportCalendar(request) {
       accommodation_id
     });
 
-    let ical = 'BEGIN:VCALENDAR\r\n';
-    ical += 'VERSION:2.0\r\n';
-    ical += 'PRODID:-//Booking.com//Booking.com//EN\r\n';
-    ical += 'METHOD:PUBLISH\r\n';
+    let ical = 'BEGIN:VCALENDAR\n';
+    ical += 'VERSION:2.0\n';
+    ical += 'PRODID:-//Conecta Hospede//Calendar//EN\n';
 
     reservations
       .filter(r => r.status !== 'cancelled')
@@ -38,15 +37,13 @@ export default async function exportCalendar(request) {
         const dtend = format(checkOut, 'yyyyMMdd');
         const now = format(new Date(), "yyyyMMdd'T'HHmmss'Z'");
 
-        ical += 'BEGIN:VEVENT\r\n';
-        ical += `UID:${uid}\r\n`;
-        ical += `DTSTAMP:${now}\r\n`;
-        ical += `DTSTART;VALUE=DATE:${dtstart}\r\n`;
-        ical += `DTEND;VALUE=DATE:${dtend}\r\n`;
-        ical += `SUMMARY:Reservado\r\n`;
-        ical += 'STATUS:CONFIRMED\r\n';
-        ical += 'TRANSP:OPAQUE\r\n';
-        ical += 'END:VEVENT\r\n';
+        ical += 'BEGIN:VEVENT\n';
+        ical += `UID:${uid}\n`;
+        ical += `DTSTAMP:${now}\n`;
+        ical += `DTSTART:${dtstart}\n`;
+        ical += `DTEND:${dtend}\n`;
+        ical += `SUMMARY:Reserved\n`;
+        ical += 'END:VEVENT\n';
       });
 
     blockedDates.forEach(block => {
@@ -57,15 +54,13 @@ export default async function exportCalendar(request) {
       const dtend = format(addDays(end, 1), 'yyyyMMdd');
       const now = format(new Date(), "yyyyMMdd'T'HHmmss'Z'");
 
-      ical += 'BEGIN:VEVENT\r\n';
-      ical += `UID:${uid}\r\n`;
-      ical += `DTSTAMP:${now}\r\n`;
-      ical += `DTSTART;VALUE=DATE:${dtstart}\r\n`;
-      ical += `DTEND;VALUE=DATE:${dtend}\r\n`;
-      ical += `SUMMARY:Bloqueado\r\n`;
-      ical += 'STATUS:CONFIRMED\r\n';
-      ical += 'TRANSP:OPAQUE\r\n';
-      ical += 'END:VEVENT\r\n';
+      ical += 'BEGIN:VEVENT\n';
+      ical += `UID:${uid}\n`;
+      ical += `DTSTAMP:${now}\n`;
+      ical += `DTSTART:${dtstart}\n`;
+      ical += `DTEND:${dtend}\n`;
+      ical += `SUMMARY:Not Available\n`;
+      ical += 'END:VEVENT\n';
     });
 
     ical += 'END:VCALENDAR';
@@ -74,7 +69,7 @@ export default async function exportCalendar(request) {
       status: 200,
       headers: {
         'Content-Type': 'text/calendar; charset=utf-8',
-        'Cache-Control': 'no-cache'
+        'Content-Disposition': 'inline; filename="calendar.ics"'
       },
       body: ical
     };
