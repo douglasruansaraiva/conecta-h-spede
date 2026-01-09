@@ -575,22 +575,28 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
           </div>
 
           {accommodation && (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-              <Label className="mb-2 block text-amber-800">Exportar Calendário</Label>
-              <p className="text-sm text-amber-700 mb-3">
-                Para exportar suas reservas para outras plataformas (Airbnb, Booking, VRBO), você precisa habilitar Funções Backend nas configurações do app.
-              </p>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled
-                className="w-full"
-              >
-                Exportação disponível com Backend Functions
-              </Button>
-              <p className="text-xs text-amber-600 mt-2">
-                Entre em contato com o suporte para habilitar este recurso
+            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+              <Label className="mb-2 block text-emerald-800">Exportar Calendário (para Airbnb, Booking, VRBO, etc)</Label>
+              <div className="flex gap-2">
+                <Input
+                  readOnly
+                  value={`${window.location.origin}/api/exportCalendar?accommodation_id=${accommodation.id}&company_id=${companyId}`}
+                  className="flex-1 text-xs bg-white"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${window.location.origin}/api/exportCalendar?accommodation_id=${accommodation.id}&company_id=${companyId}`);
+                    toast.success('URL copiada!');
+                  }}
+                >
+                  Copiar
+                </Button>
+              </div>
+              <p className="text-xs text-emerald-700 mt-2">
+                Use essa URL para sincronizar suas reservas em outras plataformas
               </p>
             </div>
           )}
