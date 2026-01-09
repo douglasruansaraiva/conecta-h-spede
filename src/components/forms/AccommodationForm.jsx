@@ -656,34 +656,20 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
 
           {accommodation && (
             <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
-              <Label className="mb-2 block text-emerald-800">Exportar Calendário (atualização automática 24/7)</Label>
+              <Label className="mb-2 block text-emerald-800">Exportar Calendário</Label>
               <div className="mb-2">
-                <Input
-                  readOnly
-                  value={`${window.location.origin}/api/exportCalendar?accommodation_id=${accommodation.id}&company_id=${companyId}`}
-                  className="text-xs bg-white mb-2"
-                  onClick={(e) => {
-                    e.target.select();
-                    navigator.clipboard.writeText(e.target.value);
-                    toast.success('URL copiada!');
-                  }}
-                />
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => {
-                    const url = `${window.location.origin}/api/exportCalendar?accommodation_id=${accommodation.id}&company_id=${companyId}`;
-                    navigator.clipboard.writeText(url);
-                    toast.success('URL copiada!');
-                  }}
+                  onClick={generateAndDownloadIcal}
                   className="w-full"
                 >
-                  Copiar URL do Calendário
+                  Baixar arquivo iCal (.ics)
                 </Button>
               </div>
               <p className="text-xs text-emerald-700">
-                Cole esta URL no Booking.com, Airbnb ou VRBO para sincronizar automaticamente suas reservas
+                Baixe o arquivo .ics e faça upload manualmente no Booking.com, Airbnb ou VRBO. Este método é mais confiável para sincronização.
               </p>
             </div>
           )}
