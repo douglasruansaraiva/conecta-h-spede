@@ -4,7 +4,7 @@ import { ptBR } from 'date-fns/locale';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, User, Phone, Mail, Home, CreditCard, MoreHorizontal } from "lucide-react";
+import { Calendar, User, Phone, Mail, Home, CreditCard, MoreHorizontal, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,6 +34,7 @@ export default function ReservationCard({
   onEdit,
   onStatusChange,
   onAddPayment,
+  onDelete,
   compact = false 
 }) {
   const checkIn = parseISO(reservation.check_in);
@@ -110,6 +111,15 @@ export default function ReservationCard({
                     className="text-red-600"
                   >
                     Cancelar Reserva
+                  </DropdownMenuItem>
+                )}
+                {reservation.status === 'cancelled' && onDelete && (
+                  <DropdownMenuItem 
+                    onClick={onDelete}
+                    className="text-red-600"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Excluir Reserva
                   </DropdownMenuItem>
                 )}
               </DropdownMenuContent>

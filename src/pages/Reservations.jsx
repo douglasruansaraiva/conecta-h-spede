@@ -76,6 +76,13 @@ function ReservationsContent({ user, company }) {
     setPaymentReservation(reservation);
   };
 
+  const handleDelete = async (reservation) => {
+    if (window.confirm('Tem certeza que deseja excluir esta reserva? Esta ação não pode ser desfeita.')) {
+      await base44.entities.Reservation.delete(reservation.id);
+      queryClient.invalidateQueries(['reservations']);
+    }
+  };
+
   const handleFormClose = () => {
     setFormOpen(false);
     setEditingReservation(null);
@@ -174,6 +181,7 @@ function ReservationsContent({ user, company }) {
                   onEdit={() => handleEdit(reservation)}
                   onStatusChange={(status) => handleStatusChange(reservation, status)}
                   onAddPayment={() => handleAddPayment(reservation)}
+                  onDelete={() => handleDelete(reservation)}
                 />
               ))
             )}
