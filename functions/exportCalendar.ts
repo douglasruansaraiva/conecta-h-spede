@@ -24,10 +24,7 @@ export default async function exportCalendar(request) {
 
     let ical = 'BEGIN:VCALENDAR\r\n';
     ical += 'VERSION:2.0\r\n';
-    ical += 'PRODID:-//Conecta Hóspede//NONSGML v1.0//PT\r\n';
-    ical += 'X-WR-CALNAME:Reservas\r\n';
-    ical += 'X-WR-TIMEZONE:America/Sao_Paulo\r\n';
-    ical += 'CALSCALE:GREGORIAN\r\n';
+    ical += 'PRODID:-//Booking.com//Booking.com//EN\r\n';
     ical += 'METHOD:PUBLISH\r\n';
 
     reservations
@@ -76,9 +73,7 @@ export default async function exportCalendar(request) {
       status: 200,
       headers: {
         'Content-Type': 'text/calendar; charset=utf-8',
-        'Content-Disposition': 'attachment; filename="calendar.ics"',
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Access-Control-Allow-Origin': '*'
+        'Cache-Control': 'no-cache'
       },
       body: ical
     };
