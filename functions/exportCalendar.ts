@@ -2,6 +2,7 @@ import { base44 } from '@base44/sdk';
 import { parseISO, format, addDays } from 'date-fns';
 
 export default async function exportCalendar(request) {
+  // Support both /api/exportCalendar?params and /api/exportCalendar/calendar.ics?params
   const { accommodation_id, company_id } = request.query;
 
   if (!accommodation_id || !company_id) {
