@@ -157,15 +157,33 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
         if (!icalConfig.url) continue;
 
         try {
-          const proxyUrl = 'https://corsproxy.io/?';
-          const response = await fetch(proxyUrl + encodeURIComponent(icalConfig.url));
+          // Try multiple proxy strategies
+          let icalData = null;
+          let response = null;
           
-          if (!response.ok) {
-            console.error(`Erro ao buscar ${icalConfig.name}:`, response.statusText);
-            continue;
+          // Try direct fetch first (works for many URLs)
+          try {
+            response = await fetch(icalConfig.url);
+            if (response.ok) {
+              icalData = await response.text();
+            }
+          } catch (e) {
+            console.log('Direct fetch failed, trying proxy...');
           }
           
-          const icalData = await response.text();
+          // If direct fetch failed, try with CORS proxy
+          if (!icalData) {
+            const proxyUrl = 'https://api.allorigins.win/raw?url=';
+            response = await fetch(proxyUrl + encodeURIComponent(icalConfig.url));
+            
+            if (!response.ok) {
+              console.error(`Erro ao buscar ${icalConfig.name}:`, response.statusText);
+              toast.error(`Erro ao sincronizar ${icalConfig.name || 'calendário'}`);
+              continue;
+            }
+            
+            icalData = await response.text();
+          }
           
           // Parse iCal data
           const events = [];
