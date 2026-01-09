@@ -660,7 +660,7 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
               <div className="mb-2">
                 <Input
                   readOnly
-                  value={`${window.location.origin}/api/exportCalendar/calendar.ics?accommodation_id=${accommodation.id}&company_id=${companyId}`}
+                  value={`${window.location.origin}/api/exportCalendar?accommodation_id=${accommodation.id}&company_id=${companyId}`}
                   className="text-xs bg-white mb-2"
                   onClick={(e) => {
                     e.target.select();
