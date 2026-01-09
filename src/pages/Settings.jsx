@@ -106,9 +106,16 @@ export default function Settings() {
     if (!file) return;
 
     setUploading(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    setFormData(prev => ({ ...prev, [field]: file_url }));
-    setUploading(false);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      setFormData(prev => ({ ...prev, [field]: file_url }));
+      toast.success('Imagem enviada com sucesso!');
+    } catch (error) {
+      console.error('Erro ao fazer upload:', error);
+      toast.error('Erro ao enviar imagem. Tente novamente.');
+    } finally {
+      setUploading(false);
+    }
   };
 
   const generateSlug = (name) => {
