@@ -47,7 +47,9 @@ export default function Settings() {
     check_in_time: '14:00',
     check_out_time: '12:00',
     cancellation_policy: '',
-    payment_instructions: ''
+    payment_instructions: '',
+    stripe_publishable_key: '',
+    stripe_secret_key: ''
   });
   const queryClient = useQueryClient();
 
@@ -96,7 +98,9 @@ export default function Settings() {
         check_in_time: comp.check_in_time || '14:00',
         check_out_time: comp.check_out_time || '12:00',
         cancellation_policy: comp.cancellation_policy || '',
-        payment_instructions: comp.payment_instructions || ''
+        payment_instructions: comp.payment_instructions || '',
+        stripe_publishable_key: comp.stripe_publishable_key || '',
+        stripe_secret_key: comp.stripe_secret_key || ''
       });
     }
   }, [companies]);
@@ -184,6 +188,10 @@ export default function Settings() {
                 <LinkIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                 <span className="hidden sm:inline">Reservas Online</span>
                 <span className="sm:hidden">Reservas</span>
+              </TabsTrigger>
+              <TabsTrigger value="payments" className="text-xs sm:text-sm">
+                <CreditCard className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                Pagamentos
               </TabsTrigger>
               <TabsTrigger value="seasonal" className="text-xs sm:text-sm">
                 <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
@@ -350,6 +358,62 @@ export default function Settings() {
                       />
                     </div>
                   </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Payments Tab */}
+            <TabsContent value="payments">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Pagamentos Online (Stripe)</CardTitle>
+                  <CardDescription>Configure o Stripe para aceitar pagamentos com cartão</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-800">
+                      <strong>Como obter suas chaves do Stripe:</strong>
+                    </p>
+                    <ol className="text-sm text-blue-700 mt-2 ml-4 list-decimal space-y-1">
+                      <li>Acesse <a href="https://dashboard.stripe.com/register" target="_blank" rel="noopener noreferrer" className="underline">dashboard.stripe.com</a></li>
+                      <li>Faça login ou crie uma conta</li>
+                      <li>Vá em "Desenvolvedores" → "Chaves de API"</li>
+                      <li>Copie suas chaves e cole abaixo</li>
+                    </ol>
+                  </div>
+
+                  <div>
+                    <Label>Chave Publicável (Publishable Key)</Label>
+                    <Input
+                      type="text"
+                      value={formData.stripe_publishable_key}
+                      onChange={(e) => setFormData({ ...formData, stripe_publishable_key: e.target.value })}
+                      placeholder="pk_test_..."
+                      className="font-mono text-sm"
+                    />
+                    <p className="text-xs text-slate-500 mt-1">Começa com pk_test_ ou pk_live_</p>
+                  </div>
+
+                  <div>
+                    <Label>Chave Secreta (Secret Key)</Label>
+                    <Input
+                      type="password"
+                      value={formData.stripe_secret_key}
+                      onChange={(e) => setFormData({ ...formData, stripe_secret_key: e.target.value })}
+                      placeholder="sk_test_..."
+                      className="font-mono text-sm"
+                    />
+                    <p className="text-xs text-slate-500 mt-1">Começa com sk_test_ ou sk_live_</p>
+                  </div>
+
+                  {formData.stripe_publishable_key && formData.stripe_secret_key && (
+                    <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
+                      <p className="text-sm text-emerald-800 flex items-center gap-2">
+                        <Check className="w-4 h-4" />
+                        Pagamentos online configurados! Seus clientes poderão pagar com cartão.
+                      </p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>

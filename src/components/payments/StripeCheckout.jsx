@@ -5,8 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Loader2, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '');
-
 function CheckoutForm({ amount, onSuccess, onCancel }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -83,6 +81,7 @@ function CheckoutForm({ amount, onSuccess, onCancel }) {
 
 export default function StripeCheckout({ amount, reservationId, companyId, onSuccess, onCancel }) {
   const [clientSecret, setClientSecret] = useState('');
+  const [stripePromise, setStripePromise] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -100,10 +99,11 @@ export default function StripeCheckout({ amount, reservationId, companyId, onSuc
 
         const data = await response.json();
         
-        if (data.clientSecret) {
+        if (data.clientSecret && data.publishableKey) {
           setClientSecret(data.clientSecret);
+          setStripePromise(loadStripe(data.publishableKey));
         } else {
-          toast.error('Erro ao inicializar pagamento');
+          toast.error(data.error || 'Erro ao inicializar pagamento');
           onCancel();
         }
       } catch (error) {
@@ -128,7 +128,7 @@ export default function StripeCheckout({ amount, reservationId, companyId, onSuc
     );
   }
 
-  if (!clientSecret) {
+  if (!clientSecret || !stripePromise) {
     return null;
   }
 
