@@ -598,6 +598,26 @@ function FinancialContent({ user, company }) {
                 </CardContent>
               </Card>
 
+              {/* Most Rented Accommodations */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Acomodações Mais Alugadas</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={revenueByAccommodation} layout="vertical">
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis type="number" />
+                      <YAxis dataKey="name" type="category" width={100} />
+                      <Tooltip 
+                        formatter={(value) => `${value} reservas`}
+                      />
+                      <Bar dataKey="reservas" fill="#10b981" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
               {/* Reservations by Source */}
               <Card>
                 <CardHeader>
