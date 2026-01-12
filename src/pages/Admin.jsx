@@ -252,11 +252,10 @@ export default function AdminPage() {
         </div>
 
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="dashboard">Dashboard & Financeiro</TabsTrigger>
             <TabsTrigger value="users">Usuários ({allUsers.length})</TabsTrigger>
             <TabsTrigger value="companies">Empresas ({allCompanies.length})</TabsTrigger>
-            <TabsTrigger value="financial">Financeiro</TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard" className="space-y-6">
@@ -376,6 +375,248 @@ export default function AdminPage() {
                   </div>
                 </CardContent>
               </Card>
+            </div>
+
+            {/* Financial Section */}
+            <div className="mt-8">
+              <h2 className="text-2xl font-bold text-slate-900 mb-6">Financeiro</h2>
+              
+              <FinancialCharts subscriptions={allSubscriptions} expenses={allExpenses} />
+              
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium text-slate-600">Receitas Recebidas</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold text-emerald-600">
+                      R$ {monthlyRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </div>
+                    <p className="text-xs text-slate-500 mt-2">
+                      {allSubscriptions.filter(s => s.payment_status === 'paid').length} mensalidades pagas
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium text-slate-600">Despesas</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold text-red-600">
+                      R$ {totalExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </div>
+                    <p className="text-xs text-slate-500 mt-2">
+                      {allExpenses.filter(e => e.status === 'paid').length} despesas pagas
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium text-slate-600">Lucro Líquido</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className={`text-3xl font-bold ${netProfit >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                      R$ {netProfit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </div>
+                    <p className="text-xs text-slate-500 mt-2">
+                      Receitas - Despesas
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium text-slate-600">Pendentes</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold text-amber-600">
+                      R$ {pendingRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </div>
+                    <p className="text-xs text-slate-500 mt-2">
+                      {allSubscriptions.filter(s => s.payment_status === 'pending').length} pagamentos pendentes
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle>Mensalidades</CardTitle>
+                        <CardDescription>Assinaturas das empresas</CardDescription>
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          setEditingSubscription(null);
+                          setSubscriptionFormOpen(true);
+                        }}
+                        className="bg-gradient-to-r from-[#2C5F5D] to-[#3A7A77]"
+                      >
+                        <Plus className="w-4 h-4 mr-1" />
+                        Nova
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2 max-h-96 overflow-y-auto">
+                      {allSubscriptions.map(subscription => {
+                        const company = allCompanies.find(c => c.id === subscription.company_id);
+                        return (
+                          <div
+                            key={subscription.id}
+                            className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              {company?.logo_url ? (
+                                <img
+                                  src={company.logo_url}
+                                  alt={company.name}
+                                  className="w-10 h-10 rounded-lg object-cover"
+                                />
+                              ) : (
+                                <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center">
+                                  <Building2 className="w-5 h-5 text-slate-400" />
+                                </div>
+                              )}
+                              <div>
+                                <p className="text-sm font-medium">{company?.name || 'Empresa desconhecida'}</p>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <Badge variant="outline" className="text-xs">
+                                    {subscription.plan}
+                                  </Badge>
+                                  <p className="text-xs text-slate-500">
+                                    Venc: {format(new Date(subscription.due_date), "dd/MM/yyyy", { locale: ptBR })}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="text-right">
+                                <p className="font-semibold text-slate-900 text-sm">
+                                  R$ {subscription.monthly_fee?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                </p>
+                                <Badge 
+                                  variant={
+                                    subscription.payment_status === 'paid' ? 'default' : 
+                                    subscription.payment_status === 'overdue' ? 'destructive' : 
+                                    'secondary'
+                                  } 
+                                  className="text-xs"
+                                >
+                                  {subscription.payment_status === 'paid' ? 'Pago' : 
+                                   subscription.payment_status === 'overdue' ? 'Atrasado' : 
+                                   'Pendente'}
+                                </Badge>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  setEditingSubscription(subscription);
+                                  setSubscriptionFormOpen(true);
+                                }}
+                              >
+                                <Pencil className="w-4 h-4 text-slate-500" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setDeleteSubscriptionId(subscription.id)}
+                              >
+                                <Trash2 className="w-4 h-4 text-red-500" />
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle>Despesas</CardTitle>
+                        <CardDescription>Custos operacionais</CardDescription>
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          setEditingExpense(null);
+                          setExpenseFormOpen(true);
+                        }}
+                        className="bg-gradient-to-r from-[#2C5F5D] to-[#3A7A77]"
+                      >
+                        <Plus className="w-4 h-4 mr-1" />
+                        Nova
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2 max-h-96 overflow-y-auto">
+                      {allExpenses.map(expense => (
+                        <div
+                          key={expense.id}
+                          className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
+                              <Receipt className="w-5 h-5 text-red-600" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">{expense.description}</p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <Badge variant="outline" className="text-xs">
+                                  {expense.category}
+                                </Badge>
+                                <p className="text-xs text-slate-500">
+                                  {format(new Date(expense.date), "dd/MM/yyyy", { locale: ptBR })}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="text-right">
+                              <p className="font-semibold text-red-600 text-sm">
+                                R$ {expense.amount?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                              </p>
+                              <Badge 
+                                variant={expense.status === 'paid' ? 'default' : 'secondary'}
+                                className="text-xs"
+                              >
+                                {expense.status === 'paid' ? 'Pago' : 'Pendente'}
+                              </Badge>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                setEditingExpense(expense);
+                                setExpenseFormOpen(true);
+                              }}
+                            >
+                              <Pencil className="w-4 h-4 text-slate-500" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setDeleteExpenseId(expense.id)}
+                            >
+                              <Trash2 className="w-4 h-4 text-red-500" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </TabsContent>
 
@@ -543,244 +784,7 @@ export default function AdminPage() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="financial" className="space-y-6">
-            <FinancialCharts subscriptions={allSubscriptions} expenses={allExpenses} />
-            
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm font-medium text-slate-600">Receitas Recebidas</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-emerald-600">
-                    R$ {monthlyRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </div>
-                  <p className="text-xs text-slate-500 mt-2">
-                    {allSubscriptions.filter(s => s.payment_status === 'paid').length} mensalidades pagas
-                  </p>
-                </CardContent>
-              </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm font-medium text-slate-600">Despesas</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-red-600">
-                    R$ {totalExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </div>
-                  <p className="text-xs text-slate-500 mt-2">
-                    {allExpenses.filter(e => e.status === 'paid').length} despesas pagas
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm font-medium text-slate-600">Lucro Líquido</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className={`text-3xl font-bold ${netProfit >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-                    R$ {netProfit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </div>
-                  <p className="text-xs text-slate-500 mt-2">
-                    Receitas - Despesas
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm font-medium text-slate-600">Pendentes</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-amber-600">
-                    R$ {pendingRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </div>
-                  <p className="text-xs text-slate-500 mt-2">
-                    {allSubscriptions.filter(s => s.payment_status === 'pending').length} pagamentos pendentes
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle>Mensalidades</CardTitle>
-                      <CardDescription>Assinaturas das empresas</CardDescription>
-                    </div>
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        setEditingSubscription(null);
-                        setSubscriptionFormOpen(true);
-                      }}
-                      className="bg-gradient-to-r from-[#2C5F5D] to-[#3A7A77]"
-                    >
-                      <Plus className="w-4 h-4 mr-1" />
-                      Nova
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2 max-h-96 overflow-y-auto">
-                    {allSubscriptions.map(subscription => {
-                      const company = allCompanies.find(c => c.id === subscription.company_id);
-                      return (
-                        <div
-                          key={subscription.id}
-                          className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
-                        >
-                          <div className="flex items-center gap-3">
-                            {company?.logo_url ? (
-                              <img
-                                src={company.logo_url}
-                                alt={company.name}
-                                className="w-10 h-10 rounded-lg object-cover"
-                              />
-                            ) : (
-                              <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center">
-                                <Building2 className="w-5 h-5 text-slate-400" />
-                              </div>
-                            )}
-                            <div>
-                              <p className="text-sm font-medium">{company?.name || 'Empresa desconhecida'}</p>
-                              <div className="flex items-center gap-2 mt-1">
-                                <Badge variant="outline" className="text-xs">
-                                  {subscription.plan}
-                                </Badge>
-                                <p className="text-xs text-slate-500">
-                                  Venc: {format(new Date(subscription.due_date), "dd/MM/yyyy", { locale: ptBR })}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="text-right">
-                              <p className="font-semibold text-slate-900 text-sm">
-                                R$ {subscription.monthly_fee?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                              </p>
-                              <Badge 
-                                variant={
-                                  subscription.payment_status === 'paid' ? 'default' : 
-                                  subscription.payment_status === 'overdue' ? 'destructive' : 
-                                  'secondary'
-                                } 
-                                className="text-xs"
-                              >
-                                {subscription.payment_status === 'paid' ? 'Pago' : 
-                                 subscription.payment_status === 'overdue' ? 'Atrasado' : 
-                                 'Pendente'}
-                              </Badge>
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => {
-                                setEditingSubscription(subscription);
-                                setSubscriptionFormOpen(true);
-                              }}
-                            >
-                              <Pencil className="w-4 h-4 text-slate-500" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setDeleteSubscriptionId(subscription.id)}
-                            >
-                              <Trash2 className="w-4 h-4 text-red-500" />
-                            </Button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle>Despesas</CardTitle>
-                      <CardDescription>Custos operacionais</CardDescription>
-                    </div>
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        setEditingExpense(null);
-                        setExpenseFormOpen(true);
-                      }}
-                      className="bg-gradient-to-r from-[#2C5F5D] to-[#3A7A77]"
-                    >
-                      <Plus className="w-4 h-4 mr-1" />
-                      Nova
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2 max-h-96 overflow-y-auto">
-                    {allExpenses.map(expense => (
-                      <div
-                        key={expense.id}
-                        className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
-                            <Receipt className="w-5 h-5 text-red-600" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium">{expense.description}</p>
-                            <div className="flex items-center gap-2 mt-1">
-                              <Badge variant="outline" className="text-xs">
-                                {expense.category}
-                              </Badge>
-                              <p className="text-xs text-slate-500">
-                                {format(new Date(expense.date), "dd/MM/yyyy", { locale: ptBR })}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="text-right">
-                            <p className="font-semibold text-red-600 text-sm">
-                              R$ {expense.amount?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                            </p>
-                            <Badge 
-                              variant={expense.status === 'paid' ? 'default' : 'secondary'}
-                              className="text-xs"
-                            >
-                              {expense.status === 'paid' ? 'Pago' : 'Pendente'}
-                            </Badge>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => {
-                              setEditingExpense(expense);
-                              setExpenseFormOpen(true);
-                            }}
-                          >
-                            <Pencil className="w-4 h-4 text-slate-500" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setDeleteExpenseId(expense.id)}
-                          >
-                            <Trash2 className="w-4 h-4 text-red-500" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
         </Tabs>
       </div>
 
