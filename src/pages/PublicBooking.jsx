@@ -23,12 +23,14 @@ import {
   Loader2,
   Calendar,
   Home,
-  X
+  X,
+  CreditCard
 } from "lucide-react";
 import CalendarGrid from '@/components/reservations/CalendarGrid';
+import StripeCheckout from '@/components/payments/StripeCheckout';
 
 export default function PublicBooking() {
-  const [step, setStep] = useState(1); // 1: list, 1.5: details, 2: dates, 3: form
+  const [step, setStep] = useState(1); // 1: list, 1.5: details, 2: dates, 3: form, 4: payment
   const [selectedAccommodation, setSelectedAccommodation] = useState(null);
   const [selectedDates, setSelectedDates] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -36,6 +38,8 @@ export default function PublicBooking() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [user, setUser] = useState(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [paymentMethod, setPaymentMethod] = useState('manual'); // 'manual' or 'online'
+  const [createdReservationId, setCreatedReservationId] = useState(null);
   const [formData, setFormData] = useState({
     guest_name: '',
     guest_email: '',
@@ -157,6 +161,17 @@ export default function PublicBooking() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (paymentMethod === 'online') {
+      // Continuar para pagamento
+      setStep(4);
+    } else {
+      // Criar reserva sem pagamento
+      await createReservation();
+    }
+  };
+
+  const createReservation = async () => {
     setLoading(true);
 
     try {
@@ -189,7 +204,7 @@ export default function PublicBooking() {
       }
 
       // Create reservation
-      await base44.entities.Reservation.create({
+      const reservation = await base44.entities.Reservation.create({
         company_id: company.id,
         accommodation_id: selectedAccommodation.id,
         guest_id: guestId,
@@ -201,17 +216,28 @@ export default function PublicBooking() {
         guests_count: parseInt(formData.guests_count) || 1,
         notes: formData.notes,
         total_amount: calculateTotal(),
+        paid_amount: paymentMethod === 'online' ? calculateTotal() : 0,
         source: 'direct',
-        status: 'pending'
+        status: paymentMethod === 'online' ? 'confirmed' : 'pending'
       });
 
+      setCreatedReservationId(reservation.id);
       setLoading(false);
-      setSuccess(true);
+      
+      if (paymentMethod === 'manual') {
+        setSuccess(true);
+      }
+      
+      return reservation.id;
     } catch (error) {
       console.error('Erro ao criar reserva:', error);
       setLoading(false);
       alert('Erro ao processar reserva. Por favor, tente novamente.');
     }
+  };
+
+  const handlePaymentSuccess = () => {
+    setSuccess(true);
   };
 
   if (checkingAuth || !user) {
@@ -683,6 +709,46 @@ export default function PublicBooking() {
                         />
                       </div>
 
+                      <div className="border-t pt-4">
+                        <Label className="text-slate-700 mb-3 block">Forma de Pagamento</Label>
+                        <div className="space-y-3">
+                          <button
+                            type="button"
+                            onClick={() => setPaymentMethod('online')}
+                            className={`w-full p-4 rounded-lg border-2 transition-all ${
+                              paymentMethod === 'online' 
+                                ? 'border-emerald-500 bg-emerald-50' 
+                                : 'border-slate-200 hover:border-slate-300'
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <CreditCard className="w-5 h-5 text-slate-600" />
+                              <div className="text-left">
+                                <p className="font-medium text-slate-800">Pagar Agora (Online)</p>
+                                <p className="text-sm text-slate-500">Cartão de crédito ou débito</p>
+                              </div>
+                            </div>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setPaymentMethod('manual')}
+                            className={`w-full p-4 rounded-lg border-2 transition-all ${
+                              paymentMethod === 'manual' 
+                                ? 'border-emerald-500 bg-emerald-50' 
+                                : 'border-slate-200 hover:border-slate-300'
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <Clock className="w-5 h-5 text-slate-600" />
+                              <div className="text-left">
+                                <p className="font-medium text-slate-800">Pagar Depois</p>
+                                <p className="text-sm text-slate-500">Siga as instruções enviadas por email</p>
+                              </div>
+                            </div>
+                          </button>
+                        </div>
+                      </div>
+
                       {company.cancellation_policy && (
                         <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
                           <p className="text-sm font-medium text-emerald-700 mb-1">Política de Cancelamento</p>
@@ -701,7 +767,7 @@ export default function PublicBooking() {
                           className="bg-gradient-to-r from-[#2C5F5D] to-[#3A7A77] hover:from-[#234B49] hover:to-[#2C5F5D] text-white shadow-md"
                         >
                           {loading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                          Confirmar Reserva
+                          {paymentMethod === 'online' ? 'Ir para Pagamento' : 'Confirmar Reserva'}
                         </Button>
                       </div>
                     </form>
@@ -747,11 +813,81 @@ export default function PublicBooking() {
                 </Card>
               </div>
             </div>
-          </div>
-        )}
-      </div>
+            </div>
+            )}
 
-      {/* Footer */}
+            {/* Step 4: Payment */}
+            {step === 4 && (
+            <div>
+            <Button 
+              variant="ghost" 
+              onClick={() => setStep(3)}
+              className="mb-4 text-slate-600 hover:text-slate-800 text-sm"
+            >
+              <ChevronLeft className="w-4 h-4 mr-1" />
+              Voltar
+            </Button>
+
+            <h2 className="text-lg sm:text-xl font-semibold text-slate-800 mb-4 sm:mb-6">Pagamento</h2>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+              <div className="lg:col-span-2">
+                <Card className="bg-white border-slate-200 shadow-sm">
+                  <CardContent className="p-6">
+                    <StripeCheckout
+                      amount={calculateTotal()}
+                      reservationId={createdReservationId || 'temp'}
+                      companyId={company.id}
+                      onSuccess={handlePaymentSuccess}
+                      onCancel={() => setStep(3)}
+                    />
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Summary */}
+              <div>
+                <Card className="bg-white border-slate-200 shadow-sm">
+                  <CardHeader>
+                    <CardTitle className="text-lg text-slate-800">Resumo</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div>
+                        <p className="font-medium text-slate-800">{selectedAccommodation?.name}</p>
+                      </div>
+                      <div className="border-t border-slate-200 pt-4 space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-slate-600">Check-in</span>
+                          <span className="text-slate-800">{format(selectedDates.start, "dd/MM/yyyy")}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-slate-600">Check-out</span>
+                          <span className="text-slate-800">{format(selectedDates.end, "dd/MM/yyyy")}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-slate-600">{nights} noite(s)</span>
+                          <span className="text-slate-800">R$ {calculateTotal().toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                        </div>
+                      </div>
+                      <div className="border-t border-slate-200 pt-4">
+                        <div className="flex justify-between">
+                          <span className="font-semibold text-slate-800">Total</span>
+                          <span className="font-bold text-xl text-emerald-400">
+                            R$ {calculateTotal().toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+            </div>
+            )}
+            </div>
+
+            {/* Footer */}
       <div className="bg-white/80 backdrop-blur border-t border-slate-200 mt-8 sm:mt-12">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
           <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-slate-600">

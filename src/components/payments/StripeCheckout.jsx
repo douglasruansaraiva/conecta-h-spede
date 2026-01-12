@@ -1,0 +1,140 @@
+import React, { useState, useEffect } from 'react';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { Button } from "@/components/ui/button";
+import { Loader2, CreditCard } from "lucide-react";
+import { toast } from "sonner";
+
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '');
+
+function CheckoutForm({ amount, onSuccess, onCancel }) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!stripe || !elements) return;
+
+    setLoading(true);
+
+    const { error } = await stripe.confirmPayment({
+      elements,
+      confirmParams: {
+        return_url: window.location.href,
+      },
+      redirect: 'if_required'
+    });
+
+    if (error) {
+      toast.error(error.message);
+      setLoading(false);
+    } else {
+      toast.success('Pagamento realizado com sucesso!');
+      onSuccess();
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-slate-600">Total a pagar:</span>
+          <span className="text-2xl font-bold text-slate-800">
+            R$ {amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+          </span>
+        </div>
+      </div>
+
+      <PaymentElement />
+
+      <div className="flex gap-3">
+        <Button 
+          type="button" 
+          variant="outline" 
+          onClick={onCancel}
+          disabled={loading}
+          className="flex-1"
+        >
+          Cancelar
+        </Button>
+        <Button 
+          type="submit" 
+          disabled={!stripe || loading}
+          className="flex-1 bg-gradient-to-r from-[#2C5F5D] to-[#3A7A77] hover:from-[#234B49] hover:to-[#2C5F5D] text-white"
+        >
+          {loading ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              Processando...
+            </>
+          ) : (
+            <>
+              <CreditCard className="w-4 h-4 mr-2" />
+              Pagar Agora
+            </>
+          )}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+export default function StripeCheckout({ amount, reservationId, companyId, onSuccess, onCancel }) {
+  const [clientSecret, setClientSecret] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const createIntent = async () => {
+      try {
+        const response = await fetch('/api/createPaymentIntent', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            amount,
+            reservation_id: reservationId,
+            company_id: companyId
+          })
+        });
+
+        const data = await response.json();
+        
+        if (data.clientSecret) {
+          setClientSecret(data.clientSecret);
+        } else {
+          toast.error('Erro ao inicializar pagamento');
+          onCancel();
+        }
+      } catch (error) {
+        console.error('Erro:', error);
+        toast.error('Erro ao conectar com sistema de pagamento');
+        onCancel();
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (amount && reservationId && companyId) {
+      createIntent();
+    }
+  }, [amount, reservationId, companyId]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-8 h-8 text-emerald-600 animate-spin" />
+      </div>
+    );
+  }
+
+  if (!clientSecret) {
+    return null;
+  }
+
+  return (
+    <Elements stripe={stripePromise} options={{ clientSecret }}>
+      <CheckoutForm amount={amount} onSuccess={onSuccess} onCancel={onCancel} />
+    </Elements>
+  );
+}
