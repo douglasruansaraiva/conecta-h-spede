@@ -19,7 +19,8 @@ import {
   Copy,
   Check,
   Calendar,
-  Megaphone
+  Megaphone,
+  CreditCard
 } from "lucide-react";
 import { createPageUrl } from '@/utils';
 import { toast } from "sonner";
