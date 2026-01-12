@@ -112,17 +112,29 @@ export default function AdminPage() {
 
   const deleteUserMutation = useMutation({
     mutationFn: async (userId) => {
+      const user = allUsers.find(u => u.id === userId);
+      
       // Delete user's companies first
-      const userCompanies = allCompanies.filter(c => c.owner_email === allUsers.find(u => u.id === userId)?.email);
+      const userCompanies = allCompanies.filter(c => c.owner_email === user?.email);
       for (const company of userCompanies) {
+        // Delete subscriptions
+        const companySubscriptions = allSubscriptions.filter(s => s.company_id === company.id);
+        for (const sub of companySubscriptions) {
+          await base44.entities.Subscription.delete(sub.id);
+        }
+        // Delete company
         await base44.entities.Company.delete(company.id);
       }
-      // Note: User deletion would require backend function
-      toast.success('Usuário e empresas associadas removidos');
+      
+      // Delete user
+      await base44.entities.User.delete(userId);
+      
+      toast.success('Usuário e dados associados removidos');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       queryClient.invalidateQueries({ queryKey: ['admin-companies'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-subscriptions'] });
       setDeleteUserId(null);
     }
   });
