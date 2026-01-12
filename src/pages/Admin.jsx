@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import SubscriptionForm from '@/components/admin/SubscriptionForm';
 import ExpenseForm from '@/components/admin/ExpenseForm';
+import FinancialCharts from '@/components/admin/FinancialCharts';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -531,6 +532,8 @@ export default function AdminPage() {
           </TabsContent>
 
           <TabsContent value="financial" className="space-y-6">
+            <FinancialCharts subscriptions={allSubscriptions} expenses={allExpenses} />
+            
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <Card>
                 <CardHeader>
