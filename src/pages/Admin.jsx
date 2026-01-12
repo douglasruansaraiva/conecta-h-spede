@@ -87,9 +87,9 @@ export default function AdminPage() {
     enabled: currentUser?.role === 'admin'
   });
 
-  const { data: allTransactions = [] } = useQuery({
-    queryKey: ['admin-transactions'],
-    queryFn: () => base44.entities.Transaction.list(),
+  const { data: allSubscriptions = [] } = useQuery({
+    queryKey: ['admin-subscriptions'],
+    queryFn: () => base44.entities.Subscription.list(),
     enabled: currentUser?.role === 'admin'
   });
 
@@ -173,13 +173,17 @@ export default function AdminPage() {
     company.owner_email?.toLowerCase().includes(searchCompanies.toLowerCase())
   );
 
-  const totalRevenue = allTransactions
-    .filter(t => t.type === 'income' && t.status === 'completed')
-    .reduce((sum, t) => sum + (t.amount || 0), 0);
+  const monthlyRevenue = allSubscriptions
+    .filter(s => s.payment_status === 'paid')
+    .reduce((sum, s) => sum + (s.monthly_fee || 0), 0);
 
-  const totalExpenses = allTransactions
-    .filter(t => t.type === 'expense' && t.status === 'completed')
-    .reduce((sum, t) => sum + (t.amount || 0), 0);
+  const pendingRevenue = allSubscriptions
+    .filter(s => s.payment_status === 'pending')
+    .reduce((sum, s) => sum + (s.monthly_fee || 0), 0);
+    
+  const overdueRevenue = allSubscriptions
+    .filter(s => s.payment_status === 'overdue')
+    .reduce((sum, s) => sum + (s.monthly_fee || 0), 0);
 
   const totalReservations = allReservations.length;
   const activeReservations = allReservations.filter(r => 
@@ -252,16 +256,16 @@ export default function AdminPage() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-slate-600">
-                    Receita Total
+                    Receita Mensal
                   </CardTitle>
                   <DollarSign className="w-4 h-4 text-slate-400" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    R$ {totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    R$ {monthlyRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </div>
                   <p className="text-xs text-slate-500 mt-1">
-                    Lucro: R$ {(totalRevenue - totalExpenses).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    {allSubscriptions.filter(s => s.payment_status === 'paid').length} pagamentos recebidos
                   </p>
                 </CardContent>
               </Card>
@@ -421,9 +425,7 @@ export default function AdminPage() {
                 <div className="space-y-2">
                   {filteredCompanies.map(company => {
                     const companyReservations = allReservations.filter(r => r.company_id === company.id);
-                    const companyRevenue = allTransactions
-                      .filter(t => t.company_id === company.id && t.type === 'income' && t.status === 'completed')
-                      .reduce((sum, t) => sum + (t.amount || 0), 0);
+                    const companySubscription = allSubscriptions.find(s => s.company_id === company.id);
 
                     return (
                       <div
@@ -452,9 +454,24 @@ export default function AdminPage() {
                               <p className="text-xs text-slate-400">
                                 {companyReservations.length} reservas
                               </p>
-                              <p className="text-xs text-emerald-600 font-medium">
-                                R$ {companyRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                              </p>
+                              {companySubscription && (
+                                <>
+                                  <Badge variant="outline" className="text-xs">
+                                    {companySubscription.plan}
+                                  </Badge>
+                                  <p className={`text-xs font-medium ${
+                                    companySubscription.payment_status === 'paid' ? 'text-emerald-600' :
+                                    companySubscription.payment_status === 'overdue' ? 'text-red-600' :
+                                    'text-amber-600'
+                                  }`}>
+                                    R$ {companySubscription.monthly_fee?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} • {
+                                      companySubscription.payment_status === 'paid' ? 'Pago' :
+                                      companySubscription.payment_status === 'overdue' ? 'Atrasado' :
+                                      'Pendente'
+                                    }
+                                  </p>
+                                </>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -477,42 +494,42 @@ export default function AdminPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-sm font-medium text-slate-600">Receita Total</CardTitle>
+                  <CardTitle className="text-sm font-medium text-slate-600">Receitas Recebidas</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl font-bold text-emerald-600">
-                    R$ {totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    R$ {monthlyRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </div>
                   <p className="text-xs text-slate-500 mt-2">
-                    {allTransactions.filter(t => t.type === 'income' && t.status === 'completed').length} transações
+                    {allSubscriptions.filter(s => s.payment_status === 'paid').length} mensalidades pagas
                   </p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-sm font-medium text-slate-600">Despesas Totais</CardTitle>
+                  <CardTitle className="text-sm font-medium text-slate-600">Pendentes</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-amber-600">
+                    R$ {pendingRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </div>
+                  <p className="text-xs text-slate-500 mt-2">
+                    {allSubscriptions.filter(s => s.payment_status === 'pending').length} pagamentos pendentes
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm font-medium text-slate-600">Atrasadas</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl font-bold text-red-600">
-                    R$ {totalExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    R$ {overdueRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </div>
                   <p className="text-xs text-slate-500 mt-2">
-                    {allTransactions.filter(t => t.type === 'expense' && t.status === 'completed').length} transações
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm font-medium text-slate-600">Lucro Líquido</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-blue-600">
-                    R$ {(totalRevenue - totalExpenses).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </div>
-                  <p className="text-xs text-slate-500 mt-2">
-                    Margem: {totalRevenue > 0 ? ((totalRevenue - totalExpenses) / totalRevenue * 100).toFixed(1) : 0}%
+                    {allSubscriptions.filter(s => s.payment_status === 'overdue').length} pagamentos atrasados
                   </p>
                 </CardContent>
               </Card>
@@ -520,36 +537,66 @@ export default function AdminPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Transações Recentes</CardTitle>
-                <CardDescription>Últimas movimentações financeiras do sistema</CardDescription>
+                <CardTitle>Mensalidades das Empresas</CardTitle>
+                <CardDescription>Status dos pagamentos mensais</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {allTransactions.slice(0, 10).map(transaction => {
-                    const company = allCompanies.find(c => c.company_id === transaction.company_id);
+                  {allSubscriptions.map(subscription => {
+                    const company = allCompanies.find(c => c.id === subscription.company_id);
                     return (
                       <div
-                        key={transaction.id}
+                        key={subscription.id}
                         className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
                       >
-                        <div>
-                          <p className="text-sm font-medium">{transaction.description || 'Sem descrição'}</p>
-                          <p className="text-xs text-slate-500">
-                            {company?.name || 'Empresa desconhecida'} • {transaction.category}
-                          </p>
-                          {transaction.date && (
-                            <p className="text-xs text-slate-400">
-                              {format(new Date(transaction.date), "dd/MM/yyyy", { locale: ptBR })}
-                            </p>
+                        <div className="flex items-center gap-3">
+                          {company?.logo_url ? (
+                            <img
+                              src={company.logo_url}
+                              alt={company.name}
+                              className="w-10 h-10 rounded-lg object-cover"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center">
+                              <Building2 className="w-5 h-5 text-slate-400" />
+                            </div>
                           )}
+                          <div>
+                            <p className="text-sm font-medium">{company?.name || 'Empresa desconhecida'}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <Badge variant="outline" className="text-xs">
+                                {subscription.plan}
+                              </Badge>
+                              <p className="text-xs text-slate-500">
+                                Venc: {format(new Date(subscription.due_date), "dd/MM/yyyy", { locale: ptBR })}
+                              </p>
+                            </div>
+                            {subscription.notes && (
+                              <p className="text-xs text-slate-400 mt-1">{subscription.notes}</p>
+                            )}
+                          </div>
                         </div>
                         <div className="text-right">
-                          <p className={`font-semibold ${transaction.type === 'income' ? 'text-emerald-600' : 'text-red-600'}`}>
-                            {transaction.type === 'income' ? '+' : '-'} R$ {transaction.amount?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          <p className="font-semibold text-slate-900">
+                            R$ {subscription.monthly_fee?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                           </p>
-                          <Badge variant={transaction.status === 'completed' ? 'default' : 'secondary'} className="text-xs">
-                            {transaction.status === 'completed' ? 'Concluído' : transaction.status === 'pending' ? 'Pendente' : 'Cancelado'}
+                          <Badge 
+                            variant={
+                              subscription.payment_status === 'paid' ? 'default' : 
+                              subscription.payment_status === 'overdue' ? 'destructive' : 
+                              'secondary'
+                            } 
+                            className="text-xs mt-1"
+                          >
+                            {subscription.payment_status === 'paid' ? 'Pago' : 
+                             subscription.payment_status === 'overdue' ? 'Atrasado' : 
+                             'Pendente'}
                           </Badge>
+                          {subscription.paid_date && subscription.payment_status === 'paid' && (
+                            <p className="text-xs text-slate-400 mt-1">
+                              Pago em {format(new Date(subscription.paid_date), "dd/MM/yyyy", { locale: ptBR })}
+                            </p>
+                          )}
                         </div>
                       </div>
                     );
