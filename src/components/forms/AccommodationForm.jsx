@@ -237,6 +237,7 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
         if (!icalConfig.url) continue;
 
         try {
+          console.log(`Sincronizando ${icalConfig.name}...`);
           // Try multiple proxy strategies
           let icalData = null;
           let response = null;
@@ -246,9 +247,10 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
             response = await fetch(icalConfig.url);
             if (response.ok) {
               icalData = await response.text();
+              console.log(`${icalConfig.name}: fetch direto funcionou`);
             }
           } catch (e) {
-            console.log('Direct fetch failed, trying proxy...');
+            console.log(`${icalConfig.name}: fetch direto falhou, tentando proxy...`);
           }
           
           // If direct fetch failed, try with CORS proxy
@@ -263,6 +265,7 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
             }
             
             icalData = await response.text();
+            console.log(`${icalConfig.name}: proxy funcionou`);
           }
           
           // Parse iCal data
@@ -303,6 +306,7 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
           }
 
           // Create blocks for this calendar
+          console.log(`${icalConfig.name}: ${events.length} eventos encontrados`);
           for (const event of events) {
             try {
               await base44.entities.BlockedDate.create({
@@ -318,13 +322,15 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
               console.error('Erro ao criar bloqueio:', err);
             }
           }
+          console.log(`${icalConfig.name}: ${events.length} bloqueios criados`);
         } catch (error) {
           console.error(`Erro ao sincronizar ${icalConfig.name}:`, error);
         }
       }
 
       if (totalCreated > 0) {
-        toast.success(`${totalCreated} datas bloqueadas importadas de ${formData.ical_urls.length} calendários!`);
+        const calendarNames = formData.ical_urls.map(c => c.name).filter(Boolean).join(', ');
+        toast.success(`${totalCreated} datas bloqueadas importadas de: ${calendarNames}`);
         onSave();
       } else {
         toast.warning('Nenhum evento encontrado nos calendários');
