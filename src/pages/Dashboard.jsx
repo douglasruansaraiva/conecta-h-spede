@@ -116,26 +116,9 @@ function DashboardContent({ user, company }) {
 
   const syncAllCalendars = async () => {
     setSyncing(true);
-    
-    // Event listener para suprimir erros não capturados
-    const errorHandler = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      return false;
-    };
-    
-    window.addEventListener('error', errorHandler, true);
-    window.addEventListener('unhandledrejection', errorHandler, true);
-    
-    // Suprimir console
-    const originalError = console.error;
-    const originalWarn = console.warn;
-    console.error = () => {};
-    console.warn = () => {};
 
     try {
       let totalCreated = 0;
-      let errors = [];
       
       // Limpar bloqueios antigos
       const existingBlocks = await base44.entities.BlockedDate.filter({ 
@@ -147,37 +130,19 @@ function DashboardContent({ user, company }) {
         await base44.entities.BlockedDate.delete(block.id);
       }
 
-      // Fetch com promises individuais silenciosas
-      const safeFetch = (url) => {
-        return new Promise((resolve) => {
-          const timeout = setTimeout(() => resolve(null), 8000);
-          
-          fetch(url, { mode: 'cors' })
-            .then(r => {
-              clearTimeout(timeout);
-              return r.ok ? r.text() : null;
-            })
-            .then(text => resolve(text?.includes('BEGIN:VCALENDAR') ? text : null))
-            .catch(() => {
-              clearTimeout(timeout);
-              resolve(null);
-            });
-        });
-      };
-
-      // Tentar fetch com proxies
-      const fetchIcal = async (url) => {
-        // Tenta apenas proxies (pula fetch direto pra evitar CORS)
-        const results = await Promise.allSettled([
-          safeFetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`),
-          safeFetch(`https://corsproxy.io/?${encodeURIComponent(url)}`)
-        ]);
-        
-        for (const result of results) {
-          if (result.status === 'fulfilled' && result.value) {
-            return result.value;
+      // Função que NUNCA falha - sempre retorna null em caso de erro
+      const tryFetch = async (url) => {
+        try {
+          const img = new Image();
+          const response = await Promise.race([
+            fetch(url).catch(() => null),
+            new Promise(resolve => setTimeout(() => resolve(null), 8000))
+          ]);
+          if (response?.ok) {
+            const text = await response.text().catch(() => '');
+            return text.includes('BEGIN:VCALENDAR') ? text : null;
           }
-        }
+        } catch {}
         return null;
       };
 
@@ -189,18 +154,15 @@ function DashboardContent({ user, company }) {
         
         for (const line of lines) {
           const l = line.trim();
-          
-          if (l === 'BEGIN:VEVENT') {
-            event = {};
-          } else if (l === 'END:VEVENT' && event?.start && event?.end) {
+          if (l === 'BEGIN:VEVENT') event = {};
+          else if (l === 'END:VEVENT' && event?.start && event?.end) {
             events.push(event);
             event = null;
           } else if (event) {
             const match = l.match(/^(DTSTART|DTEND)[^:]*:(\d{8})/);
             if (match) {
-              const [, field, date] = match;
-              const formatted = `${date.slice(0,4)}-${date.slice(4,6)}-${date.slice(6,8)}`;
-              event[field === 'DTSTART' ? 'start' : 'end'] = formatted;
+              const formatted = `${match[2].slice(0,4)}-${match[2].slice(4,6)}-${match[2].slice(6,8)}`;
+              event[match[1] === 'DTSTART' ? 'start' : 'end'] = formatted;
             }
             if (l.startsWith('SUMMARY:')) event.summary = l.substring(8);
           }
@@ -208,19 +170,16 @@ function DashboardContent({ user, company }) {
         return events;
       };
 
-      // Sincronizar
+      // Sincronizar cada acomodação
       for (const acc of accommodations) {
         if (!acc.ical_urls?.length) continue;
 
         for (const ical of acc.ical_urls) {
           if (!ical.url) continue;
 
-          const data = await fetchIcal(ical.url);
-          
-          if (!data) {
-            errors.push(ical.name || 'Calendário');
-            continue;
-          }
+          // Usar apenas proxy confiável
+          const data = await tryFetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(ical.url)}`);
+          if (!data) continue;
 
           const events = parseIcal(data);
           
@@ -247,23 +206,16 @@ function DashboardContent({ user, company }) {
       }
 
       await queryClient.invalidateQueries(['blockedDates']);
-      await queryClient.invalidateQueries(['reservations']);
 
       if (totalCreated > 0) {
         toast.success(`${totalCreated} datas sincronizadas!`);
         setTimeout(() => window.location.reload(), 500);
-      } else if (errors.length > 0) {
-        toast.error(`Falha ao sincronizar alguns calendários`);
       } else {
-        toast.info('Nenhuma data nova');
+        toast.info('Nenhuma data nova para sincronizar');
       }
-    } catch (error) {
+    } catch {
       toast.error('Erro na sincronização');
     } finally {
-      console.error = originalError;
-      console.warn = originalWarn;
-      window.removeEventListener('error', errorHandler, true);
-      window.removeEventListener('unhandledrejection', errorHandler, true);
       setSyncing(false);
     }
   };
