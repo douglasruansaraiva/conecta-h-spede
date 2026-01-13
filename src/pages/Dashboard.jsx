@@ -106,6 +106,10 @@ function DashboardContent({ user, company }) {
 
   const syncAllCalendars = async () => {
     setSyncing(true);
+    console.log('=== INICIANDO SINCRONIZAÇÃO ===');
+    console.log('Company:', company.name, company.id);
+    console.log('Acomodações:', accommodations.length);
+    
     try {
       let totalCreated = 0;
       let errors = [];
@@ -116,16 +120,27 @@ function DashboardContent({ user, company }) {
         source: 'ical_import'
       });
       
+      console.log(`Deletando ${existingBlocks.length} bloqueios existentes...`);
       for (const block of existingBlocks) {
         await base44.entities.BlockedDate.delete(block.id);
       }
 
       // Sync each accommodation with iCal URLs
       for (const accommodation of accommodations) {
-        if (!accommodation.ical_urls || accommodation.ical_urls.length === 0) continue;
+        console.log(`\n--- Acomodação: ${accommodation.name} ---`);
+        
+        if (!accommodation.ical_urls || accommodation.ical_urls.length === 0) {
+          console.log('  Sem URLs iCal configuradas');
+          continue;
+        }
+
+        console.log(`  ${accommodation.ical_urls.length} calendários para sincronizar`);
 
         for (const icalConfig of accommodation.ical_urls) {
           if (!icalConfig.url) continue;
+
+          console.log(`\n  📅 Sincronizando: ${icalConfig.name}`);
+          console.log(`     URL: ${icalConfig.url}`);
 
           try {
             let icalData = null;
@@ -135,27 +150,32 @@ function DashboardContent({ user, company }) {
               const response = await fetch(icalConfig.url, { mode: 'cors' });
               if (response.ok) {
                 icalData = await response.text();
+                console.log('     ✓ Busca direta bem-sucedida');
               }
             } catch (directError) {
+              console.log('     ⚠ Busca direta falhou, tentando proxy...');
               // Try with proxy
               try {
                 const proxyUrl = 'https://api.allorigins.win/raw?url=';
                 const response = await fetch(proxyUrl + encodeURIComponent(icalConfig.url));
                 if (response.ok) {
                   icalData = await response.text();
+                  console.log('     ✓ Busca via proxy bem-sucedida');
                 }
               } catch (proxyError) {
-                console.error(`Falha ao buscar ${icalConfig.name}:`, proxyError);
+                console.error(`     ✗ Falha ao buscar ${icalConfig.name}:`, proxyError);
                 errors.push(icalConfig.name || 'Calendário desconhecido');
                 continue;
               }
             }
             
             if (!icalData) {
+              console.log('     ✗ Nenhum dado retornado');
               errors.push(icalConfig.name || 'Calendário desconhecido');
               continue;
             }
             
+            console.log(`     Parseando iCal... (${icalData.length} caracteres)`);
             const events = [];
             const lines = icalData.split(/\r?\n/);
             let currentEvent = null;
@@ -190,8 +210,12 @@ function DashboardContent({ user, company }) {
               }
             }
 
+            console.log(`     📊 ${events.length} eventos encontrados`);
+            
+            let createdForThisCalendar = 0;
             for (const event of events) {
               try {
+                console.log(`        - ${event.start} até ${event.end}: ${event.summary || 'Sem título'}`);
                 await base44.entities.BlockedDate.create({
                   company_id: company.id,
                   accommodation_id: accommodation.id,
@@ -200,16 +224,23 @@ function DashboardContent({ user, company }) {
                   reason: `${icalConfig.name || 'Reserva externa'}: ${event.summary || ''}`,
                   source: 'ical_import'
                 });
+                createdForThisCalendar++;
                 totalCreated++;
               } catch (err) {
-                console.error('Erro ao criar bloqueio:', err);
+                console.error('        ✗ Erro ao criar bloqueio:', err);
               }
             }
+            console.log(`     ✓ ${createdForThisCalendar} bloqueios criados para ${icalConfig.name}`);
           } catch (error) {
-            console.error(`Erro ao sincronizar ${icalConfig.name}:`, error);
+            console.error(`     ✗ Erro ao sincronizar ${icalConfig.name}:`, error);
+            errors.push(icalConfig.name || 'Calendário desconhecido');
           }
         }
       }
+
+      console.log('\n=== SINCRONIZAÇÃO CONCLUÍDA ===');
+      console.log(`Total de bloqueios criados: ${totalCreated}`);
+      console.log(`Erros: ${errors.length}`);
 
       if (totalCreated > 0) {
         if (errors.length > 0) {
