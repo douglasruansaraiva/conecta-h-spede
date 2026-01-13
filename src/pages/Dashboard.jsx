@@ -143,33 +143,39 @@ function DashboardContent({ user, company }) {
           console.log(`     URL: ${icalConfig.url}`);
 
           let icalData = null;
+          let fetchMethod = '';
           
-          try {
-            // Try direct fetch first
-            const response = await fetch(icalConfig.url, { mode: 'cors' });
-            if (response.ok) {
-              icalData = await response.text();
-              console.log('     ✓ Busca direta bem-sucedida');
-            }
-          } catch (directError) {
-            console.log('     ⚠ Busca direta falhou, tentando proxy...');
-            
+          // Try multiple methods to fetch the iCal data
+          const fetchMethods = [
+            { name: 'direct', fn: () => fetch(icalConfig.url, { mode: 'cors' }) },
+            { name: 'allorigins', fn: () => fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(icalConfig.url)) },
+            { name: 'corsproxy', fn: () => fetch('https://corsproxy.io/?' + encodeURIComponent(icalConfig.url)) },
+          ];
+          
+          for (const method of fetchMethods) {
             try {
-              const proxyUrl = 'https://api.allorigins.win/raw?url=';
-              const response = await fetch(proxyUrl + encodeURIComponent(icalConfig.url));
+              console.log(`     Tentando ${method.name}...`);
+              const response = await method.fn();
               if (response.ok) {
-                icalData = await response.text();
-                console.log('     ✓ Busca via proxy bem-sucedida');
+                const text = await response.text();
+                if (text && text.includes('BEGIN:VCALENDAR')) {
+                  icalData = text;
+                  fetchMethod = method.name;
+                  console.log(`     ✓ Sucesso via ${method.name}`);
+                  break;
+                } else {
+                  console.log(`     ⚠ ${method.name} retornou dados inválidos`);
+                }
+              } else {
+                console.log(`     ⚠ ${method.name} retornou status ${response.status}`);
               }
-            } catch (proxyError) {
-              console.error(`     ✗ Falha ao buscar ${icalConfig.name}:`, proxyError.message);
-              errors.push(icalConfig.name || 'Calendário desconhecido');
-              continue;
+            } catch (err) {
+              console.log(`     ⚠ ${method.name} falhou: ${err.message}`);
             }
           }
           
           if (!icalData) {
-            console.log('     ✗ Nenhum dado retornado');
+            console.error(`     ✗ Todos os métodos falharam para ${icalConfig.name}`);
             errors.push(icalConfig.name || 'Calendário desconhecido');
             continue;
           }
@@ -204,18 +210,10 @@ function DashboardContent({ user, company }) {
                   const match = trimmed.match(/DTEND[^:]*:(\d{8})/);
                   if (match) {
                     const dateStr = match[1];
-                    // IMPORTANTE: DTEND é exclusivo no padrão iCal, então subtraímos 1 dia
-                    const endDate = new Date(
-                      parseInt(dateStr.slice(0,4)),
-                      parseInt(dateStr.slice(4,6)) - 1,
-                      parseInt(dateStr.slice(6,8))
-                    );
-                    endDate.setDate(endDate.getDate() - 1);
-                    const year = endDate.getFullYear();
-                    const month = String(endDate.getMonth() + 1).padStart(2, '0');
-                    const day = String(endDate.getDate()).padStart(2, '0');
-                    currentEvent.end = `${year}-${month}-${day}`;
-                    currentEvent.originalEnd = `${dateStr.slice(0,4)}-${dateStr.slice(4,6)}-${dateStr.slice(6,8)}`;
+                    // DTEND no iCal é exclusivo (ex: 15-17 significa 15 e 16, não 17)
+                    // Então guardamos como está, mas na criação do bloqueio ajustamos
+                    currentEvent.end = `${dateStr.slice(0,4)}-${dateStr.slice(4,6)}-${dateStr.slice(6,8)}`;
+                    currentEvent.isExclusiveEnd = true;
                   }
                 } else if (trimmed.startsWith('SUMMARY')) {
                   const parts = trimmed.split(':');
@@ -229,12 +227,26 @@ function DashboardContent({ user, company }) {
             let createdForThisCalendar = 0;
             for (const event of events) {
               try {
-                console.log(`        - ${event.start} até ${event.end} (original: ${event.originalEnd || event.end}): ${event.summary || 'Sem título'}`);
+                // Ajusta DTEND exclusivo (subtrai 1 dia)
+                let endDate = event.end;
+                if (event.isExclusiveEnd) {
+                  const d = new Date(event.end);
+                  d.setDate(d.getDate() - 1);
+                  endDate = d.toISOString().split('T')[0];
+                }
+                
+                // Valida que start <= end
+                if (new Date(event.start) > new Date(endDate)) {
+                  console.log(`        ⚠ Pulando evento inválido: ${event.start} > ${endDate}`);
+                  continue;
+                }
+                
+                console.log(`        ✓ Criando: ${event.start} até ${endDate} - ${event.summary || 'Sem título'}`);
                 await base44.entities.BlockedDate.create({
                   company_id: company.id,
                   accommodation_id: accommodation.id,
                   start_date: event.start,
-                  end_date: event.end,
+                  end_date: endDate,
                   reason: `${icalConfig.name || 'Reserva externa'}: ${event.summary || ''}`,
                   source: 'ical_import'
                 });
