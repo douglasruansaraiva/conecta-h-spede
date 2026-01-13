@@ -192,16 +192,29 @@ function DashboardContent({ user, company }) {
                 currentEvent = null;
               } else if (currentEvent) {
                 if (trimmed.startsWith('DTSTART')) {
+                  // Suporta DTSTART:20240115 e DTSTART;VALUE=DATE:20240115 e DTSTART:20240115T140000Z
                   const match = trimmed.match(/DTSTART[^:]*:(\d{8})/);
                   if (match) {
                     const dateStr = match[1];
                     currentEvent.start = `${dateStr.slice(0,4)}-${dateStr.slice(4,6)}-${dateStr.slice(6,8)}`;
                   }
                 } else if (trimmed.startsWith('DTEND')) {
+                  // Suporta DTEND:20240117 e DTEND;VALUE=DATE:20240117 e DTEND:20240117T100000Z
                   const match = trimmed.match(/DTEND[^:]*:(\d{8})/);
                   if (match) {
                     const dateStr = match[1];
-                    currentEvent.end = `${dateStr.slice(0,4)}-${dateStr.slice(4,6)}-${dateStr.slice(6,8)}`;
+                    // IMPORTANTE: DTEND é exclusivo no padrão iCal, então subtraímos 1 dia
+                    const endDate = new Date(
+                      parseInt(dateStr.slice(0,4)),
+                      parseInt(dateStr.slice(4,6)) - 1,
+                      parseInt(dateStr.slice(6,8))
+                    );
+                    endDate.setDate(endDate.getDate() - 1);
+                    const year = endDate.getFullYear();
+                    const month = String(endDate.getMonth() + 1).padStart(2, '0');
+                    const day = String(endDate.getDate()).padStart(2, '0');
+                    currentEvent.end = `${year}-${month}-${day}`;
+                    currentEvent.originalEnd = `${dateStr.slice(0,4)}-${dateStr.slice(4,6)}-${dateStr.slice(6,8)}`;
                   }
                 } else if (trimmed.startsWith('SUMMARY')) {
                   const parts = trimmed.split(':');
@@ -215,7 +228,7 @@ function DashboardContent({ user, company }) {
             let createdForThisCalendar = 0;
             for (const event of events) {
               try {
-                console.log(`        - ${event.start} até ${event.end}: ${event.summary || 'Sem título'}`);
+                console.log(`        - ${event.start} até ${event.end} (original: ${event.originalEnd || event.end}): ${event.summary || 'Sem título'}`);
                 await base44.entities.BlockedDate.create({
                   company_id: company.id,
                   accommodation_id: accommodation.id,
