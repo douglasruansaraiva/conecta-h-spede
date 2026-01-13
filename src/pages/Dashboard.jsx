@@ -116,236 +116,147 @@ function DashboardContent({ user, company }) {
 
   const syncAllCalendars = async () => {
     setSyncing(true);
-    console.log('=== INICIANDO SINCRONIZAÇÃO ===');
-    console.log('Company:', company.name, company.id);
-    console.log('Acomodações:', accommodations.length);
-
-    // Suprimir completamente erros de fetch e CORS
+    
+    // Suprimir erros de rede globalmente
     const originalError = console.error;
-    const originalWarn = console.warn;
     console.error = (...args) => {
-      const msg = args[0]?.toString() || '';
-      if (msg.includes('Failed to fetch') || msg.includes('CORS') || msg.includes('NetworkError')) return;
+      const str = String(args[0] || '');
+      if (str.includes('Failed to fetch') || str.includes('NetworkError') || str.includes('CORS')) return;
       originalError(...args);
-    };
-    console.warn = (...args) => {
-      const msg = args[0]?.toString() || '';
-      if (msg.includes('Failed to fetch') || msg.includes('CORS')) return;
-      originalWarn(...args);
     };
 
     try {
       let totalCreated = 0;
       let errors = [];
       
-      // Delete existing ical blocks
+      // Limpar bloqueios antigos
       const existingBlocks = await base44.entities.BlockedDate.filter({ 
         company_id: company.id,
         source: 'ical_import'
       });
       
-      console.log(`Deletando ${existingBlocks.length} bloqueios existentes...`);
       for (const block of existingBlocks) {
         await base44.entities.BlockedDate.delete(block.id);
       }
 
-      // Sync each accommodation with iCal URLs
-      for (const accommodation of accommodations) {
-        console.log(`\n--- Acomodação: ${accommodation.name} ---`);
-        
-        if (!accommodation.ical_urls || accommodation.ical_urls.length === 0) {
-          console.log('  Sem URLs iCal configuradas');
-          continue;
-        }
+      // Função para buscar iCal com múltiplos proxies
+      const fetchIcal = async (url) => {
+        const proxies = [
+          url, // Direto
+          `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+          `https://corsproxy.io/?${encodeURIComponent(url)}`
+        ];
 
-        console.log(`  ${accommodation.ical_urls.length} calendários para sincronizar`);
-
-        for (const icalConfig of accommodation.ical_urls) {
-          if (!icalConfig.url) continue;
-
-          console.log(`\n  📅 Sincronizando: ${icalConfig.name}`);
-          console.log(`     URL: ${icalConfig.url}`);
-
-          let icalData = null;
-          let fetchMethod = '';
-          
-          // Helper function with timeout and complete error suppression
-          const fetchWithTimeout = async (url, timeout = 8000) => {
+        for (const proxyUrl of proxies) {
+          try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), timeout);
+            const timeout = setTimeout(() => controller.abort(), 10000);
             
-            try {
-              const response = await fetch(url, { 
-                signal: controller.signal,
-                mode: 'cors'
-              });
-              clearTimeout(timeoutId);
-              return response;
-            } catch (err) {
-              clearTimeout(timeoutId);
-              return null;
-            }
-          };
-          
-          // Completely silent fetch wrapper
-          const silentFetch = async (url) => {
-            try {
-              return await fetchWithTimeout(url);
-            } catch {
-              return null;
-            }
-          };
-          const fetchMethods = [
-            { name: 'direct', fn: () => silentFetch(icalConfig.url) },
-            { name: 'allorigins', fn: () => silentFetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(icalConfig.url)) },
-            { name: 'corsproxy', fn: () => silentFetch('https://corsproxy.io/?' + encodeURIComponent(icalConfig.url)) },
-          ];
-          
-          for (const method of fetchMethods) {
-            try {
-              console.log(`     Tentando ${method.name}...`);
-              const response = await method.fn();
-              if (response && response.ok) {
-                const text = await response.text();
-                if (text && text.includes('BEGIN:VCALENDAR')) {
-                  icalData = text;
-                  fetchMethod = method.name;
-                  console.log(`     ✓ Sucesso via ${method.name}`);
-                  break;
-                } else {
-                  console.log(`     ⚠ ${method.name} retornou dados inválidos`);
-                }
-              } else {
-                console.log(`     ⚠ ${method.name} retornou status ${response?.status || 'bloqueado por CORS'}`);
+            const response = await fetch(proxyUrl, { 
+              signal: controller.signal,
+              mode: 'cors',
+              cache: 'no-cache'
+            }).catch(() => null);
+            
+            clearTimeout(timeout);
+            
+            if (response?.ok) {
+              const text = await response.text().catch(() => '');
+              if (text.includes('BEGIN:VCALENDAR')) {
+                return text;
               }
-            } catch (err) {
-              // Erro já tratado, continua silenciosamente
+            }
+          } catch {}
+        }
+        return null;
+      };
+
+      // Parse iCal
+      const parseIcal = (icalText) => {
+        const events = [];
+        const lines = icalText.split(/\r?\n/);
+        let event = null;
+        
+        for (const line of lines) {
+          const l = line.trim();
+          
+          if (l === 'BEGIN:VEVENT') {
+            event = {};
+          } else if (l === 'END:VEVENT' && event) {
+            if (event.start && event.end) events.push(event);
+            event = null;
+          } else if (event) {
+            const match = l.match(/^(DTSTART|DTEND)[^:]*:(\d{8})/);
+            if (match) {
+              const [, field, date] = match;
+              const formatted = `${date.slice(0,4)}-${date.slice(4,6)}-${date.slice(6,8)}`;
+              if (field === 'DTSTART') event.start = formatted;
+              if (field === 'DTEND') event.end = formatted;
+            }
+            if (l.startsWith('SUMMARY:')) {
+              event.summary = l.substring(8);
             }
           }
+        }
+        return events;
+      };
+
+      // Sincronizar cada acomodação
+      for (const acc of accommodations) {
+        if (!acc.ical_urls?.length) continue;
+
+        for (const ical of acc.ical_urls) {
+          if (!ical.url) continue;
+
+          const data = await fetchIcal(ical.url);
           
-          if (!icalData) {
-            console.error(`     ✗ Todos os métodos falharam para ${icalConfig.name}`);
-            errors.push(icalConfig.name || 'Calendário desconhecido');
+          if (!data) {
+            errors.push(ical.name || 'Calendário');
             continue;
           }
-          
-          try {
-            
-            console.log(`     Parseando iCal... (${icalData.length} caracteres)`);
-            const events = [];
-            const lines = icalData.split(/\r?\n/);
-            let currentEvent = null;
-            
-            for (const line of lines) {
-              const trimmed = line.trim();
-              
-              if (trimmed === 'BEGIN:VEVENT') {
-                currentEvent = {};
-              } else if (trimmed === 'END:VEVENT' && currentEvent) {
-                if (currentEvent.start && currentEvent.end) {
-                  events.push(currentEvent);
-                }
-                currentEvent = null;
-              } else if (currentEvent) {
-                if (trimmed.startsWith('DTSTART')) {
-                  // Suporta DTSTART:20240115 e DTSTART;VALUE=DATE:20240115 e DTSTART:20240115T140000Z
-                  const match = trimmed.match(/DTSTART[^:]*:(\d{8})/);
-                  if (match) {
-                    const dateStr = match[1];
-                    currentEvent.start = `${dateStr.slice(0,4)}-${dateStr.slice(4,6)}-${dateStr.slice(6,8)}`;
-                  }
-                } else if (trimmed.startsWith('DTEND')) {
-                  // Suporta DTEND:20240117 e DTEND;VALUE=DATE:20240117 e DTEND:20240117T100000Z
-                  const match = trimmed.match(/DTEND[^:]*:(\d{8})/);
-                  if (match) {
-                    const dateStr = match[1];
-                    // DTEND no iCal é exclusivo (ex: 15-17 significa 15 e 16, não 17)
-                    // Então guardamos como está, mas na criação do bloqueio ajustamos
-                    currentEvent.end = `${dateStr.slice(0,4)}-${dateStr.slice(4,6)}-${dateStr.slice(6,8)}`;
-                    currentEvent.isExclusiveEnd = true;
-                  }
-                } else if (trimmed.startsWith('SUMMARY')) {
-                  const parts = trimmed.split(':');
-                  currentEvent.summary = parts.slice(1).join(':').trim();
-                }
-              }
-            }
 
-            console.log(`     📊 ${events.length} eventos encontrados`);
-            
-            let createdForThisCalendar = 0;
-            for (const event of events) {
-              try {
-                // Ajusta DTEND exclusivo (subtrai 1 dia)
-                let endDate = event.end;
-                if (event.isExclusiveEnd) {
-                  const d = new Date(event.end);
-                  d.setDate(d.getDate() - 1);
-                  endDate = d.toISOString().split('T')[0];
-                }
-                
-                // Valida que start <= end
-                if (new Date(event.start) > new Date(endDate)) {
-                  console.log(`        ⚠ Pulando evento inválido: ${event.start} > ${endDate}`);
-                  continue;
-                }
-                
-                console.log(`        ✓ Criando: ${event.start} até ${endDate} - ${event.summary || 'Sem título'}`);
+          const events = parseIcal(data);
+          
+          for (const event of events) {
+            try {
+              // Ajustar end_date (iCal é exclusivo)
+              const endDate = new Date(event.end);
+              endDate.setDate(endDate.getDate() - 1);
+              const end = endDate.toISOString().split('T')[0];
+              
+              if (new Date(event.start) <= new Date(end)) {
                 await base44.entities.BlockedDate.create({
                   company_id: company.id,
-                  accommodation_id: accommodation.id,
+                  accommodation_id: acc.id,
                   start_date: event.start,
-                  end_date: endDate,
-                  reason: `${icalConfig.name || 'Reserva externa'}: ${event.summary || ''}`,
+                  end_date: end,
+                  reason: `${ical.name}: ${event.summary || 'Reserva'}`,
                   source: 'ical_import'
                 });
-                createdForThisCalendar++;
                 totalCreated++;
-              } catch (err) {
-                console.error('        ✗ Erro ao criar bloqueio:', err);
               }
-            }
-            console.log(`     ✓ ${createdForThisCalendar} bloqueios criados para ${icalConfig.name}`);
-          } catch (error) {
-            console.error(`     ✗ Erro ao sincronizar ${icalConfig.name}:`, error);
-            errors.push(icalConfig.name || 'Calendário desconhecido');
+            } catch {}
           }
         }
       }
 
-      console.log('\n=== SINCRONIZAÇÃO CONCLUÍDA ===');
-      console.log(`Total de bloqueios criados: ${totalCreated}`);
-      console.log(`Erros: ${errors.length}`);
-
-      // Invalida TODAS as queries relacionadas para forçar atualização
-      await queryClient.invalidateQueries({ queryKey: ['blockedDates'] });
-      await queryClient.invalidateQueries({ queryKey: ['reservations'] });
-      await queryClient.invalidateQueries({ queryKey: ['accommodations'] });
-      
-      // Aguarda um pouco para garantir que o backend processou
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await queryClient.invalidateQueries(['blockedDates']);
+      await queryClient.invalidateQueries(['reservations']);
 
       if (totalCreated > 0) {
-        if (errors.length > 0) {
-          toast.success(`${totalCreated} datas sincronizadas. Alguns calendários falharam: ${errors.join(', ')}`);
-        } else {
-          toast.success(`${totalCreated} datas sincronizadas com sucesso!`);
-        }
-        window.location.reload();
+        toast.success(`${totalCreated} datas sincronizadas!`);
+        setTimeout(() => window.location.reload(), 500);
       } else if (errors.length > 0) {
-        toast.error(`Falha ao sincronizar: ${errors.join(', ')}`);
+        toast.error(`Falha ao sincronizar alguns calendários`);
       } else {
-        toast.warning('Nenhuma data nova para sincronizar');
+        toast.info('Nenhuma data nova');
       }
     } catch (error) {
-      console.error('Erro ao sincronizar:', error);
-      toast.error('Erro ao sincronizar calendários: ' + error.message);
+      toast.error('Erro na sincronização');
+    } finally {
+      console.error = originalError;
+      setSyncing(false);
     }
-
-    // Restaurar console
-    console.error = originalError;
-    console.warn = originalWarn;
-    setSyncing(false);
   };
 
   return (
