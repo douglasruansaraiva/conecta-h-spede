@@ -108,6 +108,7 @@ function DashboardContent({ user, company }) {
     setSyncing(true);
     try {
       let totalCreated = 0;
+      let errors = [];
       
       // Delete existing ical blocks
       const existingBlocks = await base44.entities.BlockedDate.filter({ 
@@ -129,16 +130,31 @@ function DashboardContent({ user, company }) {
           try {
             let icalData = null;
             
+            // Try direct fetch first
             try {
-              const response = await fetch(icalConfig.url);
-              if (response.ok) icalData = await response.text();
-            } catch (e) {
-              const proxyUrl = 'https://api.allorigins.win/raw?url=';
-              const response = await fetch(proxyUrl + encodeURIComponent(icalConfig.url));
-              if (response.ok) icalData = await response.text();
+              const response = await fetch(icalConfig.url, { mode: 'cors' });
+              if (response.ok) {
+                icalData = await response.text();
+              }
+            } catch (directError) {
+              // Try with proxy
+              try {
+                const proxyUrl = 'https://api.allorigins.win/raw?url=';
+                const response = await fetch(proxyUrl + encodeURIComponent(icalConfig.url));
+                if (response.ok) {
+                  icalData = await response.text();
+                }
+              } catch (proxyError) {
+                console.error(`Falha ao buscar ${icalConfig.name}:`, proxyError);
+                errors.push(icalConfig.name || 'Calendário desconhecido');
+                continue;
+              }
             }
             
-            if (!icalData) continue;
+            if (!icalData) {
+              errors.push(icalConfig.name || 'Calendário desconhecido');
+              continue;
+            }
             
             const events = [];
             const lines = icalData.split(/\r?\n/);
@@ -196,14 +212,20 @@ function DashboardContent({ user, company }) {
       }
 
       if (totalCreated > 0) {
-        toast.success(`${totalCreated} datas sincronizadas com sucesso!`);
+        if (errors.length > 0) {
+          toast.success(`${totalCreated} datas sincronizadas. Alguns calendários falharam: ${errors.join(', ')}`);
+        } else {
+          toast.success(`${totalCreated} datas sincronizadas com sucesso!`);
+        }
         window.location.reload();
+      } else if (errors.length > 0) {
+        toast.error(`Falha ao sincronizar: ${errors.join(', ')}`);
       } else {
         toast.warning('Nenhuma data nova para sincronizar');
       }
     } catch (error) {
       console.error('Erro ao sincronizar:', error);
-      toast.error('Erro ao sincronizar calendários');
+      toast.error('Erro ao sincronizar calendários: ' + error.message);
     }
     setSyncing(false);
   };
