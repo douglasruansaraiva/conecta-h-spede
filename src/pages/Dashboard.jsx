@@ -156,13 +156,17 @@ function DashboardContent({ user, company }) {
           let fetchMethod = '';
           
           // Helper function with timeout
-          const fetchWithTimeout = (url, timeout = 8000) => {
-            return Promise.race([
-              fetch(url),
-              new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('Timeout')), timeout)
-              )
-            ]);
+          const fetchWithTimeout = async (url, timeout = 8000) => {
+            try {
+              return await Promise.race([
+                fetch(url).catch(() => null),
+                new Promise((_, reject) => 
+                  setTimeout(() => reject(new Error('Timeout')), timeout)
+                )
+              ]);
+            } catch {
+              return null;
+            }
           };
           
           // Try multiple methods to fetch the iCal data
