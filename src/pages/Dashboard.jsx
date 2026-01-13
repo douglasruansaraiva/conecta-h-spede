@@ -15,8 +15,10 @@ import {
   Plus,
   ExternalLink,
   Copy,
-  Check
+  Check,
+  RefreshCw
 } from "lucide-react";
+import { toast } from "sonner";
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import StatsCard from '@/components/dashboard/StatsCard';
@@ -26,6 +28,7 @@ import CompanyGuard from '@/components/auth/CompanyGuard';
 
 function DashboardContent({ user, company }) {
   const [copied, setCopied] = useState(false);
+  const [syncing, setSyncing] = useState(false);
 
   const { data: accommodations = [] } = useQuery({
     queryKey: ['accommodations', company?.id],
@@ -101,6 +104,110 @@ function DashboardContent({ user, company }) {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const syncAllCalendars = async () => {
+    setSyncing(true);
+    try {
+      let totalCreated = 0;
+      
+      // Delete existing ical blocks
+      const existingBlocks = await base44.entities.BlockedDate.filter({ 
+        company_id: company.id,
+        source: 'ical_import'
+      });
+      
+      for (const block of existingBlocks) {
+        await base44.entities.BlockedDate.delete(block.id);
+      }
+
+      // Sync each accommodation with iCal URLs
+      for (const accommodation of accommodations) {
+        if (!accommodation.ical_urls || accommodation.ical_urls.length === 0) continue;
+
+        for (const icalConfig of accommodation.ical_urls) {
+          if (!icalConfig.url) continue;
+
+          try {
+            let icalData = null;
+            
+            try {
+              const response = await fetch(icalConfig.url);
+              if (response.ok) icalData = await response.text();
+            } catch (e) {
+              const proxyUrl = 'https://api.allorigins.win/raw?url=';
+              const response = await fetch(proxyUrl + encodeURIComponent(icalConfig.url));
+              if (response.ok) icalData = await response.text();
+            }
+            
+            if (!icalData) continue;
+            
+            const events = [];
+            const lines = icalData.split(/\r?\n/);
+            let currentEvent = null;
+            
+            for (const line of lines) {
+              const trimmed = line.trim();
+              
+              if (trimmed === 'BEGIN:VEVENT') {
+                currentEvent = {};
+              } else if (trimmed === 'END:VEVENT' && currentEvent) {
+                if (currentEvent.start && currentEvent.end) {
+                  events.push(currentEvent);
+                }
+                currentEvent = null;
+              } else if (currentEvent) {
+                if (trimmed.startsWith('DTSTART')) {
+                  const match = trimmed.match(/DTSTART[^:]*:(\d{8})/);
+                  if (match) {
+                    const dateStr = match[1];
+                    currentEvent.start = `${dateStr.slice(0,4)}-${dateStr.slice(4,6)}-${dateStr.slice(6,8)}`;
+                  }
+                } else if (trimmed.startsWith('DTEND')) {
+                  const match = trimmed.match(/DTEND[^:]*:(\d{8})/);
+                  if (match) {
+                    const dateStr = match[1];
+                    currentEvent.end = `${dateStr.slice(0,4)}-${dateStr.slice(4,6)}-${dateStr.slice(6,8)}`;
+                  }
+                } else if (trimmed.startsWith('SUMMARY')) {
+                  const parts = trimmed.split(':');
+                  currentEvent.summary = parts.slice(1).join(':').trim();
+                }
+              }
+            }
+
+            for (const event of events) {
+              try {
+                await base44.entities.BlockedDate.create({
+                  company_id: company.id,
+                  accommodation_id: accommodation.id,
+                  start_date: event.start,
+                  end_date: event.end,
+                  reason: `${icalConfig.name || 'Reserva externa'}: ${event.summary || ''}`,
+                  source: 'ical_import'
+                });
+                totalCreated++;
+              } catch (err) {
+                console.error('Erro ao criar bloqueio:', err);
+              }
+            }
+          } catch (error) {
+            console.error(`Erro ao sincronizar ${icalConfig.name}:`, error);
+          }
+        }
+      }
+
+      if (totalCreated > 0) {
+        toast.success(`${totalCreated} datas sincronizadas com sucesso!`);
+        window.location.reload();
+      } else {
+        toast.warning('Nenhuma data nova para sincronizar');
+      }
+    } catch (error) {
+      console.error('Erro ao sincronizar:', error);
+      toast.error('Erro ao sincronizar calendários');
+    }
+    setSyncing(false);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="max-w-7xl mx-auto p-4 sm:p-6">
@@ -126,6 +233,15 @@ function DashboardContent({ user, company }) {
                 </a>
               </div>
             )}
+            <Button
+              variant="outline"
+              onClick={syncAllCalendars}
+              disabled={syncing}
+              className="w-full sm:w-auto"
+            >
+              <RefreshCw className={`w-4 h-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
+              {syncing ? 'Sincronizando...' : 'Sincronizar iCal'}
+            </Button>
             <Link to={createPageUrl('Reservations')} className="w-full sm:w-auto">
               <Button className="bg-gradient-to-r from-[#2C5F5D] to-[#3A7A77] hover:from-[#234B49] hover:to-[#2C5F5D] text-white w-full shadow-md">
                 <Plus className="w-4 h-4 mr-2" />
