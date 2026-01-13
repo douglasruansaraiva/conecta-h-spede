@@ -119,7 +119,14 @@ function DashboardContent({ user, company }) {
     console.log('=== INICIANDO SINCRONIZAÇÃO ===');
     console.log('Company:', company.name, company.id);
     console.log('Acomodações:', accommodations.length);
-    
+
+    // Suprimir erros de fetch no console
+    const originalError = console.error;
+    console.error = (...args) => {
+      if (args[0]?.toString().includes('Failed to fetch')) return;
+      originalError(...args);
+    };
+
     try {
       let totalCreated = 0;
       let errors = [];
@@ -320,8 +327,11 @@ function DashboardContent({ user, company }) {
       console.error('Erro ao sincronizar:', error);
       toast.error('Erro ao sincronizar calendários: ' + error.message);
     }
+
+    // Restaurar console.error
+    console.error = originalError;
     setSyncing(false);
-  };
+    };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
