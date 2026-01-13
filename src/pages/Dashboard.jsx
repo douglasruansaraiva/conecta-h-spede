@@ -62,7 +62,16 @@ function DashboardContent({ user, company }) {
     queryKey: ['blockedDates', company?.id],
     queryFn: async () => {
       if (!company?.id) return [];
-      return await base44.entities.BlockedDate.filter({ company_id: company.id });
+      const dates = await base44.entities.BlockedDate.filter({ company_id: company.id });
+      console.log(`\n📊 [Dashboard ${company.name}] BlockedDates carregadas:`, dates.length);
+      console.log('   Detalhes:', dates.map(d => ({
+        accommodation: accommodations.find(a => a.id === d.accommodation_id)?.name || d.accommodation_id,
+        start: d.start_date,
+        end: d.end_date,
+        source: d.source,
+        reason: d.reason?.substring(0, 30)
+      })));
+      return dates;
     },
     enabled: !!company?.id
   });
