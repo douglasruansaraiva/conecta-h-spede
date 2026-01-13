@@ -331,7 +331,7 @@ function DashboardContent({ user, company }) {
     // Restaurar console.error
     console.error = originalError;
     setSyncing(false);
-    };
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
