@@ -58,12 +58,15 @@ export default function CalendarGrid({
     });
 
     if (blocked) {
-      // Extract source from blocked reason (format: "Airbnb: reservation name")
+      // Extract source from blocked reason (format: "Platform Name: reservation name")
       let source = 'blocked';
       if (blocked.reason) {
-        if (blocked.reason.toLowerCase().includes('airbnb')) source = 'airbnb';
-        else if (blocked.reason.toLowerCase().includes('booking')) source = 'booking';
-        else if (blocked.reason.toLowerCase().includes('vrbo')) source = 'vrbo';
+        const reasonLower = blocked.reason.toLowerCase();
+        if (reasonLower.includes('airbnb')) source = 'airbnb';
+        else if (reasonLower.includes('booking')) source = 'booking';
+        else if (reasonLower.includes('vrbo')) source = 'vrbo';
+        else if (reasonLower.includes('triplar')) source = 'other';
+        else if (blocked.source === 'ical_import') source = 'other';
       }
       return { status: 'blocked', blocked, source };
     }
