@@ -170,10 +170,11 @@ function DashboardContent({ user, company }) {
           };
           
           // Try multiple methods to fetch the iCal data
+          const silentFetch = (url) => fetchWithTimeout(url).catch(() => null);
           const fetchMethods = [
-            { name: 'direct', fn: () => fetchWithTimeout(icalConfig.url) },
-            { name: 'allorigins', fn: () => fetchWithTimeout('https://api.allorigins.win/raw?url=' + encodeURIComponent(icalConfig.url)) },
-            { name: 'corsproxy', fn: () => fetchWithTimeout('https://corsproxy.io/?' + encodeURIComponent(icalConfig.url)) },
+            { name: 'direct', fn: () => silentFetch(icalConfig.url) },
+            { name: 'allorigins', fn: () => silentFetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(icalConfig.url)) },
+            { name: 'corsproxy', fn: () => silentFetch('https://corsproxy.io/?' + encodeURIComponent(icalConfig.url)) },
           ];
           
           for (const method of fetchMethods) {
