@@ -120,7 +120,7 @@ function DashboardContent({ user, company }) {
     try {
       let totalCreated = 0;
       
-      // Limpar bloqueios antigos
+      // Limpar bloqueios antigos de iCal
       const existingBlocks = await base44.entities.BlockedDate.filter({ 
         company_id: company.id,
         source: 'ical_import'
@@ -130,20 +130,36 @@ function DashboardContent({ user, company }) {
         await base44.entities.BlockedDate.delete(block.id);
       }
 
-      // Função que NUNCA falha - sempre retorna null em caso de erro
-      const tryFetch = async (url) => {
-        try {
-          const img = new Image();
-          const response = await Promise.race([
-            fetch(url).catch(() => null),
-            new Promise(resolve => setTimeout(() => resolve(null), 8000))
-          ]);
-          if (response?.ok) {
-            const text = await response.text().catch(() => '');
-            return text.includes('BEGIN:VCALENDAR') ? text : null;
-          }
-        } catch {}
-        return null;
+      // Fetch através de proxy sem gerar erros
+      const fetchIcal = async (url) => {
+        return new Promise((resolve) => {
+          const timeout = setTimeout(() => resolve(null), 10000);
+          
+          const xhr = new XMLHttpRequest();
+          xhr.open('GET', `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`, true);
+          xhr.timeout = 10000;
+          
+          xhr.onload = () => {
+            clearTimeout(timeout);
+            if (xhr.status === 200 && xhr.responseText?.includes('BEGIN:VCALENDAR')) {
+              resolve(xhr.responseText);
+            } else {
+              resolve(null);
+            }
+          };
+          
+          xhr.onerror = () => {
+            clearTimeout(timeout);
+            resolve(null);
+          };
+          
+          xhr.ontimeout = () => {
+            clearTimeout(timeout);
+            resolve(null);
+          };
+          
+          xhr.send();
+        });
       };
 
       // Parse iCal
@@ -170,19 +186,20 @@ function DashboardContent({ user, company }) {
         return events;
       };
 
-      // Sincronizar cada acomodação
+      // Sincronizar cada acomodação individualmente
       for (const acc of accommodations) {
         if (!acc.ical_urls?.length) continue;
 
+        // Processar cada URL iCal desta acomodação
         for (const ical of acc.ical_urls) {
           if (!ical.url) continue;
 
-          // Usar apenas proxy confiável
-          const data = await tryFetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(ical.url)}`);
+          const data = await fetchIcal(ical.url);
           if (!data) continue;
 
           const events = parseIcal(data);
           
+          // Criar bloqueio para cada evento encontrado
           for (const event of events) {
             try {
               const endDate = new Date(event.end);
@@ -208,7 +225,7 @@ function DashboardContent({ user, company }) {
       await queryClient.invalidateQueries(['blockedDates']);
 
       if (totalCreated > 0) {
-        toast.success(`${totalCreated} datas sincronizadas!`);
+        toast.success(`${totalCreated} datas sincronizadas com sucesso!`);
         setTimeout(() => window.location.reload(), 500);
       } else {
         toast.info('Nenhuma data nova para sincronizar');
