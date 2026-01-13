@@ -146,18 +146,28 @@ function DashboardContent({ user, company }) {
           let icalData = null;
           let fetchMethod = '';
           
+          // Helper function with timeout
+          const fetchWithTimeout = (url, timeout = 8000) => {
+            return Promise.race([
+              fetch(url),
+              new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Timeout')), timeout)
+              )
+            ]);
+          };
+          
           // Try multiple methods to fetch the iCal data
           const fetchMethods = [
-            { name: 'direct', fn: () => fetch(icalConfig.url, { mode: 'cors' }) },
-            { name: 'allorigins', fn: () => fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(icalConfig.url)) },
-            { name: 'corsproxy', fn: () => fetch('https://corsproxy.io/?' + encodeURIComponent(icalConfig.url)) },
+            { name: 'direct', fn: () => fetchWithTimeout(icalConfig.url) },
+            { name: 'allorigins', fn: () => fetchWithTimeout('https://api.allorigins.win/raw?url=' + encodeURIComponent(icalConfig.url)) },
+            { name: 'corsproxy', fn: () => fetchWithTimeout('https://corsproxy.io/?' + encodeURIComponent(icalConfig.url)) },
           ];
           
           for (const method of fetchMethods) {
             try {
               console.log(`     Tentando ${method.name}...`);
               const response = await method.fn();
-              if (response.ok) {
+              if (response && response.ok) {
                 const text = await response.text();
                 if (text && text.includes('BEGIN:VCALENDAR')) {
                   icalData = text;
@@ -168,10 +178,11 @@ function DashboardContent({ user, company }) {
                   console.log(`     ⚠ ${method.name} retornou dados inválidos`);
                 }
               } else {
-                console.log(`     ⚠ ${method.name} retornou status ${response.status}`);
+                console.log(`     ⚠ ${method.name} retornou status ${response?.status || 'erro'}`);
               }
             } catch (err) {
               console.log(`     ⚠ ${method.name} falhou: ${err.message}`);
+              // Continue para próximo método
             }
           }
           
