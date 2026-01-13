@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { format, parseISO, isToday, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -29,6 +29,7 @@ import CompanyGuard from '@/components/auth/CompanyGuard';
 function DashboardContent({ user, company }) {
   const [copied, setCopied] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: accommodations = [] } = useQuery({
     queryKey: ['accommodations', company?.id],
@@ -267,6 +268,14 @@ function DashboardContent({ user, company }) {
       console.log('\n=== SINCRONIZAÇÃO CONCLUÍDA ===');
       console.log(`Total de bloqueios criados: ${totalCreated}`);
       console.log(`Erros: ${errors.length}`);
+
+      // Invalida TODAS as queries relacionadas para forçar atualização
+      await queryClient.invalidateQueries({ queryKey: ['blockedDates'] });
+      await queryClient.invalidateQueries({ queryKey: ['reservations'] });
+      await queryClient.invalidateQueries({ queryKey: ['accommodations'] });
+      
+      // Aguarda um pouco para garantir que o backend processou
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       if (totalCreated > 0) {
         if (errors.length > 0) {
