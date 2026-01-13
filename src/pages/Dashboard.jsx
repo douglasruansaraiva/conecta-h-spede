@@ -120,11 +120,18 @@ function DashboardContent({ user, company }) {
     console.log('Company:', company.name, company.id);
     console.log('Acomodações:', accommodations.length);
 
-    // Suprimir erros de fetch no console
+    // Suprimir completamente erros de fetch e CORS
     const originalError = console.error;
+    const originalWarn = console.warn;
     console.error = (...args) => {
-      if (args[0]?.toString().includes('Failed to fetch')) return;
+      const msg = args[0]?.toString() || '';
+      if (msg.includes('Failed to fetch') || msg.includes('CORS') || msg.includes('NetworkError')) return;
       originalError(...args);
+    };
+    console.warn = (...args) => {
+      const msg = args[0]?.toString() || '';
+      if (msg.includes('Failed to fetch') || msg.includes('CORS')) return;
+      originalWarn(...args);
     };
 
     try {
@@ -162,22 +169,32 @@ function DashboardContent({ user, company }) {
           let icalData = null;
           let fetchMethod = '';
           
-          // Helper function with timeout
+          // Helper function with timeout and complete error suppression
           const fetchWithTimeout = async (url, timeout = 8000) => {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), timeout);
+            
             try {
-              return await Promise.race([
-                fetch(url).catch(() => null),
-                new Promise((_, reject) => 
-                  setTimeout(() => reject(new Error('Timeout')), timeout)
-                )
-              ]);
-            } catch {
+              const response = await fetch(url, { 
+                signal: controller.signal,
+                mode: 'cors'
+              });
+              clearTimeout(timeoutId);
+              return response;
+            } catch (err) {
+              clearTimeout(timeoutId);
               return null;
             }
           };
           
-          // Try multiple methods to fetch the iCal data
-          const silentFetch = (url) => fetchWithTimeout(url).catch(() => null);
+          // Completely silent fetch wrapper
+          const silentFetch = async (url) => {
+            try {
+              return await fetchWithTimeout(url);
+            } catch {
+              return null;
+            }
+          };
           const fetchMethods = [
             { name: 'direct', fn: () => silentFetch(icalConfig.url) },
             { name: 'allorigins', fn: () => silentFetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(icalConfig.url)) },
@@ -187,10 +204,7 @@ function DashboardContent({ user, company }) {
           for (const method of fetchMethods) {
             try {
               console.log(`     Tentando ${method.name}...`);
-              const response = await method.fn().catch(e => {
-                // Suprime erro de CORS no console - é esperado
-                return null;
-              });
+              const response = await method.fn();
               if (response && response.ok) {
                 const text = await response.text();
                 if (text && text.includes('BEGIN:VCALENDAR')) {
@@ -328,8 +342,9 @@ function DashboardContent({ user, company }) {
       toast.error('Erro ao sincronizar calendários: ' + error.message);
     }
 
-    // Restaurar console.error
+    // Restaurar console
     console.error = originalError;
+    console.warn = originalWarn;
     setSyncing(false);
   };
 
