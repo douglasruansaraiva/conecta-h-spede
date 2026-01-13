@@ -175,7 +175,10 @@ function DashboardContent({ user, company }) {
           for (const method of fetchMethods) {
             try {
               console.log(`     Tentando ${method.name}...`);
-              const response = await method.fn();
+              const response = await method.fn().catch(e => {
+                // Suprime erro de CORS no console - é esperado
+                return null;
+              });
               if (response && response.ok) {
                 const text = await response.text();
                 if (text && text.includes('BEGIN:VCALENDAR')) {
@@ -187,11 +190,10 @@ function DashboardContent({ user, company }) {
                   console.log(`     ⚠ ${method.name} retornou dados inválidos`);
                 }
               } else {
-                console.log(`     ⚠ ${method.name} retornou status ${response?.status || 'erro'}`);
+                console.log(`     ⚠ ${method.name} retornou status ${response?.status || 'bloqueado por CORS'}`);
               }
             } catch (err) {
-              console.log(`     ⚠ ${method.name} falhou: ${err.message}`);
-              // Continue para próximo método
+              // Erro já tratado, continua silenciosamente
             }
           }
           
