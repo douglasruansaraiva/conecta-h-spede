@@ -153,19 +153,36 @@ function DashboardContent({ user, company }) {
                 console.log('     ✓ Busca direta bem-sucedida');
               }
             } catch (directError) {
-              console.log('     ⚠ Busca direta falhou, tentando proxy...');
-              // Try with proxy
+              console.log('     ⚠ Busca direta falhou, tentando proxy 1...');
+              
+              // Try first proxy
               try {
-                const proxyUrl = 'https://api.allorigins.win/raw?url=';
-                const response = await fetch(proxyUrl + encodeURIComponent(icalConfig.url));
+                const proxyUrl1 = 'https://api.allorigins.win/raw?url=';
+                const response = await fetch(proxyUrl1 + encodeURIComponent(icalConfig.url), { 
+                  signal: AbortSignal.timeout(10000) 
+                });
                 if (response.ok) {
                   icalData = await response.text();
-                  console.log('     ✓ Busca via proxy bem-sucedida');
+                  console.log('     ✓ Busca via proxy 1 bem-sucedida');
                 }
-              } catch (proxyError) {
-                console.error(`     ✗ Falha ao buscar ${icalConfig.name}:`, proxyError);
-                errors.push(icalConfig.name || 'Calendário desconhecido');
-                continue;
+              } catch (proxy1Error) {
+                console.log('     ⚠ Proxy 1 falhou, tentando proxy 2...');
+                
+                // Try second proxy
+                try {
+                  const proxyUrl2 = 'https://corsproxy.io/?';
+                  const response = await fetch(proxyUrl2 + encodeURIComponent(icalConfig.url), { 
+                    signal: AbortSignal.timeout(10000) 
+                  });
+                  if (response.ok) {
+                    icalData = await response.text();
+                    console.log('     ✓ Busca via proxy 2 bem-sucedida');
+                  }
+                } catch (proxy2Error) {
+                  console.error(`     ✗ Todos os métodos falharam para ${icalConfig.name}`);
+                  errors.push(icalConfig.name || 'Calendário desconhecido');
+                  continue;
+                }
               }
             }
             
