@@ -108,6 +108,8 @@ export default function StripeCheckout({ amount, reservationId, companyId, onSuc
   useEffect(() => {
     const createIntent = async () => {
       try {
+        console.log('🔄 Criando payment intent...', { amount, reservationId, companyId });
+        
         const response = await fetch('/api/createPaymentIntent', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -119,6 +121,7 @@ export default function StripeCheckout({ amount, reservationId, companyId, onSuc
         });
 
         const data = await response.json();
+        console.log('📦 Resposta:', data);
         
         if (data.clientSecret && data.publishableKey) {
           setClientSecret(data.clientSecret);
@@ -126,13 +129,15 @@ export default function StripeCheckout({ amount, reservationId, companyId, onSuc
           setError(null);
         } else {
           const errorMsg = data.error || 'Erro ao inicializar pagamento';
+          console.error('❌ Erro:', errorMsg);
           setError(errorMsg);
           toast.error(errorMsg);
         }
       } catch (error) {
-        console.error('Erro:', error);
-        toast.error('Erro ao conectar com sistema de pagamento');
-        onCancel();
+        console.error('❌ Erro ao conectar:', error);
+        const errorMsg = 'Erro ao conectar com sistema de pagamento. Verifique se as chaves do Stripe estão configuradas.';
+        setError(errorMsg);
+        toast.error(errorMsg);
       } finally {
         setLoading(false);
       }

@@ -14,10 +14,16 @@ export default async function createPaymentIntent(request) {
     // Buscar chave do Stripe da empresa
     const company = await base44.asServiceRole.entities.Company.get(company_id);
     
-    if (!company.stripe_secret_key) {
+    console.log('🏢 Empresa:', company.name);
+    console.log('🔑 Chaves configuradas:', {
+      hasSecretKey: !!company.stripe_secret_key,
+      hasPublishableKey: !!company.stripe_publishable_key
+    });
+    
+    if (!company.stripe_secret_key || !company.stripe_publishable_key) {
       return {
         status: 400,
-        body: { error: 'Pagamentos online não configurados' }
+        body: { error: 'Chaves do Stripe não configuradas. Configure em Configurações → Pagamentos.' }
       };
     }
 
@@ -32,6 +38,8 @@ export default async function createPaymentIntent(request) {
       }
     });
 
+    console.log('✅ Payment intent criado:', paymentIntent.id);
+
     return {
       status: 200,
       body: {
@@ -40,10 +48,10 @@ export default async function createPaymentIntent(request) {
       }
     };
   } catch (error) {
-    console.error('Erro ao criar payment intent:', error);
+    console.error('❌ Erro ao criar payment intent:', error);
     return {
       status: 500,
-      body: { error: 'Erro ao processar pagamento' }
+      body: { error: `Erro: ${error.message}` }
     };
   }
 }
