@@ -163,6 +163,13 @@ export default function PublicBooking() {
     e.preventDefault();
     
     if (paymentMethod === 'online') {
+      // Verificar se Stripe está configurado
+      if (!company.stripe_secret_key || !company.stripe_publishable_key) {
+        alert('Pagamento online não está configurado. Por favor, escolha "Pagar Depois".');
+        setPaymentMethod('manual');
+        return;
+      }
+      
       // Criar reserva primeiro, depois ir para pagamento
       const reservationId = await createReservation();
       if (reservationId) {
@@ -713,43 +720,48 @@ export default function PublicBooking() {
                       </div>
 
                       <div className="border-t pt-4">
-                        <Label className="text-slate-700 mb-3 block">Forma de Pagamento</Label>
-                        <div className="space-y-3">
-                          <button
-                            type="button"
-                            onClick={() => setPaymentMethod('online')}
-                            className={`w-full p-4 rounded-lg border-2 transition-all ${
-                              paymentMethod === 'online' 
-                                ? 'border-emerald-500 bg-emerald-50' 
-                                : 'border-slate-200 hover:border-slate-300'
-                            }`}
-                          >
-                            <div className="flex items-center gap-3">
-                              <CreditCard className="w-5 h-5 text-slate-600" />
-                              <div className="text-left">
-                                <p className="font-medium text-slate-800">Pagar Agora (Online)</p>
-                                <p className="text-sm text-slate-500">Cartão de crédito ou débito</p>
-                              </div>
-                            </div>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setPaymentMethod('manual')}
-                            className={`w-full p-4 rounded-lg border-2 transition-all ${
-                              paymentMethod === 'manual' 
-                                ? 'border-emerald-500 bg-emerald-50' 
-                                : 'border-slate-200 hover:border-slate-300'
-                            }`}
-                          >
-                            <div className="flex items-center gap-3">
-                              <Clock className="w-5 h-5 text-slate-600" />
-                              <div className="text-left">
-                                <p className="font-medium text-slate-800">Pagar Depois</p>
-                                <p className="text-sm text-slate-500">Siga as instruções enviadas por email</p>
-                              </div>
-                            </div>
-                          </button>
-                        </div>
+                       <Label className="text-slate-700 mb-3 block">Forma de Pagamento</Label>
+                       <div className="space-y-3">
+                         <button
+                           type="button"
+                           onClick={() => setPaymentMethod('online')}
+                           disabled={!company.stripe_secret_key || !company.stripe_publishable_key}
+                           className={`w-full p-4 rounded-lg border-2 transition-all ${
+                             paymentMethod === 'online' 
+                               ? 'border-emerald-500 bg-emerald-50' 
+                               : 'border-slate-200 hover:border-slate-300'
+                           } ${(!company.stripe_secret_key || !company.stripe_publishable_key) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                         >
+                           <div className="flex items-center gap-3">
+                             <CreditCard className="w-5 h-5 text-slate-600" />
+                             <div className="text-left">
+                               <p className="font-medium text-slate-800">Pagar Agora (Online)</p>
+                               <p className="text-sm text-slate-500">
+                                 {(!company.stripe_secret_key || !company.stripe_publishable_key) 
+                                   ? 'Indisponível no momento' 
+                                   : 'Cartão de crédito ou débito'}
+                               </p>
+                             </div>
+                           </div>
+                         </button>
+                         <button
+                           type="button"
+                           onClick={() => setPaymentMethod('manual')}
+                           className={`w-full p-4 rounded-lg border-2 transition-all ${
+                             paymentMethod === 'manual' 
+                               ? 'border-emerald-500 bg-emerald-50' 
+                               : 'border-slate-200 hover:border-slate-300'
+                           }`}
+                         >
+                           <div className="flex items-center gap-3">
+                             <Clock className="w-5 h-5 text-slate-600" />
+                             <div className="text-left">
+                               <p className="font-medium text-slate-800">Pagar Depois</p>
+                               <p className="text-sm text-slate-500">Siga as instruções enviadas por email</p>
+                             </div>
+                           </div>
+                         </button>
+                       </div>
                       </div>
 
                       {company.cancellation_policy && (

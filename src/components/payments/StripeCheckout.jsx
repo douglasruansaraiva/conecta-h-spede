@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { Button } from "@/components/ui/button";
-import { Loader2, CreditCard } from "lucide-react";
+import { Loader2, CreditCard, X } from "lucide-react";
 import { toast } from "sonner";
 
 function CheckoutForm({ amount, reservationId, onSuccess, onCancel }) {
@@ -150,8 +150,9 @@ export default function StripeCheckout({ amount, reservationId, companyId, onSuc
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 text-emerald-600 animate-spin" />
+      <div className="flex flex-col items-center justify-center py-12">
+        <Loader2 className="w-8 h-8 text-emerald-600 animate-spin mb-4" />
+        <p className="text-slate-600 text-sm">Carregando checkout...</p>
       </div>
     );
   }
@@ -159,9 +160,13 @@ export default function StripeCheckout({ amount, reservationId, companyId, onSuc
   if (error) {
     return (
       <div className="text-center py-8">
-        <p className="text-red-600 mb-4">{error}</p>
+        <div className="mb-4">
+          <X className="w-12 h-12 text-red-500 mx-auto mb-3" />
+          <p className="text-red-600 font-medium mb-2">Pagamento Online Indisponível</p>
+          <p className="text-slate-600 text-sm">{error}</p>
+        </div>
         <Button onClick={onCancel} variant="outline">
-          Voltar
+          Voltar e escolher Pagar Depois
         </Button>
       </div>
     );
