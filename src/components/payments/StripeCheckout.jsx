@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 
-function CheckoutForm({ amount, onSuccess, onCancel }) {
+function CheckoutForm({ amount, reservationId, onSuccess, onCancel }) {
   const stripe = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
@@ -29,8 +29,28 @@ function CheckoutForm({ amount, onSuccess, onCancel }) {
       toast.error(error.message);
       setLoading(false);
     } else {
-      toast.success('Pagamento realizado com sucesso!');
-      onSuccess();
+      // Pagamento confirmado - atualizar reserva
+      try {
+        const response = await fetch('/api/confirmPayment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            reservation_id: reservationId,
+            amount: amount
+          })
+        });
+        
+        if (response.ok) {
+          toast.success('Pagamento realizado com sucesso!');
+          onSuccess();
+        } else {
+          toast.error('Pagamento processado, mas erro ao confirmar reserva');
+          setLoading(false);
+        }
+      } catch (err) {
+        toast.error('Pagamento processado, mas erro ao confirmar reserva');
+        setLoading(false);
+      }
     }
   };
 
@@ -80,6 +100,7 @@ function CheckoutForm({ amount, onSuccess, onCancel }) {
 }
 
 export default function StripeCheckout({ amount, reservationId, companyId, onSuccess, onCancel }) {
+  const [error, setError] = useState(null);
   const [clientSecret, setClientSecret] = useState('');
   const [stripePromise, setStripePromise] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -102,9 +123,11 @@ export default function StripeCheckout({ amount, reservationId, companyId, onSuc
         if (data.clientSecret && data.publishableKey) {
           setClientSecret(data.clientSecret);
           setStripePromise(loadStripe(data.publishableKey));
+          setError(null);
         } else {
-          toast.error(data.error || 'Erro ao inicializar pagamento');
-          onCancel();
+          const errorMsg = data.error || 'Erro ao inicializar pagamento';
+          setError(errorMsg);
+          toast.error(errorMsg);
         }
       } catch (error) {
         console.error('Erro:', error);
@@ -128,13 +151,24 @@ export default function StripeCheckout({ amount, reservationId, companyId, onSuc
     );
   }
 
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-red-600 mb-4">{error}</p>
+        <Button onClick={onCancel} variant="outline">
+          Voltar
+        </Button>
+      </div>
+    );
+  }
+
   if (!clientSecret || !stripePromise) {
     return null;
   }
 
   return (
     <Elements stripe={stripePromise} options={{ clientSecret }}>
-      <CheckoutForm amount={amount} onSuccess={onSuccess} onCancel={onCancel} />
+      <CheckoutForm amount={amount} reservationId={reservationId} onSuccess={onSuccess} onCancel={onCancel} />
     </Elements>
   );
 }

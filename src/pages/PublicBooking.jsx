@@ -206,7 +206,7 @@ export default function PublicBooking() {
         }
       }
 
-      // Create reservation
+      // Create reservation - SEMPRE com status pending até confirmar pagamento
       const reservation = await base44.entities.Reservation.create({
         company_id: company.id,
         accommodation_id: selectedAccommodation.id,
@@ -219,9 +219,9 @@ export default function PublicBooking() {
         guests_count: parseInt(formData.guests_count) || 1,
         notes: formData.notes,
         total_amount: calculateTotal(),
-        paid_amount: paymentMethod === 'online' ? calculateTotal() : 0,
+        paid_amount: 0,
         source: 'direct',
-        status: paymentMethod === 'online' ? 'confirmed' : 'pending'
+        status: 'pending'
       });
 
       setCreatedReservationId(reservation.id);
