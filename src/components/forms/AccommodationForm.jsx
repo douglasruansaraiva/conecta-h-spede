@@ -269,6 +269,7 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
           }
           
           // Parse iCal data
+          console.log(`${icalConfig.name}: Parseando dados iCal...`);
           const events = [];
           const lines = icalData.split(/\r?\n/);
           let currentEvent = null;
@@ -281,6 +282,7 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
             } else if (trimmed === 'END:VEVENT' && currentEvent) {
               if (currentEvent.start && currentEvent.end) {
                 events.push(currentEvent);
+                console.log(`  Evento: ${currentEvent.start} até ${currentEvent.end} - ${currentEvent.summary || 'Sem título'}`);
               }
               currentEvent = null;
             } else if (currentEvent) {
@@ -304,6 +306,7 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
               }
             }
           }
+          console.log(`${icalConfig.name}: Total de ${events.length} eventos parseados`);
 
           // Create blocks for this calendar
           console.log(`${icalConfig.name}: ${events.length} eventos encontrados`);
@@ -328,12 +331,16 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
         }
       }
 
+      console.log(`RESUMO: ${totalCreated} bloqueios criados no total`);
+      
       if (totalCreated > 0) {
         const calendarNames = formData.ical_urls.map(c => c.name).filter(Boolean).join(', ');
         toast.success(`${totalCreated} datas bloqueadas importadas de: ${calendarNames}`);
-        onSave();
+        
+        // Force refresh of blocked dates
+        window.location.reload();
       } else {
-        toast.warning('Nenhum evento encontrado nos calendários');
+        toast.warning('Nenhum evento encontrado nos calendários. Verifique os logs no console para mais detalhes.');
       }
     } catch (error) {
       console.error('Erro ao sincronizar iCal:', error);
