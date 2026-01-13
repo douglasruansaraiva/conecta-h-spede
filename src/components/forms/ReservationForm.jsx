@@ -101,6 +101,16 @@ export default function ReservationForm({
 
     const checkIn = parseISO(formData.check_in);
     const checkOut = parseISO(formData.check_out);
+    
+    // Check minimum nights
+    const accommodation = accommodations.find(a => a.id === formData.accommodation_id);
+    const nights = differenceInDays(checkOut, checkIn);
+    const minNights = accommodation?.min_nights || 1;
+    
+    if (nights < minNights) {
+      setDateError(`Estadia mínima: ${minNights} ${minNights === 1 ? 'noite' : 'noites'}`);
+      return false;
+    }
 
     // Get all reservations for this accommodation
     const allReservations = await base44.entities.Reservation.filter({ 
@@ -237,6 +247,10 @@ export default function ReservationForm({
     setLoading(false);
     onSave();
     onClose();
+    
+    // Show success toast
+    const { toast } = await import("sonner");
+    toast.success(reservation ? 'Reserva atualizada!' : 'Reserva criada com sucesso!');
   };
 
   const nights = formData.check_in && formData.check_out 

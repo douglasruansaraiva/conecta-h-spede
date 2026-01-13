@@ -252,7 +252,9 @@ function FinancialContent({ user, company }) {
     .filter(t => t.type === 'expense' && t.status === 'completed')
     .reduce((sum, t) => sum + (t.amount || 0), 0);
 
-  const totalReservations = reservations.filter(r => r.status !== 'cancelled').length + blockedDates.length;
+  // Count only direct reservations (blockedDates are already external bookings)
+  const directReservations = reservations.filter(r => r.status !== 'cancelled').length;
+  const totalReservations = directReservations + blockedDates.length;
   const avgReservationValue = totalReservations > 0 ? totalRevenue / totalReservations : 0;
 
   const COLORS = ['#2C5F5D', '#10b981', '#3b82f6', '#f59e0b', '#ef4444'];
@@ -294,6 +296,10 @@ function FinancialContent({ user, company }) {
     setFormOpen(false);
     setEditingTransaction(null);
     resetForm();
+    
+    // Show success toast
+    const { toast } = await import("sonner");
+    toast.success(editingTransaction ? 'Transação atualizada!' : 'Transação criada com sucesso!');
   };
 
   const resetForm = () => {
@@ -327,6 +333,10 @@ function FinancialContent({ user, company }) {
       await base44.entities.Transaction.delete(deleteConfirmId);
       queryClient.invalidateQueries(['transactions']);
       setDeleteConfirmId(null);
+      
+      // Show success toast
+      const { toast } = await import("sonner");
+      toast.success('Transação excluída!');
     }
   };
 

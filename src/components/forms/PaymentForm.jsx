@@ -53,6 +53,10 @@ export default function PaymentForm({
     setLoading(false);
     onSave();
     onClose();
+    
+    // Show success toast
+    const { toast } = await import("sonner");
+    toast.success('Pagamento registrado com sucesso!');
   };
 
   return (

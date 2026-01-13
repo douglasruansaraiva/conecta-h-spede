@@ -130,6 +130,10 @@ function GuestsContent({ user, company }) {
     setLoading(false);
     setFormOpen(false);
     setEditingGuest(null);
+    
+    // Show success toast
+    const { toast } = await import("sonner");
+    toast.success(editingGuest ? 'Hóspede atualizado!' : 'Hóspede cadastrado com sucesso!');
     setFormData({
       name: '',
       email: '',

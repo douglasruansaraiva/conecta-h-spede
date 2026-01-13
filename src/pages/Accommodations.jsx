@@ -90,7 +90,13 @@ function AccommodationsContent({ user, company }) {
     if (deleteConfirmId) {
       await base44.entities.Accommodation.delete(deleteConfirmId);
       queryClient.invalidateQueries(['accommodations']);
+      queryClient.invalidateQueries(['reservations']);
+      queryClient.invalidateQueries(['blockedDates']);
       setDeleteConfirmId(null);
+      
+      // Show success toast
+      const { toast } = await import("sonner");
+      toast.success('Acomodação excluída com sucesso!');
     }
   };
 
