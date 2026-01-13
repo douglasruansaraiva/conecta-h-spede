@@ -142,55 +142,39 @@ function DashboardContent({ user, company }) {
           console.log(`\n  📅 Sincronizando: ${icalConfig.name}`);
           console.log(`     URL: ${icalConfig.url}`);
 
+          let icalData = null;
+          
           try {
-            let icalData = null;
-            
             // Try direct fetch first
+            const response = await fetch(icalConfig.url, { mode: 'cors' });
+            if (response.ok) {
+              icalData = await response.text();
+              console.log('     ✓ Busca direta bem-sucedida');
+            }
+          } catch (directError) {
+            console.log('     ⚠ Busca direta falhou, tentando proxy...');
+            
             try {
-              const response = await fetch(icalConfig.url, { mode: 'cors' });
+              const proxyUrl = 'https://api.allorigins.win/raw?url=';
+              const response = await fetch(proxyUrl + encodeURIComponent(icalConfig.url));
               if (response.ok) {
                 icalData = await response.text();
-                console.log('     ✓ Busca direta bem-sucedida');
+                console.log('     ✓ Busca via proxy bem-sucedida');
               }
-            } catch (directError) {
-              console.log('     ⚠ Busca direta falhou, tentando proxy 1...');
-              
-              // Try first proxy
-              try {
-                const proxyUrl1 = 'https://api.allorigins.win/raw?url=';
-                const response = await fetch(proxyUrl1 + encodeURIComponent(icalConfig.url), { 
-                  signal: AbortSignal.timeout(10000) 
-                });
-                if (response.ok) {
-                  icalData = await response.text();
-                  console.log('     ✓ Busca via proxy 1 bem-sucedida');
-                }
-              } catch (proxy1Error) {
-                console.log('     ⚠ Proxy 1 falhou, tentando proxy 2...');
-                
-                // Try second proxy
-                try {
-                  const proxyUrl2 = 'https://corsproxy.io/?';
-                  const response = await fetch(proxyUrl2 + encodeURIComponent(icalConfig.url), { 
-                    signal: AbortSignal.timeout(10000) 
-                  });
-                  if (response.ok) {
-                    icalData = await response.text();
-                    console.log('     ✓ Busca via proxy 2 bem-sucedida');
-                  }
-                } catch (proxy2Error) {
-                  console.error(`     ✗ Todos os métodos falharam para ${icalConfig.name}`);
-                  errors.push(icalConfig.name || 'Calendário desconhecido');
-                  continue;
-                }
-              }
-            }
-            
-            if (!icalData) {
-              console.log('     ✗ Nenhum dado retornado');
+            } catch (proxyError) {
+              console.error(`     ✗ Falha ao buscar ${icalConfig.name}:`, proxyError.message);
               errors.push(icalConfig.name || 'Calendário desconhecido');
               continue;
             }
+          }
+          
+          if (!icalData) {
+            console.log('     ✗ Nenhum dado retornado');
+            errors.push(icalConfig.name || 'Calendário desconhecido');
+            continue;
+          }
+          
+          try {
             
             console.log(`     Parseando iCal... (${icalData.length} caracteres)`);
             const events = [];
