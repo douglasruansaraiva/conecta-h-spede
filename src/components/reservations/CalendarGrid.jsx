@@ -32,6 +32,8 @@ export default function CalendarGrid({
   }, [currentMonth]);
 
   const getDateStatus = (date) => {
+    const dateStr = format(date, 'yyyy-MM-dd');
+    
     // Check reservations - exclude cancelled
     const reservation = reservations.find(r => {
       if (r.status === 'cancelled') return false;
@@ -44,25 +46,37 @@ export default function CalendarGrid({
     });
 
     if (reservation) {
-      // Extract source from reservation
       const source = reservation.source || 'direct';
       return { status: 'reserved', reservation, source };
     }
 
-    // Check blocked dates
+    // Check blocked dates - FIXED: properly check interval
     const blocked = blockedDates.find(b => {
       if (accommodationId && b.accommodation_id !== accommodationId) return false;
-      const start = parseISO(b.start_date);
-      const end = parseISO(b.end_date);
-      return (isWithinInterval(date, { start, end }) || isSameDay(date, start) || isSameDay(date, end));
+      
+      const blockStart = parseISO(b.start_date);
+      const blockEnd = parseISO(b.end_date);
+      
+      // Verificação detalhada: data deve estar DENTRO do intervalo bloqueado
+      const isInRange = date >= blockStart && date <= blockEnd;
+      
+      // Debug para primeira data do mês atual
+      if (format(date, 'dd') === '01') {
+        console.log(`🔍 Verificando ${dateStr}:`, {
+          blocked_period: `${b.start_date} a ${b.end_date}`,
+          is_in_range: isInRange,
+          reason: b.reason?.substring(0, 40)
+        });
+      }
+      
+      return isInRange;
     });
 
     if (blocked) {
-      // Extract source from blocked reason (format: "Platform Name: reservation name")
       let source = 'blocked';
       if (blocked.reason) {
         const reasonLower = blocked.reason.toLowerCase();
-        if (reasonLower.includes('airbnb')) source = 'airbnb';
+        if (reasonLower.includes('airbnb') || reasonLower.includes('arbnb')) source = 'airbnb';
         else if (reasonLower.includes('booking')) source = 'booking';
         else if (reasonLower.includes('vrbo')) source = 'vrbo';
         else if (reasonLower.includes('triplar')) source = 'other';
