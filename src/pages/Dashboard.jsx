@@ -117,13 +117,21 @@ function DashboardContent({ user, company }) {
   const syncAllCalendars = async () => {
     setSyncing(true);
     
-    // Suprimir erros de rede globalmente
-    const originalError = console.error;
-    console.error = (...args) => {
-      const str = String(args[0] || '');
-      if (str.includes('Failed to fetch') || str.includes('NetworkError') || str.includes('CORS')) return;
-      originalError(...args);
+    // Event listener para suprimir erros não capturados
+    const errorHandler = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
     };
+    
+    window.addEventListener('error', errorHandler, true);
+    window.addEventListener('unhandledrejection', errorHandler, true);
+    
+    // Suprimir console
+    const originalError = console.error;
+    const originalWarn = console.warn;
+    console.error = () => {};
+    console.warn = () => {};
 
     try {
       let totalCreated = 0;
@@ -139,34 +147,36 @@ function DashboardContent({ user, company }) {
         await base44.entities.BlockedDate.delete(block.id);
       }
 
-      // Função para buscar iCal com múltiplos proxies
-      const fetchIcal = async (url) => {
-        const proxies = [
-          url, // Direto
-          `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-          `https://corsproxy.io/?${encodeURIComponent(url)}`
-        ];
+      // Fetch com promises individuais silenciosas
+      const safeFetch = (url) => {
+        return new Promise((resolve) => {
+          const timeout = setTimeout(() => resolve(null), 8000);
+          
+          fetch(url, { mode: 'cors' })
+            .then(r => {
+              clearTimeout(timeout);
+              return r.ok ? r.text() : null;
+            })
+            .then(text => resolve(text?.includes('BEGIN:VCALENDAR') ? text : null))
+            .catch(() => {
+              clearTimeout(timeout);
+              resolve(null);
+            });
+        });
+      };
 
-        for (const proxyUrl of proxies) {
-          try {
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 10000);
-            
-            const response = await fetch(proxyUrl, { 
-              signal: controller.signal,
-              mode: 'cors',
-              cache: 'no-cache'
-            }).catch(() => null);
-            
-            clearTimeout(timeout);
-            
-            if (response?.ok) {
-              const text = await response.text().catch(() => '');
-              if (text.includes('BEGIN:VCALENDAR')) {
-                return text;
-              }
-            }
-          } catch {}
+      // Tentar fetch com proxies
+      const fetchIcal = async (url) => {
+        // Tenta apenas proxies (pula fetch direto pra evitar CORS)
+        const results = await Promise.allSettled([
+          safeFetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`),
+          safeFetch(`https://corsproxy.io/?${encodeURIComponent(url)}`)
+        ]);
+        
+        for (const result of results) {
+          if (result.status === 'fulfilled' && result.value) {
+            return result.value;
+          }
         }
         return null;
       };
@@ -182,26 +192,23 @@ function DashboardContent({ user, company }) {
           
           if (l === 'BEGIN:VEVENT') {
             event = {};
-          } else if (l === 'END:VEVENT' && event) {
-            if (event.start && event.end) events.push(event);
+          } else if (l === 'END:VEVENT' && event?.start && event?.end) {
+            events.push(event);
             event = null;
           } else if (event) {
             const match = l.match(/^(DTSTART|DTEND)[^:]*:(\d{8})/);
             if (match) {
               const [, field, date] = match;
               const formatted = `${date.slice(0,4)}-${date.slice(4,6)}-${date.slice(6,8)}`;
-              if (field === 'DTSTART') event.start = formatted;
-              if (field === 'DTEND') event.end = formatted;
+              event[field === 'DTSTART' ? 'start' : 'end'] = formatted;
             }
-            if (l.startsWith('SUMMARY:')) {
-              event.summary = l.substring(8);
-            }
+            if (l.startsWith('SUMMARY:')) event.summary = l.substring(8);
           }
         }
         return events;
       };
 
-      // Sincronizar cada acomodação
+      // Sincronizar
       for (const acc of accommodations) {
         if (!acc.ical_urls?.length) continue;
 
@@ -219,7 +226,6 @@ function DashboardContent({ user, company }) {
           
           for (const event of events) {
             try {
-              // Ajustar end_date (iCal é exclusivo)
               const endDate = new Date(event.end);
               endDate.setDate(endDate.getDate() - 1);
               const end = endDate.toISOString().split('T')[0];
@@ -255,6 +261,9 @@ function DashboardContent({ user, company }) {
       toast.error('Erro na sincronização');
     } finally {
       console.error = originalError;
+      console.warn = originalWarn;
+      window.removeEventListener('error', errorHandler, true);
+      window.removeEventListener('unhandledrejection', errorHandler, true);
       setSyncing(false);
     }
   };
