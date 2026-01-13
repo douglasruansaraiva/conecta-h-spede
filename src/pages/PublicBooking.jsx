@@ -163,8 +163,11 @@ export default function PublicBooking() {
     e.preventDefault();
     
     if (paymentMethod === 'online') {
-      // Continuar para pagamento
-      setStep(4);
+      // Criar reserva primeiro, depois ir para pagamento
+      const reservationId = await createReservation();
+      if (reservationId) {
+        setStep(4);
+      }
     } else {
       // Criar reserva sem pagamento
       await createReservation();
