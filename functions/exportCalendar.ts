@@ -32,11 +32,13 @@ Deno.serve(async (req) => {
       accommodation_id
     });
 
-    let ical = 'BEGIN:VCALENDAR\n';
-    ical += 'VERSION:2.0\n';
-    ical += 'PRODID:-//Conecta Hospede//Calendar//EN\n';
-    ical += 'CALSCALE:GREGORIAN\n';
-    ical += 'METHOD:PUBLISH\n';
+    let ical = 'BEGIN:VCALENDAR\r\n';
+    ical += 'VERSION:2.0\r\n';
+    ical += 'PRODID:-//Conecta Hospede//NONSGML v1.0//EN\r\n';
+    ical += 'CALSCALE:GREGORIAN\r\n';
+    ical += 'METHOD:PUBLISH\r\n';
+    ical += 'X-WR-CALNAME:Conecta Hospede\r\n';
+    ical += 'X-WR-TIMEZONE:America/Sao_Paulo\r\n';
 
     reservations
       .filter(r => r.status !== 'cancelled')
@@ -48,16 +50,15 @@ Deno.serve(async (req) => {
         const dtend = format(checkOut, 'yyyyMMdd');
         const now = format(new Date(), "yyyyMMdd'T'HHmmss'Z'");
 
-        ical += 'BEGIN:VEVENT\n';
-        ical += `UID:${uid}\n`;
-        ical += `DTSTAMP:${now}\n`;
-        ical += `DTSTART;VALUE=DATE:${dtstart}\n`;
-        ical += `DTEND;VALUE=DATE:${dtend}\n`;
-        ical += `SUMMARY:Reservado\n`;
-        ical += `DESCRIPTION:Reserva confirmada\n`;
-        ical += 'STATUS:CONFIRMED\n';
-        ical += 'TRANSP:OPAQUE\n';
-        ical += 'END:VEVENT\n';
+        ical += 'BEGIN:VEVENT\r\n';
+        ical += `UID:${uid}\r\n`;
+        ical += `DTSTAMP:${now}\r\n`;
+        ical += `DTSTART;VALUE=DATE:${dtstart}\r\n`;
+        ical += `DTEND;VALUE=DATE:${dtend}\r\n`;
+        ical += `SUMMARY:Reservado\r\n`;
+        ical += 'STATUS:CONFIRMED\r\n';
+        ical += 'TRANSP:OPAQUE\r\n';
+        ical += 'END:VEVENT\r\n';
       });
 
     blockedDates.forEach(block => {
@@ -68,19 +69,18 @@ Deno.serve(async (req) => {
       const dtend = format(addDays(end, 1), 'yyyyMMdd');
       const now = format(new Date(), "yyyyMMdd'T'HHmmss'Z'");
 
-      ical += 'BEGIN:VEVENT\n';
-      ical += `UID:${uid}\n`;
-      ical += `DTSTAMP:${now}\n`;
-      ical += `DTSTART;VALUE=DATE:${dtstart}\n`;
-      ical += `DTEND;VALUE=DATE:${dtend}\n`;
-      ical += `SUMMARY:Bloqueado\n`;
-      ical += `DESCRIPTION:${block.reason || 'Data bloqueada'}\n`;
-      ical += 'STATUS:CONFIRMED\n';
-      ical += 'TRANSP:OPAQUE\n';
-      ical += 'END:VEVENT\n';
+      ical += 'BEGIN:VEVENT\r\n';
+      ical += `UID:${uid}\r\n`;
+      ical += `DTSTAMP:${now}\r\n`;
+      ical += `DTSTART;VALUE=DATE:${dtstart}\r\n`;
+      ical += `DTEND;VALUE=DATE:${dtend}\r\n`;
+      ical += `SUMMARY:Bloqueado\r\n`;
+      ical += 'STATUS:CONFIRMED\r\n';
+      ical += 'TRANSP:OPAQUE\r\n';
+      ical += 'END:VEVENT\r\n';
     });
 
-    ical += 'END:VCALENDAR';
+    ical += 'END:VCALENDAR\r\n';
 
     return new Response(ical, {
       status: 200,
