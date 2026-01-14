@@ -34,11 +34,8 @@ Deno.serve(async (req) => {
 
     let ical = 'BEGIN:VCALENDAR\r\n';
     ical += 'VERSION:2.0\r\n';
-    ical += 'PRODID:-//Conecta Hospede//NONSGML v1.0//EN\r\n';
-    ical += 'CALSCALE:GREGORIAN\r\n';
-    ical += 'METHOD:PUBLISH\r\n';
+    ical += 'PRODID:-//Homeaway.com//NONSGML Homeaway//EN\r\n';
     ical += 'X-WR-CALNAME:Conecta Hospede\r\n';
-    ical += 'X-WR-TIMEZONE:America/Sao_Paulo\r\n';
 
     reservations
       .filter(r => r.status !== 'cancelled')
@@ -51,13 +48,12 @@ Deno.serve(async (req) => {
         const now = format(new Date(), "yyyyMMdd'T'HHmmss'Z'");
 
         ical += 'BEGIN:VEVENT\r\n';
-        ical += `UID:${uid}\r\n`;
-        ical += `DTSTAMP:${now}\r\n`;
         ical += `DTSTART;VALUE=DATE:${dtstart}\r\n`;
         ical += `DTEND;VALUE=DATE:${dtend}\r\n`;
+        ical += `DTSTAMP:${now}\r\n`;
+        ical += `UID:${uid}\r\n`;
         ical += `SUMMARY:Reservado\r\n`;
-        ical += 'STATUS:CONFIRMED\r\n';
-        ical += 'TRANSP:OPAQUE\r\n';
+        ical += `DESCRIPTION:Reservado\r\n`;
         ical += 'END:VEVENT\r\n';
       });
 
@@ -70,13 +66,12 @@ Deno.serve(async (req) => {
       const now = format(new Date(), "yyyyMMdd'T'HHmmss'Z'");
 
       ical += 'BEGIN:VEVENT\r\n';
-      ical += `UID:${uid}\r\n`;
-      ical += `DTSTAMP:${now}\r\n`;
       ical += `DTSTART;VALUE=DATE:${dtstart}\r\n`;
       ical += `DTEND;VALUE=DATE:${dtend}\r\n`;
+      ical += `DTSTAMP:${now}\r\n`;
+      ical += `UID:${uid}\r\n`;
       ical += `SUMMARY:Bloqueado\r\n`;
-      ical += 'STATUS:CONFIRMED\r\n';
-      ical += 'TRANSP:OPAQUE\r\n';
+      ical += `DESCRIPTION:Bloqueado\r\n`;
       ical += 'END:VEVENT\r\n';
     });
 
