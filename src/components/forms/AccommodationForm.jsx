@@ -671,17 +671,21 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
             <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
               <Label className="mb-2 block text-emerald-800">URL para Sincronização com Booking.com/Airbnb/VRBO</Label>
               <p className="text-sm text-emerald-700 mb-3">
-                Para sincronizar automaticamente, siga os passos:
+                Para obter a URL de sincronização:
               </p>
-              <ol className="text-xs text-emerald-700 space-y-2 list-decimal list-inside">
-                <li>Vá em <strong>Dashboard → Código → Funções → exportCalendar</strong></li>
-                <li>Copie a URL pública da função</li>
-                <li>Adicione os parâmetros: <code className="bg-emerald-100 px-1 rounded">?accommodation_id={accommodation.id}&company_id={companyId}</code></li>
-                <li>Cole a URL completa no Booking.com, Airbnb ou VRBO</li>
+              <ol className="text-xs text-emerald-700 space-y-2 list-decimal list-inside mb-3">
+                <li>Acesse o <strong>dashboard do Base44</strong> (não este app)</li>
+                <li>Vá em <strong>Backend Functions</strong> no menu lateral</li>
+                <li>Clique na função <strong>exportCalendar</strong></li>
+                <li>Copie a <strong>Public URL</strong></li>
+                <li>Adicione ao final: <code className="bg-emerald-100 px-1 rounded">?accommodation_id={accommodation.id}&company_id={companyId}</code></li>
+                <li>Cole a URL completa no Booking.com/Airbnb/VRBO</li>
               </ol>
-              <p className="text-xs text-emerald-600 mt-3 font-medium">
-                Exemplo: <code className="bg-emerald-100 px-1 rounded text-[10px]">https://base44.app/.../exportCalendar?accommodation_id={accommodation.id.slice(0, 8)}...&company_id={companyId.slice(0, 8)}...</code>
-              </p>
+              <div className="bg-white rounded p-2 border border-emerald-300">
+                <p className="text-[10px] text-slate-600 font-mono break-all">
+                  Parâmetros: ?accommodation_id={accommodation.id}&company_id={companyId}
+                </p>
+              </div>
             </div>
           )}
 
