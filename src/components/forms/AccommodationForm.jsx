@@ -68,7 +68,7 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
         const url = `${baseUrl}/api/functions/exportCalendar?accommodation_id=${accommodation.id}&token=${accommodation.ical_export_token}`;
         setExportUrl(url);
       }
-      } else {
+    } else {
       setFormData({
         name: '',
         type: 'quarto',
