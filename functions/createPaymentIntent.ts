@@ -14,18 +14,15 @@ Deno.serve(async (req) => {
     }
 
     // Buscar chave do Stripe da empresa
-    const companies = await base44.asServiceRole.entities.Company.filter({
-      id: company_id
-    });
+    const allCompanies = await base44.asServiceRole.entities.Company.filter({});
+    const company = allCompanies.find(c => c.id === company_id);
     
-    if (companies.length === 0) {
+    if (!company) {
       return Response.json(
         { error: 'Empresa não encontrada' },
         { status: 404 }
       );
     }
-
-    const company = companies[0];
     
     console.log('🏢 Empresa:', company.name);
     console.log('🔑 Chaves configuradas:', {
