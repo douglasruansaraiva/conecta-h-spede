@@ -20,6 +20,7 @@ Deno.serve(async (req) => {
       return new Response('Parâmetros inválidos', { status: 400 });
     }
 
+    // Usar service role diretamente, sem autenticação (endpoint público para iCal)
     const base44 = createClientFromRequest(req);
 
     const reservations = await base44.asServiceRole.entities.Reservation.filter({
