@@ -669,21 +669,18 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
 
           {accommodation && (
             <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
-              <Label className="mb-2 block text-emerald-800">URL para Sincronização Automática</Label>
-              <div className="mb-2">
-                <Input
-                  readOnly
-                  value={`https://base44.app/public-api/apps/${companyId}/functions/exportCalendar/calendar.ics?accommodation_id=${accommodation.id}&company_id=${companyId}`}
-                  className="text-xs bg-white mb-2"
-                  onClick={(e) => {
-                    e.target.select();
-                    navigator.clipboard.writeText(e.target.value);
-                    toast.success('URL copiada!');
-                  }}
-                />
-              </div>
-              <p className="text-xs text-emerald-700">
-                Cole esta URL no Booking.com, Airbnb ou VRBO para sincronizar automaticamente
+              <Label className="mb-2 block text-emerald-800">URL para Sincronização com Booking.com/Airbnb/VRBO</Label>
+              <p className="text-sm text-emerald-700 mb-3">
+                Para sincronizar automaticamente, siga os passos:
+              </p>
+              <ol className="text-xs text-emerald-700 space-y-2 list-decimal list-inside">
+                <li>Vá em <strong>Dashboard → Código → Funções → exportCalendar</strong></li>
+                <li>Copie a URL pública da função</li>
+                <li>Adicione os parâmetros: <code className="bg-emerald-100 px-1 rounded">?accommodation_id={accommodation.id}&company_id={companyId}</code></li>
+                <li>Cole a URL completa no Booking.com, Airbnb ou VRBO</li>
+              </ol>
+              <p className="text-xs text-emerald-600 mt-3 font-medium">
+                Exemplo: <code className="bg-emerald-100 px-1 rounded text-[10px]">https://base44.app/.../exportCalendar?accommodation_id={accommodation.id.slice(0, 8)}...&company_id={companyId.slice(0, 8)}...</code>
               </p>
             </div>
           )}
