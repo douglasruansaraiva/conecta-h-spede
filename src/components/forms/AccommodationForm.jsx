@@ -19,6 +19,7 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [generatingToken, setGeneratingToken] = useState(false);
   const [exportUrl, setExportUrl] = useState('');
   const [formData, setFormData] = useState({
     name: '',
@@ -56,10 +57,12 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
         status: accommodation.status || 'active'
       });
 
-      // Build export URL
-      const url = `${window.location.origin}/api/functions/exportCalendar?accommodation_id=${accommodation.id}&company_id=${companyId}`;
-      setExportUrl(url);
-    } else {
+      // Build export URL com token
+      if (accommodation.ical_export_token) {
+        const url = `${window.location.origin}/api/functions/exportCalendar?accommodation_id=${accommodation.id}&token=${accommodation.ical_export_token}`;
+        setExportUrl(url);
+      }
+      } else {
       setFormData({
         name: '',
         type: 'quarto',
@@ -353,6 +356,29 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
       toast.error('Erro ao sincronizar: ' + error.message);
     }
     setSyncing(false);
+  };
+
+  const generateIcalToken = async () => {
+    if (!accommodation) return;
+    
+    setGeneratingToken(true);
+    try {
+      // Gerar token único
+      const token = crypto.randomUUID();
+      await base44.entities.Accommodation.update(accommodation.id, {
+        ical_export_token: token
+      });
+      
+      // Atualizar URL
+      const url = `${window.location.origin}/api/functions/exportCalendar?accommodation_id=${accommodation.id}&token=${token}`;
+      setExportUrl(url);
+      
+      toast.success('Link de sincronização gerado!');
+    } catch (error) {
+      console.error('Erro ao gerar token:', error);
+      toast.error('Erro ao gerar link');
+    }
+    setGeneratingToken(false);
   };
 
   const handleSubmit = async (e) => {
@@ -673,34 +699,75 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
             </p>
           </div>
 
-          {accommodation && exportUrl && (
+          {accommodation && (
             <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
               <Label className="mb-2 block text-emerald-800 font-semibold">URL do Calendário para Booking.com / VRBO</Label>
-              <p className="text-xs text-emerald-700 mb-3">
-                Cole esta URL na seção de sincronização de calendários do portal:
-              </p>
-              <div className="flex gap-2 items-center">
-                <Input
-                  readOnly
-                  value={exportUrl}
-                  className="text-xs bg-white font-mono"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => {
-                    navigator.clipboard.writeText(exportUrl);
-                    toast.success('URL copiada!');
-                  }}
-                  className="flex-shrink-0"
-                >
-                  <Copy className="w-4 h-4" />
-                </Button>
-              </div>
-              <p className="text-[10px] text-emerald-600 mt-2">
-                Esta URL sincroniza automaticamente suas reservas e bloqueios com as plataformas externas.
-              </p>
+
+              {!exportUrl ? (
+                <div>
+                  <p className="text-xs text-emerald-700 mb-3">
+                    Gere um link único para sincronizar automaticamente com plataformas externas:
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={generateIcalToken}
+                    disabled={generatingToken}
+                    className="w-full"
+                  >
+                    {generatingToken ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                        Gerando...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="w-4 h-4 mr-2" />
+                        Gerar Link de Sincronização
+                      </>
+                    )}
+                  </Button>
+                </div>
+              ) : (
+                <div>
+                  <p className="text-xs text-emerald-700 mb-3">
+                    Cole esta URL na seção de sincronização de calendários do portal:
+                  </p>
+                  <div className="flex gap-2 items-center">
+                    <Input
+                      readOnly
+                      value={exportUrl}
+                      className="text-xs bg-white font-mono"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => {
+                        navigator.clipboard.writeText(exportUrl);
+                        toast.success('URL copiada!');
+                      }}
+                      className="flex-shrink-0"
+                    >
+                      <Copy className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={generateIcalToken}
+                      disabled={generatingToken}
+                      className="flex-shrink-0"
+                      title="Gerar novo link"
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <p className="text-[10px] text-emerald-600 mt-2">
+                    Esta URL sincroniza automaticamente suas reservas e bloqueios com as plataformas externas.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 

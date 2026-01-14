@@ -6,9 +6,9 @@ Deno.serve(async (req) => {
     // Parse query params (endpoint público para plataformas externas)
     const url = new URL(req.url);
     const accommodation_id = url.searchParams.get('accommodation_id');
-    const company_id = url.searchParams.get('company_id');
+    const token = url.searchParams.get('token');
 
-    if (!accommodation_id || !company_id) {
+    if (!accommodation_id || !token) {
       return new Response('Parâmetros inválidos', { status: 400 });
     }
 
@@ -18,6 +18,19 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_URL'),
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
     );
+
+    // Validar token
+    const accommodations = await base44.entities.Accommodation.filter({
+      id: accommodation_id,
+      ical_export_token: token
+    });
+
+    if (accommodations.length === 0) {
+      return new Response('Token inválido', { status: 403 });
+    }
+
+    const accommodation = accommodations[0];
+    const company_id = accommodation.company_id;
 
     const reservations = await base44.entities.Reservation.filter({
       company_id,
