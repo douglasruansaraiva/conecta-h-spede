@@ -38,7 +38,7 @@ export default function PublicBooking() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [user, setUser] = useState(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
-  const [paymentMethod, setPaymentMethod] = useState('manual'); // 'manual' or 'online'
+  const [paymentMethod, setPaymentMethod] = useState('online'); // 'manual' or 'online'
   const [createdReservationId, setCreatedReservationId] = useState(null);
   const [formData, setFormData] = useState({
     guest_name: '',
@@ -162,22 +162,10 @@ export default function PublicBooking() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (paymentMethod === 'online') {
-      // Verificar se Stripe está configurado
-      if (!company.stripe_secret_key || !company.stripe_publishable_key) {
-        alert('Pagamento online não está configurado. Por favor, escolha "Pagar Depois".');
-        setPaymentMethod('manual');
-        return;
-      }
-      
-      // Criar reserva primeiro, depois ir para pagamento
-      const reservationId = await createReservation();
-      if (reservationId) {
-        setStep(4);
-      }
-    } else {
-      // Criar reserva sem pagamento
-      await createReservation();
+    // Criar reserva primeiro, depois ir para pagamento
+    const reservationId = await createReservation();
+    if (reservationId) {
+      setStep(4);
     }
   };
 
@@ -233,11 +221,6 @@ export default function PublicBooking() {
 
       setCreatedReservationId(reservation.id);
       setLoading(false);
-      
-      if (paymentMethod === 'manual') {
-        setSuccess(true);
-      }
-      
       return reservation.id;
     } catch (error) {
       console.error('Erro ao criar reserva:', error);
@@ -719,50 +702,7 @@ export default function PublicBooking() {
                         />
                       </div>
 
-                      <div className="border-t pt-4">
-                       <Label className="text-slate-700 mb-3 block">Forma de Pagamento</Label>
-                       <div className="space-y-3">
-                         <button
-                           type="button"
-                           onClick={() => setPaymentMethod('online')}
-                           disabled={!company.stripe_secret_key || !company.stripe_publishable_key}
-                           className={`w-full p-4 rounded-lg border-2 transition-all ${
-                             paymentMethod === 'online' 
-                               ? 'border-emerald-500 bg-emerald-50' 
-                               : 'border-slate-200 hover:border-slate-300'
-                           } ${(!company.stripe_secret_key || !company.stripe_publishable_key) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                         >
-                           <div className="flex items-center gap-3">
-                             <CreditCard className="w-5 h-5 text-slate-600" />
-                             <div className="text-left">
-                               <p className="font-medium text-slate-800">Pagar Agora (Online)</p>
-                               <p className="text-sm text-slate-500">
-                                 {(!company.stripe_secret_key || !company.stripe_publishable_key) 
-                                   ? 'Indisponível no momento' 
-                                   : 'Cartão de crédito ou débito'}
-                               </p>
-                             </div>
-                           </div>
-                         </button>
-                         <button
-                           type="button"
-                           onClick={() => setPaymentMethod('manual')}
-                           className={`w-full p-4 rounded-lg border-2 transition-all ${
-                             paymentMethod === 'manual' 
-                               ? 'border-emerald-500 bg-emerald-50' 
-                               : 'border-slate-200 hover:border-slate-300'
-                           }`}
-                         >
-                           <div className="flex items-center gap-3">
-                             <Clock className="w-5 h-5 text-slate-600" />
-                             <div className="text-left">
-                               <p className="font-medium text-slate-800">Pagar Depois</p>
-                               <p className="text-sm text-slate-500">Siga as instruções enviadas por email</p>
-                             </div>
-                           </div>
-                         </button>
-                       </div>
-                      </div>
+
 
                       {company.cancellation_policy && (
                         <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
@@ -782,7 +722,7 @@ export default function PublicBooking() {
                           className="bg-gradient-to-r from-[#2C5F5D] to-[#3A7A77] hover:from-[#234B49] hover:to-[#2C5F5D] text-white shadow-md"
                         >
                           {loading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                          {paymentMethod === 'online' ? 'Ir para Pagamento' : 'Confirmar Reserva'}
+                          Ir para Pagamento
                         </Button>
                       </div>
                     </form>
