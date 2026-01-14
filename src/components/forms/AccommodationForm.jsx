@@ -58,7 +58,7 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
 
       // Build export URL
       const appId = window.location.hostname.split('.')[0];
-      const url = `https://base44.app/public-api/apps/${appId}/functions/exportCalendar?accommodation_id=${accommodation.id}&company_id=${companyId}`;
+      const url = `https://base44.app/public-api/apps/${appId}/functions/exportCalendar/calendar.ics?accommodation_id=${accommodation.id}&company_id=${companyId}`;
       setExportUrl(url);
     } else {
       setFormData({
