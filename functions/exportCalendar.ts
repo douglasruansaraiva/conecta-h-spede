@@ -1,18 +1,18 @@
-import { base44 } from '@base44/sdk';
-import { parseISO, format, addDays } from 'date-fns';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { parseISO, format, addDays } from 'npm:date-fns';
 
-export default async function exportCalendar(request) {
-  // Support both /api/exportCalendar?params and /api/exportCalendar/calendar.ics?params
-  const { accommodation_id, company_id } = request.query;
-
-  if (!accommodation_id || !company_id) {
-    return {
-      status: 400,
-      body: 'Parâmetros inválidos'
-    };
-  }
-
+Deno.serve(async (req) => {
   try {
+    const url = new URL(req.url);
+    const accommodation_id = url.searchParams.get('accommodation_id');
+    const company_id = url.searchParams.get('company_id');
+
+    if (!accommodation_id || !company_id) {
+      return new Response('Parâmetros inválidos', { status: 400 });
+    }
+
+    const base44 = createClientFromRequest(req);
+
     const reservations = await base44.asServiceRole.entities.Reservation.filter({
       company_id,
       accommodation_id
@@ -26,6 +26,8 @@ export default async function exportCalendar(request) {
     let ical = 'BEGIN:VCALENDAR\n';
     ical += 'VERSION:2.0\n';
     ical += 'PRODID:-//Conecta Hospede//Calendar//EN\n';
+    ical += 'CALSCALE:GREGORIAN\n';
+    ical += 'METHOD:PUBLISH\n';
 
     reservations
       .filter(r => r.status !== 'cancelled')
@@ -40,9 +42,12 @@ export default async function exportCalendar(request) {
         ical += 'BEGIN:VEVENT\n';
         ical += `UID:${uid}\n`;
         ical += `DTSTAMP:${now}\n`;
-        ical += `DTSTART:${dtstart}\n`;
-        ical += `DTEND:${dtend}\n`;
-        ical += `SUMMARY:Reserved\n`;
+        ical += `DTSTART;VALUE=DATE:${dtstart}\n`;
+        ical += `DTEND;VALUE=DATE:${dtend}\n`;
+        ical += `SUMMARY:Reservado\n`;
+        ical += `DESCRIPTION:Reserva confirmada\n`;
+        ical += 'STATUS:CONFIRMED\n';
+        ical += 'TRANSP:OPAQUE\n';
         ical += 'END:VEVENT\n';
       });
 
@@ -57,26 +62,26 @@ export default async function exportCalendar(request) {
       ical += 'BEGIN:VEVENT\n';
       ical += `UID:${uid}\n`;
       ical += `DTSTAMP:${now}\n`;
-      ical += `DTSTART:${dtstart}\n`;
-      ical += `DTEND:${dtend}\n`;
-      ical += `SUMMARY:Not Available\n`;
+      ical += `DTSTART;VALUE=DATE:${dtstart}\n`;
+      ical += `DTEND;VALUE=DATE:${dtend}\n`;
+      ical += `SUMMARY:Bloqueado\n`;
+      ical += `DESCRIPTION:${block.reason || 'Data bloqueada'}\n`;
+      ical += 'STATUS:CONFIRMED\n';
+      ical += 'TRANSP:OPAQUE\n';
       ical += 'END:VEVENT\n';
     });
 
     ical += 'END:VCALENDAR';
 
-    return {
+    return new Response(ical, {
       status: 200,
       headers: {
         'Content-Type': 'text/calendar; charset=utf-8',
         'Content-Disposition': 'inline; filename="calendar.ics"'
-      },
-      body: ical
-    };
+      }
+    });
   } catch (error) {
-    return {
-      status: 500,
-      body: 'Erro ao gerar calendário'
-    };
+    console.error('Erro ao gerar calendário:', error);
+    return new Response('Erro ao gerar calendário', { status: 500 });
   }
-}
+});
