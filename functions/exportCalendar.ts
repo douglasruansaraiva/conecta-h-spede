@@ -1,35 +1,33 @@
 import { createClient } from 'npm:@base44/sdk@0.8.6';
-import { parseISO, format, addDays } from 'npm:date-fns';
 
 Deno.serve(async (req) => {
   try {
-    // Parse query params (endpoint público para plataformas externas)
+    // Parse query params (endpoint público)
     const url = new URL(req.url);
     const accommodation_id = url.searchParams.get('accommodation_id');
     const token = url.searchParams.get('token');
 
     if (!accommodation_id || !token) {
-      return new Response('Parâmetros inválidos', { status: 400 });
+      return new Response('Missing parameters', { status: 400 });
     }
 
-    // Usar service role direto (endpoint público para iCal)
+    // Service role client (público, sem JWT)
     const base44 = createClient(
       Deno.env.get('BASE44_APP_ID'),
       Deno.env.get('SUPABASE_URL'),
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
     );
 
-    // Validar token
-    const accommodations = await base44.entities.Accommodation.filter({
-      id: accommodation_id,
-      ical_export_token: token
-    });
+    // Validar token contra accommodation
+    const accommodations = await base44.entities.Accommodation.list();
+    const accommodation = accommodations.find(a => 
+      a.id === accommodation_id && a.ical_export_token === token
+    );
 
-    if (accommodations.length === 0) {
-      return new Response('Token inválido', { status: 403 });
+    if (!accommodation) {
+      return new Response('Invalid token', { status: 403 });
     }
 
-    const accommodation = accommodations[0];
     const company_id = accommodation.company_id;
 
     const reservations = await base44.entities.Reservation.filter({
