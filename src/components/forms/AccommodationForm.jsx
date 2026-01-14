@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { X, Plus, Upload, Loader2, RefreshCw, Copy } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
-import { useICalSync } from "@/components/hooks/useICalSync.jsx";
+import { useICalSync } from "@/components/useICalSync";
 
 const AMENITIES = [
   'WiFi', 'Ar Condicionado', 'TV', 'Frigobar', 'Cofre', 'Secador', 
