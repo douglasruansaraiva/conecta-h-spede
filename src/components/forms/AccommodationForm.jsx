@@ -56,9 +56,17 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
         status: accommodation.status || 'active'
       });
 
-      // Build export URL
-      const appId = window.location.hostname.split('.')[0];
-      const url = `https://base44.app/public-api/apps/${appId}/functions/exportCalendar?accommodation_id=${accommodation.id}&company_id=${companyId}`;
+      // Build export URL usando o hostname atual
+      const currentHost = window.location.hostname;
+      // Se estiver em localhost ou preview, usar o hostname de produção armazenado
+      let baseUrl;
+      if (currentHost.includes('localhost') || currentHost.includes('base44.app')) {
+        // Tentar pegar o hostname real do app
+        baseUrl = `${window.location.protocol}//${currentHost}`;
+      } else {
+        baseUrl = `https://${currentHost}`;
+      }
+      const url = `${baseUrl}/api/functions/exportCalendar?accommodation_id=${accommodation.id}&company_id=${companyId}`;
       setExportUrl(url);
     } else {
       setFormData({
