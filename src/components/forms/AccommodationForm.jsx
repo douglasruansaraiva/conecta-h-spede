@@ -674,31 +674,24 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
             </p>
           </div>
 
-          {accommodation && exportUrl && (
+          {accommodation && (
             <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
-              <Label className="mb-2 block text-emerald-800 font-semibold">URL para Booking.com / Airbnb / VRBO</Label>
+              <Label className="mb-2 block text-emerald-800 font-semibold">Exportar para Booking.com / Airbnb / VRBO</Label>
               <p className="text-xs text-emerald-700 mb-3">
-                Cole esta URL no portal de reservas para sincronizar automaticamente as datas ocupadas:
+                Baixe o arquivo de calendário e faça upload manualmente no portal de reservas:
               </p>
-              <div className="flex gap-2 items-center">
-                <Input
-                  readOnly
-                  value={exportUrl}
-                  className="text-xs bg-white font-mono"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => {
-                    navigator.clipboard.writeText(exportUrl);
-                    toast.success('URL copiada!');
-                  }}
-                  className="flex-shrink-0"
-                >
-                  <Copy className="w-4 h-4" />
-                </Button>
-              </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleDownloadIcal}
+                className="w-full"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Baixar Calendário (.ics)
+              </Button>
+              <p className="text-[10px] text-emerald-600 mt-2">
+                Após baixar, acesse Booking.com/VRBO e faça upload do arquivo na seção de sincronização de calendários.
+              </p>
             </div>
           )}
 
