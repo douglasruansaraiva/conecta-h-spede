@@ -3,9 +3,18 @@ import { parseISO, format, addDays } from 'npm:date-fns';
 
 Deno.serve(async (req) => {
   try {
-    const url = new URL(req.url);
-    const accommodation_id = url.searchParams.get('accommodation_id');
-    const company_id = url.searchParams.get('company_id');
+    // Parse body for function calls, or query params for direct HTTP calls
+    let accommodation_id, company_id;
+    
+    if (req.method === 'POST') {
+      const body = await req.json();
+      accommodation_id = body.accommodation_id;
+      company_id = body.company_id;
+    } else {
+      const url = new URL(req.url);
+      accommodation_id = url.searchParams.get('accommodation_id');
+      company_id = url.searchParams.get('company_id');
+    }
 
     if (!accommodation_id || !company_id) {
       return new Response('Parâmetros inválidos', { status: 400 });
