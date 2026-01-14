@@ -275,7 +275,7 @@ export default function ReservationForm({
                 <SelectValue placeholder="Selecione..." />
               </SelectTrigger>
               <SelectContent>
-                {accommodations.map(acc => (
+                {accommodations?.filter(acc => acc.status === 'active').map(acc => (
                   <SelectItem key={acc.id} value={acc.id}>
                     {acc.name} - R$ {acc.base_price?.toFixed(2)}/noite
                   </SelectItem>
