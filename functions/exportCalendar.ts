@@ -1,34 +1,30 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClient } from 'npm:@base44/sdk@0.8.6';
 import { parseISO, format, addDays } from 'npm:date-fns';
 
 Deno.serve(async (req) => {
   try {
-    // Parse body for function calls, or query params for direct HTTP calls
-    let accommodation_id, company_id;
-    
-    if (req.method === 'POST') {
-      const body = await req.json();
-      accommodation_id = body.accommodation_id;
-      company_id = body.company_id;
-    } else {
-      const url = new URL(req.url);
-      accommodation_id = url.searchParams.get('accommodation_id');
-      company_id = url.searchParams.get('company_id');
-    }
+    // Parse query params (endpoint público para plataformas externas)
+    const url = new URL(req.url);
+    const accommodation_id = url.searchParams.get('accommodation_id');
+    const company_id = url.searchParams.get('company_id');
 
     if (!accommodation_id || !company_id) {
       return new Response('Parâmetros inválidos', { status: 400 });
     }
 
-    // Usar service role diretamente, sem autenticação (endpoint público para iCal)
-    const base44 = createClientFromRequest(req);
+    // Usar service role direto (endpoint público para iCal)
+    const base44 = createClient(
+      Deno.env.get('BASE44_APP_ID'),
+      Deno.env.get('SUPABASE_URL'),
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    );
 
-    const reservations = await base44.asServiceRole.entities.Reservation.filter({
+    const reservations = await base44.entities.Reservation.filter({
       company_id,
       accommodation_id
     });
 
-    const blockedDates = await base44.asServiceRole.entities.BlockedDate.filter({
+    const blockedDates = await base44.entities.BlockedDate.filter({
       company_id,
       accommodation_id
     });
