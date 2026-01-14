@@ -58,7 +58,7 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
 
       // Build export URL
       const appId = window.location.hostname.split('.')[0];
-      const url = `https://base44.app/public-api/apps/${appId}/functions/exportCalendar/calendar.ics?accommodation_id=${accommodation.id}&company_id=${companyId}`;
+      const url = `https://base44.app/public-api/apps/${appId}/functions/exportCalendar?accommodation_id=${accommodation.id}&company_id=${companyId}`;
       setExportUrl(url);
     } else {
       setFormData({
@@ -674,23 +674,33 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
             </p>
           </div>
 
-          {accommodation && (
+          {accommodation && exportUrl && (
             <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
-              <Label className="mb-2 block text-emerald-800 font-semibold">Exportar para Booking.com / Airbnb / VRBO</Label>
+              <Label className="mb-2 block text-emerald-800 font-semibold">URL do Calendário para Booking.com / VRBO</Label>
               <p className="text-xs text-emerald-700 mb-3">
-                Baixe o arquivo de calendário e faça upload manualmente no portal de reservas:
+                Cole esta URL na seção de sincronização de calendários do portal:
               </p>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleDownloadIcal}
-                className="w-full"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Baixar Calendário (.ics)
-              </Button>
+              <div className="flex gap-2 items-center">
+                <Input
+                  readOnly
+                  value={exportUrl}
+                  className="text-xs bg-white font-mono"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    navigator.clipboard.writeText(exportUrl);
+                    toast.success('URL copiada!');
+                  }}
+                  className="flex-shrink-0"
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
+              </div>
               <p className="text-[10px] text-emerald-600 mt-2">
-                Após baixar, acesse Booking.com/VRBO e faça upload do arquivo na seção de sincronização de calendários.
+                Esta URL sincroniza automaticamente suas reservas e bloqueios com as plataformas externas.
               </p>
             </div>
           )}
