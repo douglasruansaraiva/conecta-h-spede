@@ -1,5 +1,99 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
+function parseICalDate(dateStr) {
+  if (dateStr.length === 8) {
+    return `${dateStr.slice(0, 4)}-${dateStr.slice(4, 6)}-${dateStr.slice(6, 8)}`;
+  }
+  if (dateStr.includes('T')) {
+    const date = dateStr.split('T')[0];
+    return `${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}`;
+  }
+  const cleanDate = dateStr.replace('Z', '').split('T')[0];
+  if (cleanDate.length === 8) {
+    return `${cleanDate.slice(0, 4)}-${cleanDate.slice(4, 6)}-${cleanDate.slice(6, 8)}`;
+  }
+  return dateStr;
+}
+
+function parseICalContent(icalContent) {
+  const events = [];
+  const lines = icalContent.split(/\r?\n/);
+  
+  let currentEvent = null;
+  
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i];
+    
+    while (i + 1 < lines.length && (lines[i + 1].startsWith(' ') || lines[i + 1].startsWith('\t'))) {
+      i++;
+      line += lines[i].slice(1);
+    }
+    
+    if (line.startsWith('BEGIN:VEVENT')) {
+      currentEvent = {};
+    } else if (line.startsWith('END:VEVENT') && currentEvent) {
+      if (currentEvent.uid && currentEvent.dtstart && currentEvent.dtend) {
+        events.push(currentEvent);
+      }
+      currentEvent = null;
+    } else if (currentEvent) {
+      const colonIndex = line.indexOf(':');
+      if (colonIndex > 0) {
+        let key = line.slice(0, colonIndex);
+        const value = line.slice(colonIndex + 1);
+        
+        if (key.includes(';')) {
+          key = key.split(';')[0];
+        }
+        
+        switch (key) {
+          case 'UID':
+            currentEvent.uid = value;
+            break;
+          case 'SUMMARY':
+            currentEvent.summary = value;
+            break;
+          case 'DTSTART':
+            currentEvent.dtstart = parseICalDate(value);
+            break;
+          case 'DTEND':
+            currentEvent.dtend = parseICalDate(value);
+            break;
+          case 'DESCRIPTION':
+            currentEvent.description = value;
+            break;
+        }
+      }
+    }
+  }
+  
+  return events;
+}
+
+function calculateNights(checkIn, checkOut) {
+  const start = new Date(checkIn);
+  const end = new Date(checkOut);
+  const diff = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+  return Math.max(1, diff);
+}
+
+function calculateTotalAmount(accommodation, checkIn, checkOut) {
+  const nights = calculateNights(checkIn, checkOut);
+  const dailyRate = accommodation.base_price || 0;
+  return Number((dailyRate * nights).toFixed(2));
+}
+
+function detectSource(summary, url) {
+  const summaryLower = (summary || '').toLowerCase();
+  const urlLower = (url || '').toLowerCase();
+  
+  if (urlLower.includes('airbnb') || summaryLower.includes('airbnb')) return 'airbnb';
+  if (urlLower.includes('booking') || summaryLower.includes('booking')) return 'booking';
+  if (urlLower.includes('vrbo') || summaryLower.includes('vrbo')) return 'vrbo';
+  
+  return 'other';
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -16,7 +110,6 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'company_id é obrigatório' }, { status: 400 });
     }
 
-    // Buscar acomodações para sincronizar
     let accommodations;
     if (accommodation_id) {
       accommodations = await base44.entities.Accommodation.filter({ 
@@ -37,23 +130,10 @@ Deno.serve(async (req) => {
       let syncedCount = 0;
       let errorCount = 0;
 
-      // Deletar bloqueios existentes de iCal para esta acomodação
-      const existingBlocks = await base44.entities.BlockedDate.filter({ 
-        company_id,
-        accommodation_id: accommodation.id,
-        source: 'ical_import'
-      });
-      
-      for (const block of existingBlocks) {
-        await base44.entities.BlockedDate.delete(block.id);
-      }
-
-      // Sincronizar cada URL iCal
       for (const icalConfig of accommodation.ical_urls) {
         if (!icalConfig.url) continue;
 
         try {
-          // Buscar dados iCal
           let icalData = null;
           
           try {
@@ -62,7 +142,6 @@ Deno.serve(async (req) => {
               icalData = await response.text();
             }
           } catch (e) {
-            // Tentar com proxy CORS
             const proxyUrl = 'https://api.allorigins.win/raw?url=';
             const response = await fetch(proxyUrl + encodeURIComponent(icalConfig.url));
             
@@ -73,57 +152,46 @@ Deno.serve(async (req) => {
             icalData = await response.text();
           }
 
-          // Parse iCal
-          const events = [];
-          const lines = icalData.split(/\r?\n/);
-          let currentEvent = null;
+          const events = parseICalContent(icalData);
           
-          for (const line of lines) {
-            const trimmed = line.trim();
-            
-            if (trimmed === 'BEGIN:VEVENT') {
-              currentEvent = {};
-            } else if (trimmed === 'END:VEVENT' && currentEvent) {
-              if (currentEvent.start && currentEvent.end) {
-                events.push(currentEvent);
-              }
-              currentEvent = null;
-            } else if (currentEvent) {
-              if (trimmed.startsWith('DTSTART')) {
-                const match = trimmed.match(/DTSTART[^:]*:(\d{8})/);
-                if (match) {
-                  const dateStr = match[1];
-                  currentEvent.start = `${dateStr.slice(0,4)}-${dateStr.slice(4,6)}-${dateStr.slice(6,8)}`;
-                }
-              } 
-              else if (trimmed.startsWith('DTEND')) {
-                const match = trimmed.match(/DTEND[^:]*:(\d{8})/);
-                if (match) {
-                  const dateStr = match[1];
-                  currentEvent.end = `${dateStr.slice(0,4)}-${dateStr.slice(4,6)}-${dateStr.slice(6,8)}`;
-                }
-              } 
-              else if (trimmed.startsWith('SUMMARY')) {
-                const parts = trimmed.split(':');
-                currentEvent.summary = parts.slice(1).join(':').trim();
-              }
-            }
-          }
-
-          // Criar bloqueios
           for (const event of events) {
             try {
-              await base44.entities.BlockedDate.create({
-                company_id,
-                accommodation_id: accommodation.id,
-                start_date: event.start,
-                end_date: event.end,
-                reason: `${icalConfig.name || 'Reserva externa'}: ${event.summary || ''}`,
-                source: 'ical_import'
+              const source = detectSource(event.summary, icalConfig.url);
+              const totalAmount = calculateTotalAmount(accommodation, event.dtstart, event.dtend);
+
+              const existingReservations = await base44.entities.Reservation.filter({ 
+                external_id: event.uid,
+                accommodation_id: accommodation.id
               });
+
+              if (existingReservations.length > 0) {
+                const existing = existingReservations[0];
+                await base44.entities.Reservation.update(existing.id, {
+                  check_in: event.dtstart,
+                  check_out: event.dtend,
+                  notes: `${icalConfig.name}: ${event.summary || event.description || ''}`,
+                  total_amount: totalAmount,
+                  source: source,
+                  status: 'confirmed'
+                });
+              } else {
+                await base44.entities.Reservation.create({
+                  company_id,
+                  accommodation_id: accommodation.id,
+                  external_id: event.uid,
+                  source: source,
+                  status: 'confirmed',
+                  check_in: event.dtstart,
+                  check_out: event.dtend,
+                  guest_name: event.summary || 'Reserva externa',
+                  notes: `${icalConfig.name}: ${event.description || ''}`,
+                  total_amount: totalAmount
+                });
+              }
+
               syncedCount++;
             } catch (err) {
-              console.error('Erro ao criar bloqueio:', err);
+              console.error('Erro ao criar/atualizar reserva:', err);
               errorCount++;
             }
           }
