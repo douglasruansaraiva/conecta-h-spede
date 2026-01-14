@@ -27,6 +27,8 @@ import {
   CreditCard
 } from "lucide-react";
 import CalendarGrid from '@/components/reservations/CalendarGrid';
+import StripeCheckout from '@/components/payments/StripeCheckout';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 
 export default function PublicBooking() {
@@ -38,8 +40,9 @@ export default function PublicBooking() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [user, setUser] = useState(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
-  const [paymentMethod, setPaymentMethod] = useState('online'); // 'manual' or 'online'
+  const [paymentMethod, setPaymentMethod] = useState('manual'); // 'manual' or 'online'
   const [createdReservationId, setCreatedReservationId] = useState(null);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [formData, setFormData] = useState({
     guest_name: '',
     guest_email: '',
@@ -161,7 +164,15 @@ export default function PublicBooking() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await createReservation();
+    
+    if (paymentMethod === 'online') {
+      const reservationId = await createReservation();
+      if (reservationId) {
+        setShowPaymentDialog(true);
+      }
+    } else {
+      await createReservation();
+    }
   };
 
   const createReservation = async () => {
@@ -215,7 +226,12 @@ export default function PublicBooking() {
       });
 
       setCreatedReservationId(reservation.id);
-      setSuccess(true);
+      
+      // Se for pagamento manual, mostrar sucesso imediatamente
+      if (paymentMethod === 'manual') {
+        setSuccess(true);
+      }
+      
       setLoading(false);
       return reservation.id;
     } catch (error) {
@@ -695,16 +711,57 @@ export default function PublicBooking() {
                         />
                       </div>
                       <div>
-                        <Label className="text-slate-700 mb-2 block">Observações</Label>
-                        <Input
-                          value={formData.notes}
-                          onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                          placeholder="Alguma observação especial?"
-                          className="bg-white border-slate-300"
-                        />
+                       <Label className="text-slate-700 mb-2 block">Observações</Label>
+                       <Input
+                         value={formData.notes}
+                         onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                         placeholder="Alguma observação especial?"
+                         className="bg-white border-slate-300"
+                       />
                       </div>
 
-
+                      {/* Payment Method Selection */}
+                      {company.stripe_publishable_key && company.stripe_secret_key && (
+                       <div className="space-y-3">
+                         <Label className="text-slate-700">Forma de Pagamento</Label>
+                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                           <button
+                             type="button"
+                             onClick={() => setPaymentMethod('online')}
+                             className={`p-4 border-2 rounded-lg text-left transition-all ${
+                               paymentMethod === 'online'
+                                 ? 'border-emerald-500 bg-emerald-50'
+                                 : 'border-slate-200 hover:border-slate-300'
+                             }`}
+                           >
+                             <div className="flex items-center gap-2 mb-1">
+                               <CreditCard className="w-5 h-5 text-emerald-600" />
+                               <span className="font-medium text-slate-800">Pagar Online</span>
+                             </div>
+                             <p className="text-xs text-slate-600">
+                               Pagamento seguro com cartão
+                             </p>
+                           </button>
+                           <button
+                             type="button"
+                             onClick={() => setPaymentMethod('manual')}
+                             className={`p-4 border-2 rounded-lg text-left transition-all ${
+                               paymentMethod === 'manual'
+                                 ? 'border-emerald-500 bg-emerald-50'
+                                 : 'border-slate-200 hover:border-slate-300'
+                             }`}
+                           >
+                             <div className="flex items-center gap-2 mb-1">
+                               <Clock className="w-5 h-5 text-emerald-600" />
+                               <span className="font-medium text-slate-800">Pagar Depois</span>
+                             </div>
+                             <p className="text-xs text-slate-600">
+                               Pagamento direto com o proprietário
+                             </p>
+                           </button>
+                         </div>
+                       </div>
+                      )}
 
                       {company.cancellation_policy && (
                         <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
@@ -773,6 +830,24 @@ export default function PublicBooking() {
             </div>
             )}
 
+      {/* Payment Dialog */}
+      <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Pagamento Online</DialogTitle>
+          </DialogHeader>
+          <StripeCheckout
+            amount={calculateTotal()}
+            reservationId={createdReservationId}
+            companyId={company?.id}
+            onSuccess={handlePaymentSuccess}
+            onCancel={() => {
+              setShowPaymentDialog(false);
+              setSuccess(true);
+            }}
+          />
+        </DialogContent>
+      </Dialog>
 
             </div>
 
