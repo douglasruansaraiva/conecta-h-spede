@@ -67,5 +67,11 @@ export default function CompanyGuard({ children }) {
   }
 
   const company = companies[0];
-  return children({ user, company });
+  
+  // Support both function and element children
+  if (typeof children === 'function') {
+    return children({ user, company });
+  }
+  
+  return children;
 }
