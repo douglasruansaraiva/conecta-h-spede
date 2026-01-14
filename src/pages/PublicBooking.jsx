@@ -27,10 +27,10 @@ import {
   CreditCard
 } from "lucide-react";
 import CalendarGrid from '@/components/reservations/CalendarGrid';
-import StripeCheckout from '@/components/payments/StripeCheckout';
+
 
 export default function PublicBooking() {
-  const [step, setStep] = useState(1); // 1: list, 1.5: details, 2: dates, 3: form, 4: payment
+  const [step, setStep] = useState(1); // 1: list, 1.5: details, 2: dates, 3: form
   const [selectedAccommodation, setSelectedAccommodation] = useState(null);
   const [selectedDates, setSelectedDates] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -161,12 +161,7 @@ export default function PublicBooking() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Criar reserva primeiro, depois ir para pagamento
-    const reservationId = await createReservation();
-    if (reservationId) {
-      setStep(4);
-    }
+    await createReservation();
   };
 
   const createReservation = async () => {
@@ -220,6 +215,7 @@ export default function PublicBooking() {
       });
 
       setCreatedReservationId(reservation.id);
+      setSuccess(true);
       setLoading(false);
       return reservation.id;
     } catch (error) {
@@ -285,9 +281,9 @@ export default function PublicBooking() {
             <div className="w-16 h-16 bg-gradient-to-br from-[#2C5F5D] to-[#3A7A77] rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
               <Check className="w-8 h-8 text-white" />
             </div>
-            <h2 className="text-2xl font-bold text-slate-800 mb-2">Reserva Enviada!</h2>
+            <h2 className="text-2xl font-bold text-slate-800 mb-2">Reserva Confirmada!</h2>
             <p className="text-slate-600 mb-4">
-              Sua solicitação de reserva foi enviada com sucesso. Você receberá a confirmação em breve.
+              Sua reserva foi registrada com sucesso! Siga as instruções de pagamento abaixo.
             </p>
             <div className="bg-slate-50 rounded-lg p-4 text-left space-y-2">
               <p className="text-sm"><strong>Acomodação:</strong> {selectedAccommodation?.name}</p>
@@ -299,12 +295,18 @@ export default function PublicBooking() {
               </p>
               <p className="text-sm"><strong>Total:</strong> R$ {calculateTotal().toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
             </div>
-            {company.payment_instructions && (
-              <div className="mt-4 p-4 bg-amber-50 rounded-lg text-left">
-                <p className="text-sm font-medium text-amber-800 mb-1">Instruções de Pagamento:</p>
-                <p className="text-sm text-amber-700 whitespace-pre-line">{company.payment_instructions}</p>
-              </div>
-            )}
+            <div className="mt-4 p-4 bg-emerald-50 rounded-lg text-left border border-emerald-200">
+              <p className="text-sm font-medium text-emerald-800 mb-2">📱 Como Pagar:</p>
+              {company.payment_instructions ? (
+                <p className="text-sm text-slate-700 whitespace-pre-line">{company.payment_instructions}</p>
+              ) : (
+                <div className="text-sm text-slate-700 space-y-2">
+                  <p>Entre em contato para confirmar o pagamento:</p>
+                  {company.phone && <p>📞 Telefone: {company.phone}</p>}
+                  {company.email && <p>✉️ Email: {company.email}</p>}
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -722,7 +724,7 @@ export default function PublicBooking() {
                           className="bg-gradient-to-r from-[#2C5F5D] to-[#3A7A77] hover:from-[#234B49] hover:to-[#2C5F5D] text-white shadow-md"
                         >
                           {loading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                          Ir para Pagamento
+                          Confirmar Reserva
                         </Button>
                       </div>
                     </form>
@@ -771,75 +773,7 @@ export default function PublicBooking() {
             </div>
             )}
 
-            {/* Step 4: Payment */}
-            {step === 4 && (
-            <div>
-            <Button 
-              variant="ghost" 
-              onClick={() => setStep(3)}
-              className="mb-4 text-slate-600 hover:text-slate-800 text-sm"
-            >
-              <ChevronLeft className="w-4 h-4 mr-1" />
-              Voltar
-            </Button>
 
-            <h2 className="text-lg sm:text-xl font-semibold text-slate-800 mb-4 sm:mb-6">Pagamento</h2>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-              <div className="lg:col-span-2">
-                <Card className="bg-white border-slate-200 shadow-sm">
-                  <CardContent className="p-6">
-                    <StripeCheckout
-                      amount={calculateTotal()}
-                      reservationId={createdReservationId || 'temp'}
-                      companyId={company.id}
-                      onSuccess={handlePaymentSuccess}
-                      onCancel={() => setStep(3)}
-                    />
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Summary */}
-              <div>
-                <Card className="bg-white border-slate-200 shadow-sm">
-                  <CardHeader>
-                    <CardTitle className="text-lg text-slate-800">Resumo</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div>
-                        <p className="font-medium text-slate-800">{selectedAccommodation?.name}</p>
-                      </div>
-                      <div className="border-t border-slate-200 pt-4 space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-slate-600">Check-in</span>
-                          <span className="text-slate-800">{format(selectedDates.start, "dd/MM/yyyy")}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-slate-600">Check-out</span>
-                          <span className="text-slate-800">{format(selectedDates.end, "dd/MM/yyyy")}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-slate-600">{nights} noite(s)</span>
-                          <span className="text-slate-800">R$ {calculateTotal().toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                        </div>
-                      </div>
-                      <div className="border-t border-slate-200 pt-4">
-                        <div className="flex justify-between">
-                          <span className="font-semibold text-slate-800">Total</span>
-                          <span className="font-bold text-xl text-emerald-400">
-                            R$ {calculateTotal().toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-            </div>
-            )}
             </div>
 
             {/* Footer */}
