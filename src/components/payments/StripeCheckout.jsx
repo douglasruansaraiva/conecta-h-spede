@@ -31,7 +31,7 @@ function CheckoutForm({ amount, reservationId, onSuccess, onCancel }) {
     } else {
       // Pagamento confirmado - atualizar reserva
       try {
-        const response = await fetch('/api/confirmPayment', {
+        const response = await fetch('/api/functions/confirmPayment', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -110,7 +110,7 @@ export default function StripeCheckout({ amount, reservationId, companyId, onSuc
       try {
         console.log('🔄 Criando payment intent...', { amount, reservationId, companyId });
         
-        const response = await fetch('/api/createPaymentIntent', {
+        const response = await fetch('/api/functions/createPaymentIntent', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
