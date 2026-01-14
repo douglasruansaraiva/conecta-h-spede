@@ -57,19 +57,7 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
       });
 
       // Build export URL
-      // Detectar se está em preview ou produção
-      const hostname = window.location.hostname;
-      let url;
-      
-      if (hostname.includes('preview-sandbox') || hostname.includes('localhost')) {
-        // Em preview, construir a URL esperada para produção
-        // O formato será o domínio customizado ou o domínio base44 do app
-        url = `[URL disponível após publicação do app]`;
-      } else {
-        // Em produção, usar o domínio atual
-        url = `${window.location.origin}/api/functions/exportCalendar?accommodation_id=${accommodation.id}&company_id=${companyId}`;
-      }
-      
+      const url = `${window.location.origin}/api/functions/exportCalendar?accommodation_id=${accommodation.id}&company_id=${companyId}`;
       setExportUrl(url);
     } else {
       setFormData({
@@ -685,53 +673,34 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
             </p>
           </div>
 
-          {accommodation && (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-              <Label className="mb-2 block text-amber-800 font-semibold">⚠️ Sincronização via iCal com Booking.com / VRBO</Label>
-              <p className="text-xs text-amber-700 mb-3">
-                <strong>Importante:</strong> A URL de sincronização automática só funciona após publicar o app. Por enquanto, você pode:
+          {accommodation && exportUrl && (
+            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+              <Label className="mb-2 block text-emerald-800 font-semibold">URL do Calendário para Booking.com / VRBO</Label>
+              <p className="text-xs text-emerald-700 mb-3">
+                Cole esta URL na seção de sincronização de calendários do portal:
               </p>
-              <div className="space-y-2">
+              <div className="flex gap-2 items-center">
+                <Input
+                  readOnly
+                  value={exportUrl}
+                  className="text-xs bg-white font-mono"
+                />
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={handleDownloadIcal}
-                  className="w-full"
+                  size="icon"
+                  onClick={() => {
+                    navigator.clipboard.writeText(exportUrl);
+                    toast.success('URL copiada!');
+                  }}
+                  className="flex-shrink-0"
                 >
-                  <Download className="w-4 h-4 mr-2" />
-                  Baixar Calendário (.ics) Manualmente
+                  <Copy className="w-4 h-4" />
                 </Button>
-                <p className="text-[10px] text-amber-600">
-                  Você pode baixar o arquivo .ics e enviá-lo por email para suas equipes ou importar em outros calendários localmente.
-                </p>
               </div>
-              
-              {exportUrl && !exportUrl.includes('[URL disponível') && (
-                <div className="mt-3 pt-3 border-t border-amber-200">
-                  <p className="text-xs text-amber-700 mb-2">
-                    <strong>URL de Sincronização Automática:</strong>
-                  </p>
-                  <div className="flex gap-2 items-center">
-                    <Input
-                      readOnly
-                      value={exportUrl}
-                      className="text-xs bg-white font-mono"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={() => {
-                        navigator.clipboard.writeText(exportUrl);
-                        toast.success('URL copiada!');
-                      }}
-                      className="flex-shrink-0"
-                    >
-                      <Copy className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              )}
+              <p className="text-[10px] text-emerald-600 mt-2">
+                Esta URL sincroniza automaticamente suas reservas e bloqueios com as plataformas externas.
+              </p>
             </div>
           )}
 
