@@ -6,9 +6,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { X, Plus, Upload, Loader2, RefreshCw, Copy, Download } from "lucide-react";
+import { X, Plus, Upload, Loader2, RefreshCw, Copy } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
+import { useICalSync } from "@/hooks/useICalSync";
 
 const AMENITIES = [
   'WiFi', 'Ar Condicionado', 'TV', 'Frigobar', 'Cofre', 'Secador', 
@@ -18,9 +19,9 @@ const AMENITIES = [
 export default function AccommodationForm({ open, onClose, accommodation, companyId, onSave }) {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [syncing, setSyncing] = useState(false);
   const [generatingToken, setGeneratingToken] = useState(false);
   const [exportUrl, setExportUrl] = useState('');
+  const { syncAccommodation, isSyncing } = useICalSync();
   const [formData, setFormData] = useState({
     name: '',
     type: 'quarto',
@@ -135,87 +136,7 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
     }));
   };
 
-  const handleDownloadIcal = async () => {
-    if (!accommodation) return;
-    
-    try {
-      // Buscar reservas e datas bloqueadas
-      const reservations = await base44.entities.Reservation.filter({
-        company_id: companyId,
-        accommodation_id: accommodation.id
-      });
-      
-      const blockedDates = await base44.entities.BlockedDate.filter({
-        company_id: companyId,
-        accommodation_id: accommodation.id
-      });
-      
-      // Gerar iCal
-      let ical = 'BEGIN:VCALENDAR\r\n';
-      ical += 'VERSION:2.0\r\n';
-      ical += 'PRODID:-//Conecta Hospede//NONSGML v1.0//EN\r\n';
-      ical += 'CALSCALE:GREGORIAN\r\n';
-      ical += 'METHOD:PUBLISH\r\n';
-      
-      // Adicionar reservas
-      reservations
-        .filter(r => r.status !== 'cancelled')
-        .forEach(reservation => {
-          const checkIn = reservation.check_in.replace(/-/g, '');
-          const checkOut = reservation.check_out.replace(/-/g, '');
-          const uid = `res-${reservation.id}@conectahospede.app`;
-          const now = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-          
-          ical += 'BEGIN:VEVENT\r\n';
-          ical += `UID:${uid}\r\n`;
-          ical += `DTSTAMP:${now}\r\n`;
-          ical += `DTSTART;VALUE=DATE:${checkIn}\r\n`;
-          ical += `DTEND;VALUE=DATE:${checkOut}\r\n`;
-          ical += `SUMMARY:Reservado - ${reservation.guest_name || 'Hóspede'}\r\n`;
-          ical += 'STATUS:CONFIRMED\r\n';
-          ical += 'TRANSP:OPAQUE\r\n';
-          ical += 'END:VEVENT\r\n';
-        });
-      
-      // Adicionar bloqueios
-      blockedDates.forEach(block => {
-        const start = block.start_date.replace(/-/g, '');
-        const end = block.end_date.replace(/-/g, '');
-        const uid = `blk-${block.id}@conectahospede.app`;
-        const now = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-        
-        ical += 'BEGIN:VEVENT\r\n';
-        ical += `UID:${uid}\r\n`;
-        ical += `DTSTAMP:${now}\r\n`;
-        ical += `DTSTART;VALUE=DATE:${start}\r\n`;
-        ical += `DTEND;VALUE=DATE:${end}\r\n`;
-        ical += `SUMMARY:Bloqueado${block.reason ? ' - ' + block.reason : ''}\r\n`;
-        ical += 'STATUS:CONFIRMED\r\n';
-        ical += 'TRANSP:OPAQUE\r\n';
-        ical += 'END:VEVENT\r\n';
-      });
-      
-      ical += 'END:VCALENDAR';
-      
-      // Download do arquivo
-      const blob = new Blob([ical], { type: 'text/calendar;charset=utf-8' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `calendario-${accommodation.name.toLowerCase().replace(/\s+/g, '-')}.ics`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      
-      toast.success('Arquivo iCal baixado com sucesso!');
-    } catch (error) {
-      console.error('Erro ao gerar iCal:', error);
-      toast.error('Erro ao gerar calendário');
-    }
-  };
-
-  const syncIcal = async () => {
+  const handleSyncIcal = async () => {
     if (!formData.ical_urls || formData.ical_urls.length === 0) {
       toast.error('Adicione pelo menos uma URL de iCal primeiro');
       return;
@@ -226,136 +147,7 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
       return;
     }
     
-    setSyncing(true);
-    try {
-      // Delete existing ical blocks for this accommodation
-      const existingBlocks = await base44.entities.BlockedDate.filter({ 
-        company_id: companyId,
-        accommodation_id: accommodation.id,
-        source: 'ical_import'
-      });
-      
-      for (const block of existingBlocks) {
-        await base44.entities.BlockedDate.delete(block.id);
-      }
-
-      let totalCreated = 0;
-
-      // Sync each iCal URL
-      for (const icalConfig of formData.ical_urls) {
-        if (!icalConfig.url) continue;
-
-        try {
-          console.log(`Sincronizando ${icalConfig.name}...`);
-          // Try multiple proxy strategies
-          let icalData = null;
-          let response = null;
-          
-          // Try direct fetch first (works for many URLs)
-          try {
-            response = await fetch(icalConfig.url);
-            if (response.ok) {
-              icalData = await response.text();
-              console.log(`${icalConfig.name}: fetch direto funcionou`);
-            }
-          } catch (e) {
-            console.log(`${icalConfig.name}: fetch direto falhou, tentando proxy...`);
-          }
-          
-          // If direct fetch failed, try with CORS proxy
-          if (!icalData) {
-            const proxyUrl = 'https://api.allorigins.win/raw?url=';
-            response = await fetch(proxyUrl + encodeURIComponent(icalConfig.url));
-            
-            if (!response.ok) {
-              console.error(`Erro ao buscar ${icalConfig.name}:`, response.statusText);
-              toast.error(`Erro ao sincronizar ${icalConfig.name || 'calendário'}`);
-              continue;
-            }
-            
-            icalData = await response.text();
-            console.log(`${icalConfig.name}: proxy funcionou`);
-          }
-          
-          // Parse iCal data
-          console.log(`${icalConfig.name}: Parseando dados iCal...`);
-          const events = [];
-          const lines = icalData.split(/\r?\n/);
-          let currentEvent = null;
-          
-          for (const line of lines) {
-            const trimmed = line.trim();
-            
-            if (trimmed === 'BEGIN:VEVENT') {
-              currentEvent = {};
-            } else if (trimmed === 'END:VEVENT' && currentEvent) {
-              if (currentEvent.start && currentEvent.end) {
-                events.push(currentEvent);
-                console.log(`  Evento: ${currentEvent.start} até ${currentEvent.end} - ${currentEvent.summary || 'Sem título'}`);
-              }
-              currentEvent = null;
-            } else if (currentEvent) {
-              if (trimmed.startsWith('DTSTART')) {
-                const match = trimmed.match(/DTSTART[^:]*:(\d{8})/);
-                if (match) {
-                  const dateStr = match[1];
-                  currentEvent.start = `${dateStr.slice(0,4)}-${dateStr.slice(4,6)}-${dateStr.slice(6,8)}`;
-                }
-              } 
-              else if (trimmed.startsWith('DTEND')) {
-                const match = trimmed.match(/DTEND[^:]*:(\d{8})/);
-                if (match) {
-                  const dateStr = match[1];
-                  currentEvent.end = `${dateStr.slice(0,4)}-${dateStr.slice(4,6)}-${dateStr.slice(6,8)}`;
-                }
-              } 
-              else if (trimmed.startsWith('SUMMARY')) {
-                const parts = trimmed.split(':');
-                currentEvent.summary = parts.slice(1).join(':').trim();
-              }
-            }
-          }
-          console.log(`${icalConfig.name}: Total de ${events.length} eventos parseados`);
-
-          // Create blocks for this calendar
-          console.log(`${icalConfig.name}: ${events.length} eventos encontrados`);
-          for (const event of events) {
-            try {
-              await base44.entities.BlockedDate.create({
-                company_id: companyId,
-                accommodation_id: accommodation.id,
-                start_date: event.start,
-                end_date: event.end,
-                reason: `${icalConfig.name || 'Reserva externa'}: ${event.summary || ''}`,
-                source: 'ical_import'
-              });
-              totalCreated++;
-            } catch (err) {
-              console.error('Erro ao criar bloqueio:', err);
-            }
-          }
-          console.log(`${icalConfig.name}: ${events.length} bloqueios criados`);
-        } catch (error) {
-          console.error(`Erro ao sincronizar ${icalConfig.name}:`, error);
-        }
-      }
-
-      console.log(`RESUMO: ${totalCreated} bloqueios criados no total`);
-      
-      if (totalCreated > 0) {
-        const calendarNames = formData.ical_urls.map(c => c.name).filter(Boolean).join(', ');
-        toast.success(`${totalCreated} datas bloqueadas importadas de: ${calendarNames}`);
-        
-        // Force refresh of blocked dates
-        window.location.reload();
-      } else {
-        toast.warning('Nenhum evento encontrado nos calendários. Verifique os logs no console para mais detalhes.');
-      }
-    } catch (error) {
-      console.error('Erro ao sincronizar iCal:', error);
-      toast.error('Erro ao sincronizar: ' + error.message);
-    }
-    setSyncing(false);
+    await syncAccommodation(accommodation.id, companyId);
   };
 
   const generateIcalToken = async () => {
@@ -675,11 +467,11 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={syncIcal}
-                  disabled={syncing || !accommodation}
+                  onClick={handleSyncIcal}
+                  disabled={isSyncing || !accommodation}
                   className="w-full"
                 >
-                  {syncing ? (
+                  {isSyncing ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin mr-2" />
                       Sincronizando...
