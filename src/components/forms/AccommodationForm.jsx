@@ -60,7 +60,12 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
 
       // Build export URL com token
       if (accommodation.ical_export_token) {
-        const url = `${window.location.origin}/api/functions/exportCalendar?accommodation_id=${accommodation.id}&token=${accommodation.ical_export_token}`;
+        // Sempre usar domínio de produção para integrações externas
+        const baseUrl = window.location.hostname.includes('preview') || window.location.hostname.includes('sandbox')
+          ? 'https://conectahospede.base44.app'
+          : window.location.origin;
+
+        const url = `${baseUrl}/api/functions/exportCalendar?accommodation_id=${accommodation.id}&token=${accommodation.ical_export_token}`;
         setExportUrl(url);
       }
       } else {
