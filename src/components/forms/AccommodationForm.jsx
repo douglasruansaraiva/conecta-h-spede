@@ -19,6 +19,7 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [exportUrl, setExportUrl] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     type: 'quarto',
@@ -54,6 +55,11 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
         ical_urls: accommodation.ical_urls || [],
         status: accommodation.status || 'active'
       });
+
+      // Build export URL
+      const appId = window.location.hostname.split('.')[0];
+      const url = `https://base44.app/public-api/apps/${appId}/functions/exportCalendar?accommodation_id=${accommodation.id}&company_id=${companyId}`;
+      setExportUrl(url);
     } else {
       setFormData({
         name: '',
@@ -71,8 +77,9 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
         ical_urls: [],
         status: 'active'
       });
+      setExportUrl('');
     }
-  }, [accommodation, open]);
+  }, [accommodation, open, companyId]);
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
@@ -667,24 +674,30 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
             </p>
           </div>
 
-          {accommodation && (
+          {accommodation && exportUrl && (
             <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
-              <Label className="mb-2 block text-emerald-800">URL para Sincronização com Booking.com/Airbnb/VRBO</Label>
-              <p className="text-sm text-emerald-700 mb-3">
-                Para obter a URL de sincronização:
+              <Label className="mb-2 block text-emerald-800 font-semibold">URL para Booking.com / Airbnb / VRBO</Label>
+              <p className="text-xs text-emerald-700 mb-3">
+                Cole esta URL no portal de reservas para sincronizar automaticamente as datas ocupadas:
               </p>
-              <ol className="text-xs text-emerald-700 space-y-2 list-decimal list-inside mb-3">
-                <li>Acesse o <strong>dashboard do Base44</strong> (não este app)</li>
-                <li>Vá em <strong>Backend Functions</strong> no menu lateral</li>
-                <li>Clique na função <strong>exportCalendar</strong></li>
-                <li>Copie a <strong>Public URL</strong></li>
-                <li>Adicione ao final: <code className="bg-emerald-100 px-1 rounded">?accommodation_id={accommodation.id}&company_id={companyId}</code></li>
-                <li>Cole a URL completa no Booking.com/Airbnb/VRBO</li>
-              </ol>
-              <div className="bg-white rounded p-2 border border-emerald-300">
-                <p className="text-[10px] text-slate-600 font-mono break-all">
-                  Parâmetros: ?accommodation_id={accommodation.id}&company_id={companyId}
-                </p>
+              <div className="flex gap-2 items-center">
+                <Input
+                  readOnly
+                  value={exportUrl}
+                  className="text-xs bg-white font-mono"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    navigator.clipboard.writeText(exportUrl);
+                    toast.success('URL copiada!');
+                  }}
+                  className="flex-shrink-0"
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
               </div>
             </div>
           )}
