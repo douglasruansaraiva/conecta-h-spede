@@ -66,7 +66,7 @@ Deno.serve(async (req) => {
 
     const now = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
 
-    // Adicionar reservas como eventos (formato compatível VRBO)
+    // Adicionar reservas como datas bloqueadas
     reservations.forEach(res => {
       const checkIn = res.check_in.replace(/-/g, '');
       const checkOut = res.check_out.replace(/-/g, '');
@@ -77,8 +77,8 @@ Deno.serve(async (req) => {
       ical += `DTSTAMP:${now}\r\n`;
       ical += `DTSTART;VALUE=DATE:${checkIn}\r\n`;
       ical += `DTEND;VALUE=DATE:${checkOut}\r\n`;
-      ical += `SUMMARY:Reservado\r\n`;
-      ical += `DESCRIPTION:Reserva confirmada\r\n`;
+      ical += `SUMMARY:Indisponível\r\n`;
+      ical += `DESCRIPTION:Data bloqueada\r\n`;
       ical += 'STATUS:CONFIRMED\r\n';
       ical += 'TRANSP:OPAQUE\r\n';
       ical += 'SEQUENCE:0\r\n';
