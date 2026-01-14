@@ -30,70 +30,76 @@ Deno.serve(async (req) => {
 
     const company_id = accommodation.company_id;
 
-    const reservations = await base44.entities.Reservation.filter({
-      company_id,
-      accommodation_id
-    });
+    // Buscar reservas ativas (não canceladas)
+    const allReservations = await base44.entities.Reservation.list();
+    const reservations = allReservations.filter(r => 
+      r.accommodation_id === accommodation_id && 
+      r.company_id === company_id &&
+      r.status !== 'cancelled'
+    );
 
-    const blockedDates = await base44.entities.BlockedDate.filter({
-      company_id,
-      accommodation_id
-    });
+    const allBlocked = await base44.entities.BlockedDate.list();
+    const blockedDates = allBlocked.filter(b => 
+      b.accommodation_id === accommodation_id && 
+      b.company_id === company_id
+    );
 
+    // Gerar arquivo iCal
     let ical = 'BEGIN:VCALENDAR\r\n';
     ical += 'VERSION:2.0\r\n';
-    ical += 'PRODID:-//Homeaway.com//NONSGML Homeaway//EN\r\n';
-    ical += 'X-WR-CALNAME:Conecta Hospede\r\n';
+    ical += 'PRODID:-//Conecta Hospede//NONSGML v1.0//EN\r\n';
+    ical += 'CALSCALE:GREGORIAN\r\n';
+    ical += 'METHOD:PUBLISH\r\n';
 
-    reservations
-      .filter(r => r.status !== 'cancelled')
-      .forEach(reservation => {
-        const checkIn = parseISO(reservation.check_in);
-        const checkOut = parseISO(reservation.check_out);
-        const uid = `res-${reservation.id}@conectahospede.app`;
-        const dtstart = format(checkIn, 'yyyyMMdd');
-        const dtend = format(checkOut, 'yyyyMMdd');
-        const now = format(new Date(), "yyyyMMdd'T'HHmmss'Z'");
+    const now = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
 
-        ical += 'BEGIN:VEVENT\r\n';
-        ical += `DTSTART;VALUE=DATE:${dtstart}\r\n`;
-        ical += `DTEND;VALUE=DATE:${dtend}\r\n`;
-        ical += `DTSTAMP:${now}\r\n`;
-        ical += `UID:${uid}\r\n`;
-        ical += `SUMMARY:Reservado\r\n`;
-        ical += `DESCRIPTION:Reservado\r\n`;
-        ical += 'END:VEVENT\r\n';
-      });
-
-    blockedDates.forEach(block => {
-      const start = parseISO(block.start_date);
-      const end = parseISO(block.end_date);
-      const uid = `blk-${block.id}@conectahospede.app`;
-      const dtstart = format(start, 'yyyyMMdd');
-      const dtend = format(addDays(end, 1), 'yyyyMMdd');
-      const now = format(new Date(), "yyyyMMdd'T'HHmmss'Z'");
-
+    // Adicionar reservas como eventos de dia inteiro
+    reservations.forEach(res => {
+      const checkIn = res.check_in.replace(/-/g, '');
+      const checkOut = res.check_out.replace(/-/g, '');
+      
       ical += 'BEGIN:VEVENT\r\n';
-      ical += `DTSTART;VALUE=DATE:${dtstart}\r\n`;
-      ical += `DTEND;VALUE=DATE:${dtend}\r\n`;
+      ical += `UID:res-${res.id}@conectahospede.app\r\n`;
       ical += `DTSTAMP:${now}\r\n`;
-      ical += `UID:${uid}\r\n`;
-      ical += `SUMMARY:Bloqueado\r\n`;
-      ical += `DESCRIPTION:Bloqueado\r\n`;
+      ical += `DTSTART;VALUE=DATE:${checkIn}\r\n`;
+      ical += `DTEND;VALUE=DATE:${checkOut}\r\n`;
+      ical += `SUMMARY:Reservado - ${res.guest_name || 'Hóspede'}\r\n`;
+      ical += 'STATUS:CONFIRMED\r\n';
+      ical += 'TRANSP:OPAQUE\r\n';
       ical += 'END:VEVENT\r\n';
     });
 
-    ical += 'END:VCALENDAR\r\n';
+    // Adicionar bloqueios
+    blockedDates.forEach(block => {
+      const start = block.start_date.replace(/-/g, '');
+      const end = block.end_date.replace(/-/g, '');
+      
+      ical += 'BEGIN:VEVENT\r\n';
+      ical += `UID:blk-${block.id}@conectahospede.app\r\n`;
+      ical += `DTSTAMP:${now}\r\n`;
+      ical += `DTSTART;VALUE=DATE:${start}\r\n`;
+      ical += `DTEND;VALUE=DATE:${end}\r\n`;
+      ical += `SUMMARY:Bloqueado${block.reason ? ' - ' + block.reason : ''}\r\n`;
+      ical += 'STATUS:CONFIRMED\r\n';
+      ical += 'TRANSP:OPAQUE\r\n';
+      ical += 'END:VEVENT\r\n';
+    });
+
+    ical += 'END:VCALENDAR';
 
     return new Response(ical, {
       status: 200,
       headers: {
         'Content-Type': 'text/calendar; charset=utf-8',
-        'Content-Disposition': 'inline; filename="calendar.ics"'
+        'Content-Disposition': 'inline; filename="calendar.ics"',
+        'Cache-Control': 'no-cache'
       }
     });
   } catch (error) {
-    console.error('Erro ao gerar calendário:', error);
-    return new Response('Erro ao gerar calendário', { status: 500 });
+    console.error('Export error:', error);
+    return new Response(JSON.stringify({ error: error.message }), { 
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 });
