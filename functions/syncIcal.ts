@@ -169,7 +169,7 @@ Deno.serve(async (req) => {
                 await base44.entities.Reservation.update(existing.id, {
                   check_in: event.dtstart,
                   check_out: event.dtend,
-                  notes: `${icalConfig.name}: ${event.summary || event.description || ''}`,
+                  notes: `Importado via ${icalConfig.name}`,
                   total_amount: totalAmount,
                   source: source,
                   status: 'confirmed'
@@ -183,8 +183,8 @@ Deno.serve(async (req) => {
                   status: 'confirmed',
                   check_in: event.dtstart,
                   check_out: event.dtend,
-                  guest_name: event.summary || 'Reserva externa',
-                  notes: `${icalConfig.name}: ${event.description || ''}`,
+                  guest_name: 'Indisponível',
+                  notes: `Importado via ${icalConfig.name}`,
                   total_amount: totalAmount
                 });
               }
