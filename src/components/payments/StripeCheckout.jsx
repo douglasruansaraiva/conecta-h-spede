@@ -31,23 +31,16 @@ function CheckoutForm({ amount, reservationId, onSuccess, onCancel }) {
     } else {
       // Pagamento confirmado - atualizar reserva
       try {
-        const response = await fetch('/api/functions/confirmPayment', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            reservation_id: reservationId,
-            amount: amount
-          })
+        const { base44 } = await import('@/api/base44Client');
+        await base44.functions.invoke('confirmPayment', {
+          reservation_id: reservationId,
+          amount: amount
         });
         
-        if (response.ok) {
-          toast.success('Pagamento realizado com sucesso!');
-          onSuccess();
-        } else {
-          toast.error('Pagamento processado, mas erro ao confirmar reserva');
-          setLoading(false);
-        }
+        toast.success('Pagamento realizado com sucesso!');
+        onSuccess();
       } catch (err) {
+        console.error('Erro ao confirmar:', err);
         toast.error('Pagamento processado, mas erro ao confirmar reserva');
         setLoading(false);
       }
@@ -110,25 +103,21 @@ export default function StripeCheckout({ amount, reservationId, companyId, onSuc
       try {
         console.log('🔄 Criando payment intent...', { amount, reservationId, companyId });
         
-        const response = await fetch('/api/functions/createPaymentIntent', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            amount,
-            reservation_id: reservationId,
-            company_id: companyId
-          })
+        const { base44 } = await import('@/api/base44Client');
+        const response = await base44.functions.invoke('createPaymentIntent', {
+          amount,
+          reservation_id: reservationId,
+          company_id: companyId
         });
 
-        const data = await response.json();
-        console.log('📦 Resposta:', data);
+        console.log('📦 Resposta:', response.data);
         
-        if (data.clientSecret && data.publishableKey) {
-          setClientSecret(data.clientSecret);
-          setStripePromise(loadStripe(data.publishableKey));
+        if (response.data.clientSecret && response.data.publishableKey) {
+          setClientSecret(response.data.clientSecret);
+          setStripePromise(loadStripe(response.data.publishableKey));
           setError(null);
         } else {
-          const errorMsg = data.error || 'Erro ao inicializar pagamento';
+          const errorMsg = response.data.error || 'Erro ao inicializar pagamento';
           console.error('❌ Erro:', errorMsg);
           setError(errorMsg);
           toast.error(errorMsg);
