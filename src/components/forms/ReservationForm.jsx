@@ -269,7 +269,8 @@ export default function ReservationForm({
           company_email: company?.email || '',
           check_in_time: company?.check_in_time || '14:00',
           check_out_time: company?.check_out_time || '12:00',
-          payment_instructions: company?.payment_instructions || ''
+          payment_instructions: company?.payment_instructions || '',
+          company_id: companyId
         });
       } catch (error) {
         console.error('Erro ao enviar email:', error);

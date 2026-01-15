@@ -53,6 +53,7 @@ export default function Reservas() {
 
   const urlParams = new URLSearchParams(window.location.search);
   const companySlug = urlParams.get('c');
+  const reservationIdFromUrl = urlParams.get('reservation_id');
 
   useEffect(() => {
     let hasRedirected = false;
@@ -62,7 +63,11 @@ export default function Reservas() {
         const isAuth = await base44.auth.isAuthenticated();
         if (!isAuth && !hasRedirected) {
           hasRedirected = true;
-          base44.auth.redirectToLogin(`${window.location.origin}/Reservas?c=${companySlug || ''}`);
+          let redirectUrl = `${window.location.origin}/Reservas?c=${companySlug || ''}`;
+          if (reservationIdFromUrl) {
+            redirectUrl += `&reservation_id=${reservationIdFromUrl}`;
+          }
+          base44.auth.redirectToLogin(redirectUrl);
           return;
         }
         const userData = await base44.auth.me();
@@ -112,6 +117,34 @@ export default function Reservas() {
     },
     enabled: !!company?.id
   });
+
+  // Verificar se há reservation_id na URL para processar pagamento direto
+  useEffect(() => {
+    if (reservationIdFromUrl && reservations.length > 0 && accommodations.length > 0 && !createdReservationId) {
+      const resToPay = reservations.find(r => r.id === reservationIdFromUrl);
+      if (resToPay) {
+        const acc = accommodations.find(a => a.id === resToPay.accommodation_id);
+        if (acc) {
+          setSelectedAccommodation(acc);
+          setSelectedDates({ 
+            start: parseISO(resToPay.check_in), 
+            end: parseISO(resToPay.check_out) 
+          });
+          setFormData({
+            guest_name: resToPay.guest_name || '',
+            guest_email: resToPay.guest_email || '',
+            guest_phone: resToPay.guest_phone || '',
+            guests_count: resToPay.guests_count || 1,
+            notes: resToPay.notes || ''
+          });
+          setCreatedReservationId(resToPay.id);
+          setPaymentMethod('online');
+          setStep(3);
+          setShowPaymentDialog(true);
+        }
+      }
+    }
+  }, [reservationIdFromUrl, reservations, accommodations]);
 
   const { data: blockedDates = [] } = useQuery({
     queryKey: ['blocked-public', company?.id],
@@ -247,7 +280,8 @@ export default function Reservas() {
           company_email: company.email,
           check_in_time: company.check_in_time,
           check_out_time: company.check_out_time,
-          payment_instructions: company.payment_instructions
+          payment_instructions: company.payment_instructions,
+          company_id: company.id
         });
       } catch (error) {
         console.error('Erro ao enviar email:', error);
