@@ -146,6 +146,7 @@ export default function Settings() {
 
     const data = {
       ...formData,
+      slug: generateSlug(formData.slug), // Garantir que o slug seja válido antes de salvar
       owner_email: user?.email
     };
 
@@ -299,10 +300,11 @@ export default function Settings() {
                       <Label>URL (slug) *</Label>
                       <Input
                         value={formData.slug}
-                        onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                        onChange={(e) => setFormData({ ...formData, slug: generateSlug(e.target.value) })}
                         placeholder="pousada-exemplo"
                         required
                       />
+                      <p className="text-xs text-slate-500 mt-1">Apenas letras, números e hífens (sem espaços)</p>
                     </div>
                   </div>
 
