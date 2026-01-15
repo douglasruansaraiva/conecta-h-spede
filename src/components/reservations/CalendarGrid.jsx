@@ -22,7 +22,7 @@ export default function CalendarGrid({
   const [selectingRange, setSelectingRange] = useState(false);
   const [rangeStart, setRangeStart] = useState(null);
   const [hoverDate, setHoverDate] = useState(null);
-  const [selectedAccommodationId, setSelectedAccommodationId] = useState(accommodationId || 'all');
+  const [selectedAccommodationId, setSelectedAccommodationId] = useState('all');
 
   const days = useMemo(() => {
     const start = startOfMonth(currentMonth);
@@ -151,11 +151,17 @@ export default function CalendarGrid({
     <TooltipProvider>
     <div className="bg-white rounded-2xl border border-slate-200 p-6">
       {/* Accommodation Filter */}
-      {accommodations.length > 0 && (
+      {accommodations && accommodations.length > 0 && (
         <div className="mb-4">
-          <Select value={selectedAccommodationId} onValueChange={setSelectedAccommodationId}>
+          <Select 
+            value={selectedAccommodationId} 
+            onValueChange={(value) => {
+              console.log('Filtro mudou para:', value);
+              setSelectedAccommodationId(value);
+            }}
+          >
             <SelectTrigger className="w-full sm:w-64">
-              <SelectValue placeholder="Filtrar por acomodação" />
+              <SelectValue placeholder="Todas as Acomodações" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todas as Acomodações</SelectItem>
