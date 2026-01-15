@@ -238,10 +238,42 @@ export default function ReservationForm({
       total_amount: parseFloat(formData.total_amount) || 0
     };
 
+    let savedReservation;
     if (reservation) {
-      await base44.entities.Reservation.update(reservation.id, data);
+      savedReservation = await base44.entities.Reservation.update(reservation.id, data);
     } else {
-      await base44.entities.Reservation.create(data);
+      savedReservation = await base44.entities.Reservation.create(data);
+    }
+
+    // Enviar email de confirmação se for reserva nova e tiver email
+    if (!reservation && formData.guest_email) {
+      try {
+        // Buscar dados da empresa
+        const companies = await base44.entities.Company.filter({ id: companyId });
+        const company = companies[0];
+        
+        // Buscar nome da acomodação
+        const accommodation = accommodations.find(a => a.id === formData.accommodation_id);
+        
+        await base44.functions.invoke('sendReservationConfirmation', {
+          reservation_id: savedReservation.id,
+          guest_email: formData.guest_email,
+          guest_name: formData.guest_name,
+          accommodation_name: accommodation?.name || 'Acomodação',
+          check_in: format(parseISO(formData.check_in), "dd/MM/yyyy"),
+          check_out: format(parseISO(formData.check_out), "dd/MM/yyyy"),
+          guests_count: parseInt(formData.guests_count) || 1,
+          total_amount: parseFloat(formData.total_amount) || 0,
+          company_name: company?.name || '',
+          company_phone: company?.phone || '',
+          company_email: company?.email || '',
+          check_in_time: company?.check_in_time || '14:00',
+          check_out_time: company?.check_out_time || '12:00',
+          payment_instructions: company?.payment_instructions || ''
+        });
+      } catch (error) {
+        console.error('Erro ao enviar email:', error);
+      }
     }
 
     setLoading(false);
@@ -250,7 +282,7 @@ export default function ReservationForm({
     
     // Show success toast
     const { toast } = await import("sonner");
-    toast.success(reservation ? 'Reserva atualizada!' : 'Reserva criada com sucesso!');
+    toast.success(reservation ? 'Reserva atualizada!' : 'Reserva criada e email enviado!');
   };
 
   const nights = formData.check_in && formData.check_out 
