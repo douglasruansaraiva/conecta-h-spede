@@ -25,30 +25,37 @@ export default function CompanyGuard({ children }) {
     loadUser();
   }, []);
 
-  const { data: companies = [], isLoading: loadingCompanies } = useQuery({
+  const { data: companies = [], isLoading: loadingCompanies, error } = useQuery({
     queryKey: ['companies', user?.email],
     queryFn: async () => {
       if (!user?.email) return [];
       return await base44.entities.Company.filter({ owner_email: user.email });
     },
-    enabled: !!user?.email
+    enabled: !!user?.email,
+    retry: 1
   });
 
-  if (loading || loadingCompanies) {
+  if (loading || (loadingCompanies && !error)) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-emerald-600 animate-spin" />
+        <Loader2 className="w-8 h-8 text-[#2C5F5D] animate-spin" />
       </div>
     );
   }
 
-  if (companies.length === 0) {
+  // Se houve erro ao carregar empresas, ainda assim continua
+  if (error) {
+    console.error('Erro ao carregar empresas:', error);
+  }
+
+  // Se não tem empresas e não está carregando, mostra tela de setup
+  if (!loadingCompanies && companies.length === 0 && user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-6">
         <Card className="max-w-md w-full">
           <CardContent className="p-8 text-center">
-            <div className="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Home className="w-8 h-8 text-emerald-600" />
+            <div className="w-16 h-16 bg-[#2C5F5D]/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Home className="w-8 h-8 text-[#2C5F5D]" />
             </div>
             <h2 className="text-2xl font-bold text-slate-800 mb-2">Bem-vindo!</h2>
             <p className="text-slate-600 mb-6">
