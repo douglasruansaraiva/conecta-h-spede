@@ -94,7 +94,7 @@ function DashboardContent({ user, company }) {
     .reduce((sum, t) => sum + (t.amount || 0), 0);
 
   const upcomingReservations = reservations
-    .filter(r => ['pending', 'confirmed'].includes(r.status))
+    .filter(r => ['pending', 'confirmed'].includes(r.status) && new Date(r.check_in) >= new Date())
     .sort((a, b) => new Date(a.check_in) - new Date(b.check_in))
     .slice(0, 5);
 

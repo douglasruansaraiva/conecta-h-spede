@@ -4,9 +4,9 @@ import Dashboard from './pages/Dashboard';
 import Financial from './pages/Financial';
 import Guests from './pages/Guests';
 import Reports from './pages/Reports';
+import Reservas from './pages/Reservas';
 import Reservations from './pages/Reservations';
 import Settings from './pages/Settings';
-import Reservas from './pages/Reservas';
 import __Layout from './Layout.jsx';
 
 
@@ -17,9 +17,9 @@ export const PAGES = {
     "Financial": Financial,
     "Guests": Guests,
     "Reports": Reports,
+    "Reservas": Reservas,
     "Reservations": Reservations,
     "Settings": Settings,
-    "Reservas": Reservas,
 }
 
 export const pagesConfig = {
