@@ -251,7 +251,7 @@ function DashboardContent({ user, company }) {
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
             {bookingUrl && (
               <div className="flex items-center gap-2 bg-white rounded-lg border border-slate-200 px-3 py-2">
-                <span className="text-xs sm:text-sm text-slate-600 truncate max-w-[150px] sm:max-w-[200px]">{bookingUrl}</span>
+                <span className="text-xs sm:text-sm text-slate-600 truncate max-w-[100px] sm:max-w-[120px]">{bookingUrl}</span>
                 <Button size="icon" variant="ghost" className="h-8 w-8" onClick={copyBookingUrl}>
                   {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
                 </Button>
