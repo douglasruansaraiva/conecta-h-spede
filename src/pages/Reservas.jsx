@@ -164,20 +164,24 @@ export default function Reservas() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     
-    if (paymentMethod === 'online') {
-      const reservationId = await createReservation();
-      if (reservationId) {
-        setShowPaymentDialog(true);
+    try {
+      if (paymentMethod === 'online') {
+        const reservationId = await createReservation();
+        if (reservationId) {
+          setShowPaymentDialog(true);
+        }
+      } else {
+        await createReservation();
       }
-    } else {
-      await createReservation();
+    } catch (error) {
+      console.error('Erro ao processar reserva:', error);
+      setLoading(false);
     }
   };
 
   const createReservation = async () => {
-    setLoading(true);
-
     try {
       // Find or create guest - always create/update if email provided
       let guestId = null;
@@ -251,15 +255,17 @@ export default function Reservas() {
 
       // Se for pagamento manual, mostrar sucesso imediatamente
       if (paymentMethod === 'manual') {
+        setLoading(false);
         setSuccess(true);
+      } else {
+        setLoading(false);
       }
 
-      setLoading(false);
       return reservation.id;
     } catch (error) {
       console.error('Erro ao criar reserva:', error);
       setLoading(false);
-      alert('Erro ao processar reserva. Por favor, tente novamente.');
+      throw error;
     }
   };
 
