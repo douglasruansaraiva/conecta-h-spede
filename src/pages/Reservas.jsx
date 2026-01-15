@@ -339,17 +339,65 @@ export default function Reservas() {
               </p>
               <p className="text-sm"><strong>Total:</strong> R$ {calculateTotal().toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
             </div>
-            <div className="mt-4 p-4 bg-emerald-50 rounded-lg text-left border border-emerald-200">
-              <p className="text-sm font-medium text-emerald-800 mb-2">📱 Como Pagar:</p>
-              {company.payment_instructions ? (
-                <p className="text-sm text-slate-700 whitespace-pre-line">{company.payment_instructions}</p>
-              ) : (
-                <div className="text-sm text-slate-700 space-y-2">
-                  <p>Entre em contato para confirmar o pagamento:</p>
-                  {company.phone && <p>📞 Telefone: {company.phone}</p>}
-                  {company.email && <p>✉️ Email: {company.email}</p>}
+            <div className="mt-6 space-y-4">
+              <div className="p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl border-2 border-emerald-200">
+                <p className="text-base font-bold text-emerald-900 mb-3 flex items-center gap-2">
+                  💳 Formas de Pagamento
+                </p>
+                
+                {/* PIX */}
+                <div className="bg-white rounded-lg p-4 mb-3 border border-emerald-100">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-8 h-8 bg-emerald-500 rounded flex items-center justify-center">
+                      <span className="text-white font-bold text-xs">PIX</span>
+                    </div>
+                    <span className="font-semibold text-slate-800">Pagamento via PIX</span>
+                  </div>
+                  {company.payment_instructions ? (
+                    <p className="text-sm text-slate-700 whitespace-pre-line">{company.payment_instructions}</p>
+                  ) : (
+                    <p className="text-sm text-slate-600">
+                      Entre em contato para receber a chave PIX e efetuar o pagamento.
+                    </p>
+                  )}
                 </div>
-              )}
+
+                {/* Cartão */}
+                {company.stripe_publishable_key && (
+                  <div className="bg-white rounded-lg p-4 mb-3 border border-emerald-100">
+                    <div className="flex items-center gap-2 mb-2">
+                      <CreditCard className="w-6 h-6 text-emerald-600" />
+                      <span className="font-semibold text-slate-800">Cartão de Crédito/Débito</span>
+                    </div>
+                    <p className="text-sm text-slate-600">
+                      Disponível durante o processo de reserva (opção "Pagar Online")
+                    </p>
+                  </div>
+                )}
+
+                {/* Contato */}
+                <div className="bg-white rounded-lg p-4 border border-emerald-100">
+                  <p className="font-semibold text-slate-800 mb-2">📞 Contato para Pagamento</p>
+                  <div className="space-y-1 text-sm text-slate-700">
+                    {company.phone && (
+                      <a href={`tel:${company.phone}`} className="flex items-center gap-2 hover:text-emerald-600">
+                        <Phone className="w-4 h-4" />
+                        {company.phone}
+                      </a>
+                    )}
+                    {company.email && (
+                      <a href={`mailto:${company.email}`} className="flex items-center gap-2 hover:text-emerald-600">
+                        <Mail className="w-4 h-4" />
+                        {company.email}
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-xs text-center text-slate-500">
+                Você receberá um e-mail de confirmação com todos os detalhes
+              </p>
             </div>
           </CardContent>
         </Card>
