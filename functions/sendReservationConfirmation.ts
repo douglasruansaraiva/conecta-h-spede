@@ -31,8 +31,10 @@ Deno.serve(async (req) => {
     const company = companies[0];
     const companySlug = company?.slug;
 
-    const paymentLink = companySlug 
-      ? `https://app.base44.com/app/${Deno.env.get("BASE44_APP_ID")}/Reservas?c=${companySlug}&reservation_id=${reservation_id}` 
+    // Construir URL da página de reservas
+    const appId = Deno.env.get("BASE44_APP_ID");
+    const paymentLink = companySlug && appId
+      ? `${req.headers.get('origin') || 'https://app.base44.com'}/Reservas?c=${companySlug}&reservation_id=${reservation_id}` 
       : '';
 
     const emailBody = `
