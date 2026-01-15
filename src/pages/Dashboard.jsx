@@ -347,6 +347,7 @@ function DashboardContent({ user, company }) {
             <CalendarGrid
               reservations={reservations}
               blockedDates={blockedDates}
+              accommodations={accommodations}
             />
           </div>
 
