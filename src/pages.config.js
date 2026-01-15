@@ -3,10 +3,10 @@ import Admin from './pages/Admin';
 import Dashboard from './pages/Dashboard';
 import Financial from './pages/Financial';
 import Guests from './pages/Guests';
-import PublicBooking from './pages/PublicBooking';
 import Reports from './pages/Reports';
 import Reservations from './pages/Reservations';
 import Settings from './pages/Settings';
+import Reservas from './pages/Reservas';
 import __Layout from './Layout.jsx';
 
 
@@ -16,10 +16,10 @@ export const PAGES = {
     "Dashboard": Dashboard,
     "Financial": Financial,
     "Guests": Guests,
-    "PublicBooking": PublicBooking,
     "Reports": Reports,
     "Reservations": Reservations,
     "Settings": Settings,
+    "Reservas": Reservas,
 }
 
 export const pagesConfig = {

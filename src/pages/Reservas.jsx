@@ -31,7 +31,7 @@ import StripeCheckout from '@/components/payments/StripeCheckout';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 
-export default function PublicBooking() {
+export default function Reservas() {
   const [step, setStep] = useState(1); // 1: list, 1.5: details, 2: dates, 3: form
   const [selectedAccommodation, setSelectedAccommodation] = useState(null);
   const [selectedDates, setSelectedDates] = useState(null);
@@ -62,7 +62,7 @@ export default function PublicBooking() {
         const isAuth = await base44.auth.isAuthenticated();
         if (!isAuth && !hasRedirected) {
           hasRedirected = true;
-          base44.auth.redirectToLogin(`${window.location.origin}/PublicBooking?c=${companySlug || ''}`);
+          base44.auth.redirectToLogin(`${window.location.origin}/Reservas?c=${companySlug || ''}`);
           return;
         }
         const userData = await base44.auth.me();
@@ -76,7 +76,7 @@ export default function PublicBooking() {
       } catch (error) {
         if (!hasRedirected) {
           hasRedirected = true;
-          base44.auth.redirectToLogin(`${window.location.origin}/PublicBooking?c=${companySlug || ''}`);
+          base44.auth.redirectToLogin(`${window.location.origin}/Reservas?c=${companySlug || ''}`);
         }
       }
     };

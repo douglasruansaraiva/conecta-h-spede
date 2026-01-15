@@ -106,7 +106,7 @@ function DashboardContent({ user, company }) {
     isToday(parseISO(r.check_out)) && r.status === 'checked_in'
   );
 
-  const bookingUrl = company?.slug ? `${window.location.origin}${createPageUrl('PublicBooking')}?c=${company.slug}` : '';
+  const bookingUrl = company?.slug ? `${window.location.origin}${createPageUrl('Reservas')}?c=${company.slug}` : '';
 
   const copyBookingUrl = () => {
     navigator.clipboard.writeText(bookingUrl);
