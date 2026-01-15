@@ -160,7 +160,7 @@ export default function Settings() {
     toast.success('Configurações salvas com sucesso!');
   };
 
-  const bookingUrl = formData.slug ? `${window.location.origin}${createPageUrl('PublicBooking')}?c=${formData.slug}` : '';
+  const bookingUrl = formData.slug ? `${window.location.origin}${createPageUrl('Reservas')}?c=${formData.slug}` : '';
 
   const copyBookingUrl = () => {
     navigator.clipboard.writeText(bookingUrl);
