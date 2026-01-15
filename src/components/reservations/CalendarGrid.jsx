@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isToday, addMonths, subMonths, isWithinInterval, parseISO, isBefore, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale/pt-BR';
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -14,12 +15,14 @@ export default function CalendarGrid({
   selectedRange = null,
   accommodationId = null,
   showLegend = true,
-  minDate = null
+  minDate = null,
+  accommodations = []
 }) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectingRange, setSelectingRange] = useState(false);
   const [rangeStart, setRangeStart] = useState(null);
   const [hoverDate, setHoverDate] = useState(null);
+  const [selectedAccommodationId, setSelectedAccommodationId] = useState(accommodationId || 'all');
 
   const days = useMemo(() => {
     const start = startOfMonth(currentMonth);
@@ -34,10 +37,12 @@ export default function CalendarGrid({
   const getDateStatus = (date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
     
+    const filterAccommodationId = selectedAccommodationId === 'all' ? null : selectedAccommodationId;
+    
     // Check reservations - exclude cancelled
     const reservation = reservations.find(r => {
       if (r.status === 'cancelled') return false;
-      if (accommodationId && r.accommodation_id !== accommodationId) return false;
+      if (filterAccommodationId && r.accommodation_id !== filterAccommodationId) return false;
       const checkIn = parseISO(r.check_in);
       const checkOut = parseISO(r.check_out);
       // Check-out date is available for new check-in
@@ -52,7 +57,7 @@ export default function CalendarGrid({
 
     // Check blocked dates - FIXED: properly check interval
     const blocked = blockedDates.find(b => {
-      if (accommodationId && b.accommodation_id !== accommodationId) return false;
+      if (filterAccommodationId && b.accommodation_id !== filterAccommodationId) return false;
       
       const blockStart = parseISO(b.start_date);
       const blockEnd = parseISO(b.end_date);
@@ -145,6 +150,25 @@ export default function CalendarGrid({
   return (
     <TooltipProvider>
     <div className="bg-white rounded-2xl border border-slate-200 p-6">
+      {/* Accommodation Filter */}
+      {accommodations.length > 0 && (
+        <div className="mb-4">
+          <Select value={selectedAccommodationId} onValueChange={setSelectedAccommodationId}>
+            <SelectTrigger className="w-full sm:w-64">
+              <SelectValue placeholder="Filtrar por acomodação" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas as Acomodações</SelectItem>
+              {accommodations.map(acc => (
+                <SelectItem key={acc.id} value={acc.id}>
+                  {acc.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+      
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <Button
