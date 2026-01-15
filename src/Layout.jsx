@@ -56,7 +56,7 @@ export default function Layout({ children, currentPageName }) {
   }, []);
 
   // Public pages without layout
-  if (currentPageName === 'PublicBooking') {
+  if (currentPageName === 'Reservas') {
     return children;
   }
 
