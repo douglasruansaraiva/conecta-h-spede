@@ -94,6 +94,20 @@ function detectSource(summary, url) {
   return 'other';
 }
 
+function isBlockedEvent(event) {
+  const summaryLower = (event.summary || '').toLowerCase();
+  const descriptionLower = (event.description || '').toLowerCase();
+  const combinedText = summaryLower + ' ' + descriptionLower;
+  
+  const blockedKeywords = [
+    'blocked', 'unavailable', 'not available', 'closed', 'maintenance',
+    'indisponível', 'fechado', 'bloqueado', 'manutenção',
+    'out of office', 'occupancy', 'private'
+  ];
+  
+  return blockedKeywords.some(keyword => combinedText.includes(keyword));
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -156,42 +170,77 @@ Deno.serve(async (req) => {
           
           for (const event of events) {
             try {
-              const source = detectSource(event.summary, icalConfig.url);
-              const totalAmount = calculateTotalAmount(accommodation, event.dtstart, event.dtend);
-
-              const existingReservations = await base44.entities.Reservation.filter({ 
-                external_id: event.uid,
-                accommodation_id: accommodation.id
-              });
-
-              if (existingReservations.length > 0) {
-                const existing = existingReservations[0];
-                await base44.entities.Reservation.update(existing.id, {
-                  check_in: event.dtstart,
-                  check_out: event.dtend,
-                  notes: `Importado via ${icalConfig.name}`,
-                  total_amount: totalAmount,
-                  source: source,
-                  status: 'confirmed'
-                });
-              } else {
-                await base44.entities.Reservation.create({
-                  company_id,
+              if (isBlockedEvent(event)) {
+                // É um período bloqueado, não uma reserva real
+                const reason = `${icalConfig.name}: ${event.summary || 'Bloqueado'}`;
+                
+                const existingBlockedDates = await base44.entities.BlockedDate.filter({
                   accommodation_id: accommodation.id,
-                  external_id: event.uid,
-                  source: source,
-                  status: 'confirmed',
-                  check_in: event.dtstart,
-                  check_out: event.dtend,
-                  guest_name: 'Indisponível',
-                  notes: `Importado via ${icalConfig.name}`,
-                  total_amount: totalAmount
+                  start_date: event.dtstart,
+                  end_date: event.dtend,
+                  source: 'ical_import'
                 });
+
+                if (existingBlockedDates.length === 0) {
+                  await base44.entities.BlockedDate.create({
+                    company_id,
+                    accommodation_id: accommodation.id,
+                    start_date: event.dtstart,
+                    end_date: event.dtend,
+                    reason: reason,
+                    source: 'ical_import'
+                  });
+                }
+
+                // Remover reserva se existir para este período
+                const existingReservations = await base44.entities.Reservation.filter({
+                  external_id: event.uid,
+                  accommodation_id: accommodation.id
+                });
+                if (existingReservations.length > 0) {
+                  await base44.entities.Reservation.delete(existingReservations[0].id);
+                }
+
+              } else {
+                // É uma reserva real
+                const source = detectSource(event.summary, icalConfig.url);
+                const totalAmount = calculateTotalAmount(accommodation, event.dtstart, event.dtend);
+
+                const existingReservations = await base44.entities.Reservation.filter({ 
+                  external_id: event.uid,
+                  accommodation_id: accommodation.id
+                });
+
+                if (existingReservations.length > 0) {
+                  const existing = existingReservations[0];
+                  await base44.entities.Reservation.update(existing.id, {
+                    check_in: event.dtstart,
+                    check_out: event.dtend,
+                    notes: `Importado via ${icalConfig.name}`,
+                    total_amount: totalAmount,
+                    source: source,
+                    status: 'confirmed',
+                    guest_name: event.summary || 'Reserva iCal'
+                  });
+                } else {
+                  await base44.entities.Reservation.create({
+                    company_id,
+                    accommodation_id: accommodation.id,
+                    external_id: event.uid,
+                    source: source,
+                    status: 'confirmed',
+                    check_in: event.dtstart,
+                    check_out: event.dtend,
+                    guest_name: event.summary || 'Reserva iCal',
+                    notes: `Importado via ${icalConfig.name}`,
+                    total_amount: totalAmount
+                  });
+                }
               }
 
               syncedCount++;
             } catch (err) {
-              console.error('Erro ao criar/atualizar reserva:', err);
+              console.error('Erro ao processar evento:', err);
               errorCount++;
             }
           }
