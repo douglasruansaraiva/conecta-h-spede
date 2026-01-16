@@ -46,9 +46,40 @@ export default function PaymentForm({
     });
 
     // Update reservation paid amount
+    const newPaidAmount = (reservation.paid_amount || 0) + amount;
     await base44.entities.Reservation.update(reservation.id, {
-      paid_amount: (reservation.paid_amount || 0) + amount
+      paid_amount: newPaidAmount
     });
+
+    // Enviar email de confirmação com informações de pagamento
+    try {
+      const accommodation = await base44.entities.Accommodation.filter({ id: reservation.accommodation_id });
+      const company = await base44.entities.Company.filter({ id: companyId });
+      
+      if (accommodation.length > 0 && company.length > 0) {
+        await base44.functions.invoke('sendReservationConfirmation', {
+          reservation_id: reservation.id,
+          guest_email: reservation.guest_email,
+          guest_name: reservation.guest_name,
+          accommodation_name: accommodation[0].name,
+          check_in: format(new Date(reservation.check_in), "dd/MM/yyyy"),
+          check_out: format(new Date(reservation.check_out), "dd/MM/yyyy"),
+          guests_count: reservation.guests_count || 1,
+          total_amount: reservation.total_amount,
+          paid_amount: newPaidAmount,
+          remaining_amount: reservation.total_amount - newPaidAmount,
+          company_name: company[0].name,
+          company_phone: company[0].phone,
+          company_email: company[0].email,
+          check_in_time: company[0].check_in_time,
+          check_out_time: company[0].check_out_time,
+          payment_instructions: company[0].payment_instructions,
+          company_id: companyId
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao enviar email:', error);
+    }
 
     setLoading(false);
     onSave();

@@ -34,7 +34,8 @@ function CheckoutForm({ amount, reservationId, onSuccess, onCancel }) {
         const { base44 } = await import('@/api/base44Client');
         await base44.functions.invoke('confirmPayment', {
           reservation_id: reservationId,
-          amount: amount
+          amount: amount,
+          company_id: companyId
         });
         
         toast.success('Pagamento realizado com sucesso!');

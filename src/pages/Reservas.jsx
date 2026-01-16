@@ -264,28 +264,8 @@ export default function Reservas() {
 
       setCreatedReservationId(reservation.id);
 
-      // Enviar email de confirmação
-      try {
-        await base44.functions.invoke('sendReservationConfirmation', {
-          reservation_id: reservation.id,
-          guest_email: formData.guest_email,
-          guest_name: formData.guest_name,
-          accommodation_name: selectedAccommodation.name,
-          check_in: format(selectedDates.start, "dd/MM/yyyy"),
-          check_out: format(selectedDates.end, "dd/MM/yyyy"),
-          guests_count: parseInt(formData.guests_count) || 1,
-          total_amount: calculateTotal(),
-          company_name: company.name,
-          company_phone: company.phone,
-          company_email: company.email,
-          check_in_time: company.check_in_time,
-          check_out_time: company.check_out_time,
-          payment_instructions: company.payment_instructions,
-          company_id: company.id
-        });
-      } catch (error) {
-        console.error('Erro ao enviar email:', error);
-      }
+      // Email será enviado apenas após pagamento confirmado via StripeCheckout
+      // ou quando pagamento for registrado manualmente
 
       // Se for pagamento manual, mostrar sucesso imediatamente
       if (paymentMethod === 'manual') {
