@@ -34,10 +34,12 @@ export default function ReservationNotesDialog({ reservation, open, onOpenChange
     onSuccess: () => {
       queryClient.invalidateQueries(['reservations']);
       toast.success('Anotações atualizadas com sucesso!');
-      onOpenChange(false);
+      setTimeout(() => onOpenChange(false), 100);
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Erro ao atualizar:', error);
       toast.error('Erro ao atualizar anotações');
+      setTimeout(() => onOpenChange(false), 100);
     }
   });
 
