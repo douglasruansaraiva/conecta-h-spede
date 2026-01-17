@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { format, parseISO, isToday, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
@@ -30,6 +30,29 @@ function DashboardContent({ user, company }) {
   const [copied, setCopied] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const queryClient = useQueryClient();
+
+  // Auto-sync silencioso a cada 5 minutos
+  useEffect(() => {
+    if (!company?.id) return;
+
+    const autoSync = async () => {
+      try {
+        await base44.functions.invoke('syncIcal', { company_id: company.id });
+        queryClient.invalidateQueries(['reservations']);
+        queryClient.invalidateQueries(['blockedDates']);
+      } catch (error) {
+        console.log('Auto-sync error (silent):', error);
+      }
+    };
+
+    // Sincronizar ao carregar
+    autoSync();
+
+    // Sincronizar a cada 5 minutos
+    const interval = setInterval(autoSync, 5 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [company?.id, queryClient]);
 
   const { data: accommodations = [] } = useQuery({
     queryKey: ['accommodations', company?.id],
