@@ -24,6 +24,11 @@ export default function BlockedDateNotesDialog({ blockedDate, open, onOpenChange
     }
   }, [blockedDate]);
 
+  const handleClose = () => {
+    setReason('');
+    onOpenChange(false);
+  };
+
   const updateMutation = useMutation({
     mutationFn: async (data) => {
       await base44.entities.BlockedDate.update(blockedDate.id, data);
@@ -31,16 +36,16 @@ export default function BlockedDateNotesDialog({ blockedDate, open, onOpenChange
     onSuccess: () => {
       queryClient.invalidateQueries(['blockedDates']);
       toast.success('Anotações atualizadas com sucesso!');
-      setTimeout(() => onOpenChange(false), 100);
+      handleClose();
     },
     onError: (error) => {
       console.error('Erro ao atualizar:', error);
       toast.error('Erro ao atualizar anotações');
-      setTimeout(() => onOpenChange(false), 100);
     }
   });
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (!blockedDate?.id) return;
     updateMutation.mutate({ reason });
   };
 
@@ -55,7 +60,7 @@ export default function BlockedDateNotesDialog({ blockedDate, open, onOpenChange
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Editar Anotações do Período Bloqueado</DialogTitle>
@@ -86,14 +91,14 @@ export default function BlockedDateNotesDialog({ blockedDate, open, onOpenChange
         <DialogFooter>
           <Button
             variant="outline"
-            onClick={() => onOpenChange(false)}
+            onClick={handleClose}
             disabled={updateMutation.isPending}
           >
             Cancelar
           </Button>
           <Button
             onClick={handleSave}
-            disabled={updateMutation.isPending}
+            disabled={updateMutation.isPending || !blockedDate?.id}
             className="bg-gradient-to-r from-[#2C5F5D] to-[#3A7A77]"
           >
             {updateMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}

@@ -55,7 +55,7 @@ export default function ReservationNotesDialog({ reservation, open, onOpenChange
   const isExternalReservation = reservation.source && reservation.source !== 'direct';
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Editar Anotações da Reserva</DialogTitle>
@@ -98,14 +98,14 @@ export default function ReservationNotesDialog({ reservation, open, onOpenChange
         <DialogFooter>
           <Button
             variant="outline"
-            onClick={() => onOpenChange(false)}
+            onClick={handleClose}
             disabled={updateMutation.isPending}
           >
             Cancelar
           </Button>
           <Button
             onClick={handleSave}
-            disabled={updateMutation.isPending}
+            disabled={updateMutation.isPending || !reservation?.id}
             className="bg-gradient-to-r from-[#2C5F5D] to-[#3A7A77]"
           >
             {updateMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
