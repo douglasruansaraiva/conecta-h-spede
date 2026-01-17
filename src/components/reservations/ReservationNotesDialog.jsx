@@ -27,6 +27,12 @@ export default function ReservationNotesDialog({ reservation, open, onOpenChange
     }
   }, [reservation]);
 
+  const handleClose = () => {
+    setGuestName('');
+    setNotes('');
+    onOpenChange(false);
+  };
+
   const updateMutation = useMutation({
     mutationFn: async (data) => {
       await base44.entities.Reservation.update(reservation.id, data);
@@ -34,16 +40,16 @@ export default function ReservationNotesDialog({ reservation, open, onOpenChange
     onSuccess: () => {
       queryClient.invalidateQueries(['reservations']);
       toast.success('Anotações atualizadas com sucesso!');
-      setTimeout(() => onOpenChange(false), 100);
+      handleClose();
     },
     onError: (error) => {
       console.error('Erro ao atualizar:', error);
       toast.error('Erro ao atualizar anotações');
-      setTimeout(() => onOpenChange(false), 100);
     }
   });
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (!reservation?.id) return;
     updateMutation.mutate({
       guest_name: guestName,
       notes: notes
