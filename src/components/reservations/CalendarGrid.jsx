@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import ReservationNotesDialog from './ReservationNotesDialog';
+import BlockedDateNotesDialog from './BlockedDateNotesDialog';
 
 export default function CalendarGrid({ 
   reservations = [], 
@@ -26,6 +27,8 @@ export default function CalendarGrid({
   const [selectedAccommodationId, setSelectedAccommodationId] = useState('all');
   const [notesDialogOpen, setNotesDialogOpen] = useState(false);
   const [selectedReservation, setSelectedReservation] = useState(null);
+  const [blockedNotesDialogOpen, setBlockedNotesDialogOpen] = useState(false);
+  const [selectedBlockedDate, setSelectedBlockedDate] = useState(null);
 
   const days = useMemo(() => {
     const start = startOfMonth(currentMonth);
@@ -106,16 +109,23 @@ export default function CalendarGrid({
   const handleDateClick = (date) => {
     if (minDate && isBefore(date, startOfDay(minDate))) return;
     
-    const { status, reservation } = getDateStatus(date);
+    const { status, reservation, blocked } = getDateStatus(date);
     
-    // If clicking on a reserved date, open notes dialog
+    // If clicking on a reserved date, open reservation notes dialog
     if (status === 'reserved' && reservation) {
       setSelectedReservation(reservation);
       setNotesDialogOpen(true);
       return;
     }
     
-    // Block clicks on blocked dates
+    // If clicking on a blocked date, open blocked date notes dialog
+    if (status === 'blocked' && blocked) {
+      setSelectedBlockedDate(blocked);
+      setBlockedNotesDialogOpen(true);
+      return;
+    }
+    
+    // Block clicks on other unavailable dates
     if (status !== 'available') return;
     
     if (onDateRangeSelect) {
@@ -238,8 +248,7 @@ export default function CalendarGrid({
                 statusColors[status],
                 isToday(day) && "ring-2 ring-[#2C5F5D] ring-offset-1",
                 isPast && "opacity-40 cursor-not-allowed",
-                reservation && "cursor-pointer hover:ring-2 hover:ring-[#2C5F5D]/50",
-                blocked && !reservation && "cursor-not-allowed",
+                (reservation || blocked) && "cursor-pointer hover:ring-2 hover:ring-[#2C5F5D]/50",
                 isSelected && "bg-[#2C5F5D]/10 ring-2 ring-[#2C5F5D]",
                 isSameDay(day, rangeStart) && "bg-gradient-to-br from-[#2C5F5D] to-[#3A7A77] text-white shadow-md"
               )}
@@ -290,7 +299,7 @@ export default function CalendarGrid({
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded bg-slate-200" />
-              <span className="text-xs text-slate-600">Bloqueado</span>
+              <span className="text-xs text-slate-600">Bloqueado (clique para editar)</span>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
@@ -319,6 +328,12 @@ export default function CalendarGrid({
         reservation={selectedReservation}
         open={notesDialogOpen}
         onOpenChange={setNotesDialogOpen}
+      />
+      
+      <BlockedDateNotesDialog
+        blockedDate={selectedBlockedDate}
+        open={blockedNotesDialogOpen}
+        onOpenChange={setBlockedNotesDialogOpen}
       />
     </div>
     </TooltipProvider>
