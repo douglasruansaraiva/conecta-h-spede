@@ -171,26 +171,30 @@ Deno.serve(async (req) => {
           for (const event of events) {
             try {
               if (isBlockedEvent(event)) {
-                // É um período bloqueado, não uma reserva real
-                const reason = `${icalConfig.name}: ${event.summary || 'Bloqueado'}`;
-                
-                const existingBlockedDates = await base44.entities.BlockedDate.filter({
+              // É um período bloqueado, não uma reserva real
+              const endDate = new Date(event.dtend);
+              endDate.setDate(endDate.getDate() - 1);
+              const adjustedEndDate = endDate.toISOString().split('T')[0];
+
+              const reason = `${icalConfig.name}: ${event.summary || 'Bloqueado'}`;
+
+              const existingBlockedDates = await base44.entities.BlockedDate.filter({
+                accommodation_id: accommodation.id,
+                start_date: event.dtstart,
+                end_date: adjustedEndDate,
+                source: 'ical_import'
+              });
+
+              if (existingBlockedDates.length === 0) {
+                await base44.entities.BlockedDate.create({
+                  company_id,
                   accommodation_id: accommodation.id,
                   start_date: event.dtstart,
-                  end_date: event.dtend,
+                  end_date: adjustedEndDate,
+                  reason: reason,
                   source: 'ical_import'
                 });
-
-                if (existingBlockedDates.length === 0) {
-                  await base44.entities.BlockedDate.create({
-                    company_id,
-                    accommodation_id: accommodation.id,
-                    start_date: event.dtstart,
-                    end_date: event.dtend,
-                    reason: reason,
-                    source: 'ical_import'
-                  });
-                }
+              }
 
                 // Remover reserva se existir para este período
                 const existingReservations = await base44.entities.Reservation.filter({
@@ -203,8 +207,12 @@ Deno.serve(async (req) => {
 
               } else {
                 // É uma reserva real
+                const endDate = new Date(event.dtend);
+                endDate.setDate(endDate.getDate() - 1);
+                const adjustedCheckOut = endDate.toISOString().split('T')[0];
+                
                 const source = detectSource(event.summary, icalConfig.url);
-                const totalAmount = calculateTotalAmount(accommodation, event.dtstart, event.dtend);
+                const totalAmount = calculateTotalAmount(accommodation, event.dtstart, adjustedCheckOut);
 
                 const existingReservations = await base44.entities.Reservation.filter({ 
                   external_id: event.uid,
@@ -215,7 +223,7 @@ Deno.serve(async (req) => {
                   const existing = existingReservations[0];
                   await base44.entities.Reservation.update(existing.id, {
                     check_in: event.dtstart,
-                    check_out: event.dtend,
+                    check_out: adjustedCheckOut,
                     notes: `Importado via ${icalConfig.name}`,
                     total_amount: totalAmount,
                     source: source,
@@ -230,7 +238,7 @@ Deno.serve(async (req) => {
                     source: source,
                     status: 'confirmed',
                     check_in: event.dtstart,
-                    check_out: event.dtend,
+                    check_out: adjustedCheckOut,
                     guest_name: event.summary || 'Reserva iCal',
                     notes: `Importado via ${icalConfig.name}`,
                     total_amount: totalAmount

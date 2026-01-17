@@ -46,7 +46,8 @@ function DashboardContent({ user, company }) {
       if (!company?.id) return [];
       return await base44.entities.Reservation.filter({ company_id: company.id });
     },
-    enabled: !!company?.id
+    enabled: !!company?.id,
+    refetchInterval: 10000
   });
 
   const { data: transactions = [] } = useQuery({
@@ -73,7 +74,8 @@ function DashboardContent({ user, company }) {
       })));
       return dates;
     },
-    enabled: !!company?.id
+    enabled: !!company?.id,
+    refetchInterval: 10000
   });
 
   // Stats calculations
