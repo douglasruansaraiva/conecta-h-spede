@@ -224,23 +224,29 @@ function DashboardContent({ user, company }) {
 
           const events = parseIcal(data);
           
-          // Criar bloqueio para cada evento encontrado
+          // Criar bloqueio individual para cada dia do evento
           for (const event of events) {
             try {
               const endDate = new Date(event.end);
               endDate.setDate(endDate.getDate() - 1);
               const end = endDate.toISOString().split('T')[0];
               
-              if (new Date(event.start) <= new Date(end)) {
+              // Criar um registro para cada dia do período
+              const startDay = new Date(event.start);
+              const endDay = new Date(end);
+              
+              while (startDay <= endDay) {
+                const dayStr = startDay.toISOString().split('T')[0];
                 await base44.entities.BlockedDate.create({
                   company_id: company.id,
                   accommodation_id: acc.id,
-                  start_date: event.start,
-                  end_date: end,
+                  start_date: dayStr,
+                  end_date: dayStr,
                   reason: `${ical.name}: ${event.summary || 'Reserva'}`,
                   source: 'ical_import'
                 });
                 totalCreated++;
+                startDay.setDate(startDay.getDate() + 1);
               }
             } catch {}
           }
