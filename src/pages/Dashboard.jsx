@@ -23,7 +23,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import StatsCard from '@/components/dashboard/StatsCard';
 import ReservationCard from '@/components/reservations/ReservationCard';
-import CalendarGrid from '@/components/reservations/CalendarGrid';
+import TimelineCalendar from '@/components/reservations/TimelineCalendar';
 import CompanyGuard from '@/components/auth/CompanyGuard';
 
 function DashboardContent({ user, company }) {
@@ -375,7 +375,7 @@ function DashboardContent({ user, company }) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Calendar */}
           <div className="lg:col-span-2">
-            <CalendarGrid
+            <TimelineCalendar
               reservations={reservations}
               blockedDates={blockedDates}
               accommodations={accommodations}
