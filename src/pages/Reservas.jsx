@@ -43,6 +43,7 @@ export default function Reservas() {
   const [paymentMethod, setPaymentMethod] = useState('manual'); // 'manual' or 'online'
   const [createdReservationId, setCreatedReservationId] = useState(null);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [formData, setFormData] = useState({
     guest_name: '',
     guest_email: '',
@@ -197,20 +198,29 @@ export default function Reservas() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     
-    try {
-      if (paymentMethod === 'online') {
+    // Se escolheu pagamento online, mostrar formulário de pagamento
+    if (paymentMethod === 'online') {
+      setLoading(true);
+      try {
         const reservationId = await createReservation();
         if (reservationId) {
-          setShowPaymentDialog(true);
+          setShowPaymentForm(true);
+          setLoading(false);
         }
-      } else {
-        await createReservation();
+      } catch (error) {
+        console.error('Erro ao processar reserva:', error);
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('Erro ao processar reserva:', error);
-      setLoading(false);
+    } else {
+      // Pagamento manual - criar reserva e mostrar sucesso
+      setLoading(true);
+      try {
+        await createReservation();
+      } catch (error) {
+        console.error('Erro ao processar reserva:', error);
+        setLoading(false);
+      }
     }
   };
 
@@ -750,7 +760,7 @@ export default function Reservas() {
         )}
 
         {/* Step 3: Guest Data */}
-        {step === 3 && (
+        {step === 3 && !showPaymentForm && (
           <div>
             <h2 className="text-lg sm:text-xl font-semibold text-slate-800 mb-4 sm:mb-6">Seus Dados</h2>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
@@ -866,12 +876,12 @@ export default function Reservas() {
                           Voltar
                         </Button>
                         <Button 
-                          type="submit" 
-                          disabled={loading}
-                          className="bg-gradient-to-r from-[#2C5F5D] to-[#3A7A77] hover:from-[#234B49] hover:to-[#2C5F5D] text-white shadow-md"
+                         type="submit" 
+                         disabled={loading}
+                         className="bg-gradient-to-r from-[#2C5F5D] to-[#3A7A77] hover:from-[#234B49] hover:to-[#2C5F5D] text-white shadow-md"
                         >
                           {loading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                          Confirmar Reserva
+                          {paymentMethod === 'online' ? 'Ir para Pagamento' : 'Confirmar Reserva'}
                         </Button>
                       </div>
                     </form>
@@ -920,7 +930,81 @@ export default function Reservas() {
             </div>
             )}
 
-      {/* Payment Dialog */}
+        {/* Step 3.5: Payment Form (Online Payment) */}
+        {step === 3 && showPaymentForm && (
+          <div>
+            <h2 className="text-lg sm:text-xl font-semibold text-slate-800 mb-4 sm:mb-6">Pagamento</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+              <div className="lg:col-span-2">
+                <Card className="bg-white border-slate-200 shadow-sm">
+                  <CardHeader>
+                    <CardTitle className="text-lg text-slate-800">Complete o Pagamento</CardTitle>
+                    <p className="text-sm text-slate-600 mt-1">
+                      Digite os dados do seu cartão de forma segura
+                    </p>
+                  </CardHeader>
+                  <CardContent>
+                    <StripeCheckout
+                      amount={calculateTotal()}
+                      reservationId={createdReservationId}
+                      companyId={company?.id}
+                      onSuccess={handlePaymentSuccess}
+                      onCancel={() => {
+                        setShowPaymentForm(false);
+                        setSuccess(true);
+                      }}
+                    />
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Summary */}
+              <div>
+                <Card className="bg-white border-slate-200 shadow-sm">
+                  <CardHeader>
+                    <CardTitle className="text-lg text-slate-800">Resumo da Reserva</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div>
+                        <p className="font-medium text-slate-800">{selectedAccommodation?.name}</p>
+                      </div>
+                      <div className="border-t border-slate-200 pt-4 space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-slate-600">Check-in</span>
+                          <span className="text-slate-800">{format(selectedDates.start, "dd/MM/yyyy")}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-slate-600">Check-out</span>
+                          <span className="text-slate-800">{format(selectedDates.end, "dd/MM/yyyy")}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-slate-600">{nights} noite(s)</span>
+                          <span className="text-slate-800">R$ {calculateTotal().toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                        </div>
+                      </div>
+                      <div className="border-t border-slate-200 pt-4">
+                        <div className="flex justify-between">
+                          <span className="font-semibold text-slate-800">Total a Pagar</span>
+                          <span className="font-bold text-xl text-emerald-400">
+                            R$ {calculateTotal().toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="pt-2">
+                        <p className="text-xs text-slate-500 text-center">
+                          🔒 Pagamento 100% seguro
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
+        )}
+
+      {/* Payment Dialog (for URL redirect payments) */}
       <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
