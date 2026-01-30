@@ -191,11 +191,18 @@ export default function ReservationForm({
     e.preventDefault();
     setLoading(true);
 
-    // Check date availability
-    const isAvailable = await checkDateAvailability();
-    if (!isAvailable) {
-      setLoading(false);
-      return;
+    // Check date availability only if dates changed or it's a new reservation
+    const datesChanged = !reservation || 
+      reservation.check_in !== formData.check_in || 
+      reservation.check_out !== formData.check_out ||
+      reservation.accommodation_id !== formData.accommodation_id;
+    
+    if (datesChanged) {
+      const isAvailable = await checkDateAvailability();
+      if (!isAvailable) {
+        setLoading(false);
+        return;
+      }
     }
 
     // Find or create guest if email is provided
