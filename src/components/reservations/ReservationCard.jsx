@@ -84,7 +84,15 @@ export default function ReservationCard({
       }
     } catch (error) {
       console.error('Erro ao enviar email:', error);
-      toast.error('Erro ao enviar email: ' + (error.message || 'Erro desconhecido'));
+      
+      // Mensagem específica para rate limit
+      if (error.message && error.message.includes('Rate limit')) {
+        toast.error('Limite de emails atingido. Aguarde alguns minutos e tente novamente.');
+      } else if (error.response?.data?.error) {
+        toast.error('Erro ao enviar email: ' + error.response.data.error);
+      } else {
+        toast.error('Erro ao enviar email: ' + (error.message || 'Erro desconhecido'));
+      }
     } finally {
       setSendingEmail(false);
     }
