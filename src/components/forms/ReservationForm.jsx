@@ -458,16 +458,17 @@ export default function ReservationForm({
           <div className="border-t pt-4">
             <div className="flex items-end gap-3">
               <div className="flex-1">
-                <Label>Valor Total *</Label>
+                <Label>Valor Total (R$) *</Label>
                 <Input
                   type="text"
                   inputMode="decimal"
                   value={formData.total_amount}
                   onChange={(e) => {
-                    const value = e.target.value.replace(/,/g, '.');
+                    // Permite apenas números, vírgula e ponto
+                    const value = e.target.value.replace(/[^\d.,]/g, '');
                     setFormData({ ...formData, total_amount: value });
                   }}
-                  placeholder="0.00"
+                  placeholder="Ex: 2.370,00 ou 2370.00"
                   required
                 />
               </div>
