@@ -85,52 +85,56 @@ export default function ExternalReservationDialog({ blockedDate, open, onOpenCha
           <DialogTitle>Reserva de {getSourceLabel()}</DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-4 py-4">
-          <div className="bg-slate-50 p-3 rounded-lg space-y-1 text-xs text-slate-600">
+        <div className="space-y-3 py-3">
+          <div className="bg-slate-50 p-2 rounded-lg flex gap-4 text-xs text-slate-600">
             <div><strong>Check-in:</strong> {blockedDate.start_date}</div>
             <div><strong>Check-out:</strong> {blockedDate.end_date}</div>
-            <div><strong>Origem:</strong> {getSourceLabel()}</div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="guest-name">Nome do Hóspede</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="guest-name" className="text-sm">Nome</Label>
             <Input
               id="guest-name"
               value={guestName}
               onChange={(e) => setGuestName(e.target.value)}
-              placeholder="Digite o nome do hóspede"
+              placeholder="Nome do hóspede"
+              className="h-9"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="guest-email">Email do Hóspede</Label>
-            <Input
-              id="guest-email"
-              type="email"
-              value={guestEmail}
-              onChange={(e) => setGuestEmail(e.target.value)}
-              placeholder="email@exemplo.com"
-            />
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="guest-email" className="text-sm">Email</Label>
+              <Input
+                id="guest-email"
+                type="email"
+                value={guestEmail}
+                onChange={(e) => setGuestEmail(e.target.value)}
+                placeholder="email@exemplo.com"
+                className="h-9"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="guest-phone" className="text-sm">Telefone</Label>
+              <Input
+                id="guest-phone"
+                value={guestPhone}
+                onChange={(e) => setGuestPhone(e.target.value)}
+                placeholder="(00) 00000-0000"
+                className="h-9"
+              />
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="guest-phone">Telefone do Hóspede</Label>
-            <Input
-              id="guest-phone"
-              value={guestPhone}
-              onChange={(e) => setGuestPhone(e.target.value)}
-              placeholder="(00) 00000-0000"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="notes">Observações</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="notes" className="text-sm">Observações</Label>
             <Textarea
               id="notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Adicione observações sobre esta reserva..."
-              className="min-h-[120px]"
+              placeholder="Observações..."
+              className="min-h-[60px] text-sm"
             />
           </div>
         </div>
