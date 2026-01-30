@@ -121,17 +121,13 @@ function DashboardContent({ user, company }) {
     .filter(t => t.type === 'expense' && isWithinInterval(parseISO(t.date), { start: monthStart, end: monthEnd }))
     .reduce((sum, t) => sum + (t.amount || 0), 0);
 
-  // Combinar reservas diretas e externas (apenas Airbnb e Booking)
+  // Combinar reservas diretas e externas
   const directReservations = reservations
     .filter(r => ['pending', 'confirmed'].includes(r.status) && new Date(r.check_in) >= new Date())
     .map(r => ({ ...r, type: 'direct' }));
 
   const externalReservations = blockedDates
-    .filter(b => {
-      if (b.source !== 'ical_import' || new Date(b.start_date) < new Date()) return false;
-      const reasonLower = (b.reason || '').toLowerCase();
-      return reasonLower.includes('airbnb') || reasonLower.includes('booking');
-    })
+    .filter(b => b.source === 'ical_import' && new Date(b.start_date) >= new Date())
     .map(b => ({ 
       ...b, 
       type: 'external',
