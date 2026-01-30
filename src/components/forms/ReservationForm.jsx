@@ -460,11 +460,13 @@ export default function ReservationForm({
               <div className="flex-1">
                 <Label>Valor Total *</Label>
                 <Input
-                  type="number"
-                  min="0"
-                  step="0.01"
+                  type="text"
+                  inputMode="decimal"
                   value={formData.total_amount}
-                  onChange={(e) => setFormData({ ...formData, total_amount: e.target.value })}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/,/g, '.');
+                    setFormData({ ...formData, total_amount: value });
+                  }}
                   placeholder="0.00"
                   required
                 />
