@@ -201,35 +201,61 @@ export default function ReservationForm({
     // Find or create guest if email is provided
     let guestId = reservation?.guest_id;
     
-    if (guestMode === 'existing' && selectedGuestId) {
+    // Se estiver editando reserva do Booking/Airbnb, sempre criar novo hóspede
+    const isExternalReservation = reservation && (formData.source === 'booking' || formData.source === 'airbnb');
+    
+    if (guestMode === 'existing' && selectedGuestId && !isExternalReservation) {
       // Use selected existing guest
       guestId = selectedGuestId;
     } else if (formData.guest_email) {
       // Normalize email before saving
       const normalizedEmail = formData.guest_email.toLowerCase().trim();
       
-      // Check if guest already exists
-      const existingGuests = await base44.entities.Guest.filter({ 
-        company_id: companyId, 
-        email: normalizedEmail 
-      });
+      if (isExternalReservation) {
+        // Para reservas do Booking/Airbnb sendo editadas, sempre criar novo hóspede
+        // mas verificar se já não existe para não duplicar
+        const existingGuests = await base44.entities.Guest.filter({ 
+          company_id: companyId, 
+          email: normalizedEmail 
+        });
 
-      if (existingGuests.length > 0) {
-        guestId = existingGuests[0].id;
-        // Update guest info
-        await base44.entities.Guest.update(guestId, {
-          name: formData.guest_name,
-          phone: formData.guest_phone
-        });
+        if (existingGuests.length > 0) {
+          // Se já existe hóspede com esse email, usar ele
+          guestId = existingGuests[0].id;
+        } else {
+          // Criar novo hóspede
+          const newGuest = await base44.entities.Guest.create({
+            company_id: companyId,
+            name: formData.guest_name,
+            email: normalizedEmail,
+            phone: formData.guest_phone
+          });
+          guestId = newGuest.id;
+        }
       } else {
-        // Create new guest only if doesn't exist
-        const newGuest = await base44.entities.Guest.create({
-          company_id: companyId,
-          name: formData.guest_name,
-          email: normalizedEmail,
-          phone: formData.guest_phone
+        // Comportamento normal para outras reservas
+        const existingGuests = await base44.entities.Guest.filter({ 
+          company_id: companyId, 
+          email: normalizedEmail 
         });
-        guestId = newGuest.id;
+
+        if (existingGuests.length > 0) {
+          guestId = existingGuests[0].id;
+          // Update guest info
+          await base44.entities.Guest.update(guestId, {
+            name: formData.guest_name,
+            phone: formData.guest_phone
+          });
+        } else {
+          // Create new guest only if doesn't exist
+          const newGuest = await base44.entities.Guest.create({
+            company_id: companyId,
+            name: formData.guest_name,
+            email: normalizedEmail,
+            phone: formData.guest_phone
+          });
+          guestId = newGuest.id;
+        }
       }
     }
 
