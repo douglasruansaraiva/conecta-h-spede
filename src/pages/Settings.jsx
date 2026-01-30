@@ -124,6 +124,8 @@ export default function Settings() {
   };
 
   const generateSlug = (name) => {
+    if (!name) return '';
+
     return name
       .toLowerCase()
       .normalize('NFD')

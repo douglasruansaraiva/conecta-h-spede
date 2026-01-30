@@ -64,7 +64,7 @@ export default function ReservationNotesDialog({ reservation, open, onOpenChange
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Editar Anotações da Reserva</DialogTitle>
+          <DialogTitle>Detalhes da Reserva</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4 py-4">

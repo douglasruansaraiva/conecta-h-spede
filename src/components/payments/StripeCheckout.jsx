@@ -52,7 +52,7 @@ function CheckoutForm({ amount, reservationId, onSuccess, onCancel }) {
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
         <div className="flex items-center justify-between mb-4">
-          <span className="text-slate-600">Total a pagar:</span>
+          <span className="text-slate-600">Valor a Pagar:</span>
           <span className="text-2xl font-bold text-slate-800">
             R$ {amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
           </span>
@@ -142,7 +142,7 @@ export default function StripeCheckout({ amount, reservationId, companyId, onSuc
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <Loader2 className="w-8 h-8 text-emerald-600 animate-spin mb-4" />
-        <p className="text-slate-600 text-sm">Carregando checkout...</p>
+        <p className="text-slate-600 text-sm">Carregando formulário de pagamento...</p>
       </div>
     );
   }

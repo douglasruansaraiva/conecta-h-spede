@@ -63,7 +63,7 @@ export default function BlockedDateNotesDialog({ blockedDate, open, onOpenChange
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Editar Anotações do Período Bloqueado</DialogTitle>
+          <DialogTitle>Detalhes do Período Bloqueado</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4 py-4">
