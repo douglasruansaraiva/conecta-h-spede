@@ -207,9 +207,8 @@ Deno.serve(async (req) => {
 
               } else {
                 // É uma reserva real
-                const endDate = new Date(event.dtend);
-                endDate.setDate(endDate.getDate() - 1);
-                const adjustedCheckOut = endDate.toISOString().split('T')[0];
+                // No iCal, DTEND já é o dia de checkout (exclusivo), não precisa ajustar
+                const adjustedCheckOut = event.dtend;
 
                 const source = detectSource(event.summary, icalConfig.url);
 
