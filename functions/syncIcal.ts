@@ -210,9 +210,12 @@ Deno.serve(async (req) => {
                 const endDate = new Date(event.dtend);
                 endDate.setDate(endDate.getDate() - 1);
                 const adjustedCheckOut = endDate.toISOString().split('T')[0];
-                
+
                 const source = detectSource(event.summary, icalConfig.url);
-                const totalAmount = calculateTotalAmount(accommodation, event.dtstart, adjustedCheckOut);
+
+                // Não calcula valor automaticamente para Booking e Airbnb
+                const shouldCalculateAmount = source !== 'booking' && source !== 'airbnb';
+                const totalAmount = shouldCalculateAmount ? calculateTotalAmount(accommodation, event.dtstart, adjustedCheckOut) : null;
 
                 const existingReservations = await base44.entities.Reservation.filter({ 
                   external_id: event.uid,
@@ -225,20 +228,24 @@ Deno.serve(async (req) => {
                     check_in: event.dtstart,
                     check_out: adjustedCheckOut,
                     notes: `Importado via ${icalConfig.name}`,
-                    total_amount: totalAmount,
                     source: source,
                     status: 'confirmed'
                   };
-                  
+
+                  // Só atualiza o valor se não for Booking/Airbnb
+                  if (shouldCalculateAmount) {
+                    updateData.total_amount = totalAmount;
+                  }
+
                   // Só atualiza o nome se ainda for "Reservado" ou vazio (não foi editado manualmente)
                   const currentName = existing.guest_name || '';
                   if (currentName === 'Reservado' || currentName === '' || currentName === 'Reserva iCal') {
                     updateData.guest_name = event.summary || 'Reservado';
                   }
-                  
+
                   await base44.entities.Reservation.update(existing.id, updateData);
                 } else {
-                  await base44.entities.Reservation.create({
+                  const newReservation = {
                     company_id,
                     accommodation_id: accommodation.id,
                     external_id: event.uid,
@@ -247,9 +254,15 @@ Deno.serve(async (req) => {
                     check_in: event.dtstart,
                     check_out: adjustedCheckOut,
                     guest_name: event.summary || 'Reservado',
-                    notes: `Importado via ${icalConfig.name}`,
-                    total_amount: totalAmount
-                  });
+                    notes: `Importado via ${icalConfig.name}`
+                  };
+
+                  // Só adiciona valor se não for Booking/Airbnb
+                  if (shouldCalculateAmount) {
+                    newReservation.total_amount = totalAmount;
+                  }
+
+                  await base44.entities.Reservation.create(newReservation);
                 }
               }
 
