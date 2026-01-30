@@ -115,24 +115,16 @@ Deno.serve(async (req) => {
     console.log('Tentando enviar email para:', normalizedEmail);
     console.log('Assunto:', `✅ Confirmação de Reserva - ${company_name}`);
     
-    let result;
     try {
-      result = await base44.functions.invoke('sendEmailViaResend', {
+      await base44.asServiceRole.integrations.Core.SendEmail({
+        from_name: company_name,
         to: normalizedEmail,
         subject: `✅ Confirmação de Reserva - ${company_name}`,
-        html: emailHtml,
-        from_name: company_name
+        body: emailHtml
       });
       console.log('✅ Email enviado com sucesso para:', normalizedEmail);
-      console.log('Resultado da API:', JSON.stringify(result));
     } catch (emailError) {
-      console.error('❌ Erro ao chamar API de email:', emailError);
-      
-      // Verifica se é erro de rate limit
-      if (emailError.message && emailError.message.includes('Rate limit')) {
-        throw new Error('Limite de envio de emails atingido. Por favor, aguarde alguns minutos antes de tentar novamente.');
-      }
-      
+      console.error('❌ Erro ao enviar email:', emailError);
       throw emailError;
     }
 
