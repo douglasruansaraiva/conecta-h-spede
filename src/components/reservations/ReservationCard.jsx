@@ -56,9 +56,10 @@ export default function ReservationCard({
 
     setSendingEmail(true);
     try {
+      const normalizedEmail = reservation.guest_email.toLowerCase().trim();
       const response = await base44.functions.invoke('sendReservationConfirmation', {
         reservation_id: reservation.id,
-        guest_email: reservation.guest_email,
+        guest_email: normalizedEmail,
         guest_name: reservation.guest_name || 'Hóspede',
         accommodation_name: accommodation?.name || 'Acomodação',
         check_in: reservation.check_in,
