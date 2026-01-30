@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, User, Phone, Mail, Home, CreditCard, MoreHorizontal, Trash2 } from "lucide-react";
+import { Calendar, User, Phone, Mail, Home, CreditCard, MoreHorizontal, Trash2, Send } from "lucide-react";
+import { base44 } from '@/api/base44Client';
+import { toast } from "sonner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,18 +33,55 @@ const sourceConfig = {
 export default function ReservationCard({ 
   reservation, 
   accommodation,
+  company,
   onEdit,
   onStatusChange,
   onAddPayment,
   onDelete,
   compact = false 
 }) {
+  const [sendingEmail, setSendingEmail] = useState(false);
   const checkIn = parseISO(reservation.check_in);
   const checkOut = parseISO(reservation.check_out);
   const nights = differenceInDays(checkOut, checkIn);
   const status = statusConfig[reservation.status] || statusConfig.pending;
   const source = sourceConfig[reservation.source] || sourceConfig.other;
   const pendingAmount = (reservation.total_amount || 0) - (reservation.paid_amount || 0);
+
+  const handleSendConfirmationEmail = async () => {
+    if (!reservation.guest_email) {
+      toast.error('Email do hóspede não encontrado');
+      return;
+    }
+
+    setSendingEmail(true);
+    try {
+      await base44.functions.invoke('sendReservationConfirmation', {
+        reservation_id: reservation.id,
+        guest_email: reservation.guest_email,
+        guest_name: reservation.guest_name || 'Hóspede',
+        accommodation_name: accommodation?.name || 'Acomodação',
+        check_in: reservation.check_in,
+        check_out: reservation.check_out,
+        guests_count: reservation.guests_count,
+        total_amount: reservation.total_amount,
+        paid_amount: reservation.paid_amount || 0,
+        remaining_amount: pendingAmount,
+        company_name: company?.name || '',
+        company_phone: company?.phone || '',
+        company_email: company?.email || '',
+        check_in_time: company?.check_in_time || '14:00',
+        check_out_time: company?.check_out_time || '12:00',
+        payment_instructions: company?.payment_instructions || '',
+        company_id: company?.id
+      });
+      toast.success('Email de confirmação enviado com sucesso!');
+    } catch (error) {
+      toast.error('Erro ao enviar email: ' + error.message);
+    } finally {
+      setSendingEmail(false);
+    }
+  };
 
   if (compact) {
     return (
@@ -105,6 +144,13 @@ export default function ReservationCard({
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem onClick={onAddPayment}>Adicionar Pagamento</DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={handleSendConfirmationEmail}
+                  disabled={sendingEmail || !reservation.guest_email}
+                >
+                  <Send className="w-4 h-4 mr-2" />
+                  {sendingEmail ? 'Enviando...' : 'Enviar Email de Confirmação'}
+                </DropdownMenuItem>
                 {reservation.status !== 'cancelled' && reservation.status !== 'checked_out' && (
                   <DropdownMenuItem 
                     onClick={() => onStatusChange('cancelled')}

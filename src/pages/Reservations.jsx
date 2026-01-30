@@ -179,6 +179,7 @@ function ReservationsContent({ user, company }) {
                   key={reservation.id}
                   reservation={reservation}
                   accommodation={accommodations.find(a => a.id === reservation.accommodation_id)}
+                  company={company}
                   onEdit={() => handleEdit(reservation)}
                   onStatusChange={(status) => handleStatusChange(reservation, status)}
                   onAddPayment={() => handleAddPayment(reservation)}
