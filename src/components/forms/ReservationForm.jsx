@@ -497,11 +497,11 @@ export default function ReservationForm({
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
-              Cancelar
+            Cancelar
             </Button>
             <Button type="submit" disabled={loading || !!dateError} className="bg-gradient-to-r from-[#2C5F5D] to-[#3A7A77] hover:from-[#234B49] hover:to-[#2C5F5D] text-white shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
-              {loading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-              {reservation ? 'Salvar' : 'Criar Reserva'}
+            {loading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+            {reservation ? 'Salvar Alterações' : 'Criar Reserva'}
             </Button>
           </DialogFooter>
         </form>

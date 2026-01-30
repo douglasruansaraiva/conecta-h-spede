@@ -91,20 +91,20 @@ export default function ReservationCard({
                 <DropdownMenuItem onClick={onEdit}>Editar Reserva</DropdownMenuItem>
                 {reservation.status === 'pending' && (
                   <DropdownMenuItem onClick={() => onStatusChange('confirmed')}>
-                    Confirmar
+                    Confirmar Reserva
                   </DropdownMenuItem>
                 )}
                 {reservation.status === 'confirmed' && (
                   <DropdownMenuItem onClick={() => onStatusChange('checked_in')}>
-                    Check-in
+                    Fazer Check-in
                   </DropdownMenuItem>
                 )}
                 {reservation.status === 'checked_in' && (
                   <DropdownMenuItem onClick={() => onStatusChange('checked_out')}>
-                    Check-out
+                    Fazer Check-out
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuItem onClick={onAddPayment}>Registrar Pagamento</DropdownMenuItem>
+                <DropdownMenuItem onClick={onAddPayment}>Adicionar Pagamento</DropdownMenuItem>
                 {reservation.status !== 'cancelled' && reservation.status !== 'checked_out' && (
                   <DropdownMenuItem 
                     onClick={() => onStatusChange('cancelled')}

@@ -588,7 +588,7 @@ export default function AccommodationForm({ open, onClose, accommodation, compan
             </Button>
             <Button type="submit" disabled={loading} className="bg-gradient-to-r from-[#2C5F5D] to-[#3A7A77] hover:from-[#234B49] hover:to-[#2C5F5D] text-white shadow-md">
               {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-              {accommodation ? 'Salvar' : 'Criar Acomodação'}
+              {accommodation ? 'Salvar Alterações' : 'Criar Acomodação'}
             </Button>
           </DialogFooter>
         </form>
