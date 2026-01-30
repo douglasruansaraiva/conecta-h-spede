@@ -230,9 +230,12 @@ export default function Reservas() {
       let guestId = null;
       
       if (formData.guest_email) {
+        // Normalize email before saving
+        const normalizedEmail = formData.guest_email.toLowerCase().trim();
+        
         const existingGuests = await base44.entities.Guest.filter({ 
           company_id: company.id, 
-          email: formData.guest_email 
+          email: normalizedEmail 
         });
 
         if (existingGuests.length > 0) {
@@ -247,13 +250,16 @@ export default function Reservas() {
           const newGuest = await base44.entities.Guest.create({
             company_id: company.id,
             name: formData.guest_name,
-            email: formData.guest_email,
+            email: normalizedEmail,
             phone: formData.guest_phone
           });
           guestId = newGuest.id;
         }
       }
 
+      // Normalize email before saving reservation
+      const normalizedEmail = formData.guest_email ? formData.guest_email.toLowerCase().trim() : '';
+      
       // Create reservation - SEMPRE com status pending até confirmar pagamento
       const reservation = await base44.entities.Reservation.create({
         company_id: company.id,
@@ -262,7 +268,7 @@ export default function Reservas() {
         check_in: format(selectedDates.start, 'yyyy-MM-dd'),
         check_out: format(selectedDates.end, 'yyyy-MM-dd'),
         guest_name: formData.guest_name,
-        guest_email: formData.guest_email,
+        guest_email: normalizedEmail,
         guest_phone: formData.guest_phone,
         guests_count: parseInt(formData.guests_count) || 1,
         notes: formData.notes,
@@ -783,7 +789,7 @@ export default function Reservas() {
                           <Input
                             type="email"
                             value={formData.guest_email}
-                            onChange={(e) => setFormData({ ...formData, guest_email: e.target.value })}
+                            onChange={(e) => setFormData({ ...formData, guest_email: e.target.value.toLowerCase().trim() })}
                             required
                             className="bg-white border-slate-300"
                           />
