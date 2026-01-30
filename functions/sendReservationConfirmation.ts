@@ -117,11 +117,11 @@ Deno.serve(async (req) => {
     
     let result;
     try {
-      result = await base44.integrations.Core.SendEmail({
-        from_name: company_name,
+      result = await base44.functions.invoke('sendEmailViaResend', {
         to: normalizedEmail,
         subject: `✅ Confirmação de Reserva - ${company_name}`,
-        body: emailHtml
+        body: emailHtml,
+        from_name: company_name
       });
       console.log('✅ Email enviado com sucesso para:', normalizedEmail);
       console.log('Resultado da API:', JSON.stringify(result));
