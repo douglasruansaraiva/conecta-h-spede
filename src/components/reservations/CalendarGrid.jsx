@@ -7,7 +7,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import ReservationNotesDialog from './ReservationNotesDialog';
-import BlockedDateNotesDialog from './BlockedDateNotesDialog';
+import ExternalReservationDialog from './ExternalReservationDialog';
 
 export default function CalendarGrid({ 
   reservations = [], 
@@ -27,7 +27,7 @@ export default function CalendarGrid({
   const [selectedAccommodationId, setSelectedAccommodationId] = useState('all');
   const [notesDialogOpen, setNotesDialogOpen] = useState(false);
   const [selectedReservation, setSelectedReservation] = useState(null);
-  const [blockedNotesDialogOpen, setBlockedNotesDialogOpen] = useState(false);
+  const [externalDialogOpen, setExternalDialogOpen] = useState(false);
   const [selectedBlockedDate, setSelectedBlockedDate] = useState(null);
 
   const days = useMemo(() => {
@@ -118,10 +118,10 @@ export default function CalendarGrid({
       return;
     }
     
-    // If clicking on a blocked date, open blocked date notes dialog
+    // If clicking on a blocked date, open external reservation dialog
     if (status === 'blocked' && blocked) {
       setSelectedBlockedDate(blocked);
-      setBlockedNotesDialogOpen(true);
+      setExternalDialogOpen(true);
       return;
     }
     
@@ -330,10 +330,10 @@ export default function CalendarGrid({
         onOpenChange={setNotesDialogOpen}
       />
       
-      <BlockedDateNotesDialog
+      <ExternalReservationDialog
         blockedDate={selectedBlockedDate}
-        open={blockedNotesDialogOpen}
-        onOpenChange={setBlockedNotesDialogOpen}
+        open={externalDialogOpen}
+        onOpenChange={setExternalDialogOpen}
       />
     </div>
     </TooltipProvider>
