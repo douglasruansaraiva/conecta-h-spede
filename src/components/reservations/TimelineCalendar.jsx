@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ReservationNotesDialog from './ReservationNotesDialog';
-import BlockedDateNotesDialog from './BlockedDateNotesDialog';
+import ExternalReservationDialog from './ExternalReservationDialog';
 
 export default function TimelineCalendar({ 
   reservations = [], 
@@ -15,7 +15,7 @@ export default function TimelineCalendar({
   const [startDate, setStartDate] = useState(() => startOfWeek(new Date(), { weekStartsOn: 0 }));
   const [notesDialogOpen, setNotesDialogOpen] = useState(false);
   const [selectedReservation, setSelectedReservation] = useState(null);
-  const [blockedNotesDialogOpen, setBlockedNotesDialogOpen] = useState(false);
+  const [externalDialogOpen, setExternalDialogOpen] = useState(false);
   const [selectedBlockedDate, setSelectedBlockedDate] = useState(null);
   
   // Generate 14 days (2 weeks)
@@ -60,7 +60,7 @@ export default function TimelineCalendar({
       setNotesDialogOpen(true);
     } else if (blocked) {
       setSelectedBlockedDate(blocked);
-      setBlockedNotesDialogOpen(true);
+      setExternalDialogOpen(true);
     }
   };
 
@@ -209,10 +209,10 @@ export default function TimelineCalendar({
         onOpenChange={setNotesDialogOpen}
       />
       
-      <BlockedDateNotesDialog
+      <ExternalReservationDialog
         blockedDate={selectedBlockedDate}
-        open={blockedNotesDialogOpen}
-        onOpenChange={setBlockedNotesDialogOpen}
+        open={externalDialogOpen}
+        onOpenChange={setExternalDialogOpen}
       />
     </div>
   );
