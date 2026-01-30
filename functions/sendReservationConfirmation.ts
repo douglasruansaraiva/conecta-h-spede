@@ -120,7 +120,7 @@ Deno.serve(async (req) => {
       result = await base44.functions.invoke('sendEmailViaResend', {
         to: normalizedEmail,
         subject: `✅ Confirmação de Reserva - ${company_name}`,
-        body: emailHtml,
+        html: emailHtml,
         from_name: company_name
       });
       console.log('✅ Email enviado com sucesso para:', normalizedEmail);
