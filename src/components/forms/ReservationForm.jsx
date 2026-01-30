@@ -288,37 +288,26 @@ export default function ReservationForm({
       total_amount: totalAmount
     };
 
-    let savedReservation;
-    if (reservation) {
-      savedReservation = await base44.entities.Reservation.update(reservation.id, data);
-    } else {
-      savedReservation = await base44.entities.Reservation.create(data);
-    }
-
-    // Enviar email de confirmação se for reserva nova e tiver email
-    if (!reservation && formData.guest_email) {
-      try {
-        // Buscar dados da empresa
-        const companies = await base44.entities.Company.filter({ id: companyId });
-        const company = companies[0];
-        
-        // Buscar nome da acomodação
-        const accommodation = accommodations.find(a => a.id === formData.accommodation_id);
-        
-        // Email será enviado apenas quando um pagamento for registrado
-        // através do PaymentForm
-      } catch (error) {
-        console.error('Erro ao enviar email:', error);
+      let savedReservation;
+      if (reservation) {
+        savedReservation = await base44.entities.Reservation.update(reservation.id, data);
+      } else {
+        savedReservation = await base44.entities.Reservation.create(data);
       }
-    }
 
-    setLoading(false);
-    onSave();
-    onClose();
-    
-    // Show success toast
-    const { toast } = await import("sonner");
-    toast.success(reservation ? 'Reserva atualizada!' : 'Reserva criada e email enviado!');
+      setLoading(false);
+      onSave();
+      onClose();
+      
+      // Show success toast
+      const { toast } = await import("sonner");
+      toast.success(reservation ? 'Reserva atualizada!' : 'Reserva criada!');
+    } catch (error) {
+      console.error('Erro ao salvar reserva:', error);
+      setLoading(false);
+      const { toast } = await import("sonner");
+      toast.error(error.message || 'Erro ao salvar reserva');
+    }
   };
 
   const nights = formData.check_in && formData.check_out 
