@@ -56,7 +56,7 @@ export default function ReservationCard({
 
     setSendingEmail(true);
     try {
-      await base44.functions.invoke('sendReservationConfirmation', {
+      const response = await base44.functions.invoke('sendReservationConfirmation', {
         reservation_id: reservation.id,
         guest_email: reservation.guest_email,
         guest_name: reservation.guest_name || 'Hóspede',
@@ -75,9 +75,15 @@ export default function ReservationCard({
         payment_instructions: company?.payment_instructions || '',
         company_id: company?.id
       });
-      toast.success('Email de confirmação enviado com sucesso!');
+      
+      if (response?.data?.success) {
+        toast.success('Email de confirmação enviado com sucesso!');
+      } else {
+        toast.error('Erro ao enviar email');
+      }
     } catch (error) {
-      toast.error('Erro ao enviar email: ' + error.message);
+      console.error('Erro ao enviar email:', error);
+      toast.error('Erro ao enviar email: ' + (error.message || 'Erro desconhecido'));
     } finally {
       setSendingEmail(false);
     }
