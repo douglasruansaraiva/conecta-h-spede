@@ -246,7 +246,7 @@ Deno.serve(async (req) => {
                     status: 'confirmed',
                     check_in: event.dtstart,
                     check_out: adjustedCheckOut,
-                    guest_name: event.summary || 'Reserva iCal',
+                    guest_name: event.summary || 'Reservado',
                     notes: `Importado via ${icalConfig.name}`,
                     total_amount: totalAmount
                   });
