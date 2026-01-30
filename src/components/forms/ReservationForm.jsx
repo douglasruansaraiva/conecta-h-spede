@@ -259,12 +259,25 @@ export default function ReservationForm({
       }
     }
 
+    // Converter valor para formato numérico (aceita formato BR e US)
+    let totalAmount = 0;
+    if (formData.total_amount) {
+      const valueStr = String(formData.total_amount);
+      // Se tem vírgula, assume formato BR (2.370,00 ou 370,00)
+      if (valueStr.includes(',')) {
+        totalAmount = parseFloat(valueStr.replace(/\./g, '').replace(',', '.'));
+      } else {
+        // Formato US (2370.00 ou 2370)
+        totalAmount = parseFloat(valueStr);
+      }
+    }
+
     const data = {
       ...formData,
       company_id: companyId,
       guest_id: guestId,
       guests_count: parseInt(formData.guests_count) || 1,
-      total_amount: parseFloat(formData.total_amount) || 0
+      total_amount: totalAmount
     };
 
     let savedReservation;
