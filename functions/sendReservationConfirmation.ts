@@ -28,6 +28,11 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Email, ID da reserva e ID da empresa são obrigatórios' }, { status: 400 });
     }
 
+    // Normalizar email para minúsculas e remover espaços
+    const normalizedEmail = guest_email.toLowerCase().trim();
+    console.log('Email original:', guest_email);
+    console.log('Email normalizado:', normalizedEmail);
+
     // Buscar slug da empresa para gerar link de pagamento
     const companies = await base44.asServiceRole.entities.Company.filter({ id: company_id });
     const company = companies[0];
@@ -107,15 +112,18 @@ Deno.serve(async (req) => {
 </html>
     `.trim();
 
+    console.log('Tentando enviar email para:', normalizedEmail);
+    console.log('Assunto:', `✅ Confirmação de Reserva - ${company_name}`);
+    
     const result = await base44.integrations.Core.SendEmail({
       from_name: company_name,
-      to: guest_email,
+      to: normalizedEmail,
       subject: `✅ Confirmação de Reserva - ${company_name}`,
       body: emailHtml
     });
 
-    console.log('Email enviado com sucesso para:', guest_email);
-    console.log('Resultado:', result);
+    console.log('✅ Email enviado com sucesso para:', normalizedEmail);
+    console.log('Resultado da API:', JSON.stringify(result));
 
     return Response.json({ 
       success: true, 
@@ -123,9 +131,12 @@ Deno.serve(async (req) => {
     });
 
   } catch (error) {
-    console.error('Erro ao enviar email:', error);
+    console.error('❌ Erro ao enviar email:', error);
+    console.error('Detalhes do erro:', JSON.stringify(error));
+    console.error('Stack trace:', error.stack);
     return Response.json({ 
-      error: error.message || 'Erro ao enviar email'
+      error: error.message || 'Erro ao enviar email',
+      details: error.toString()
     }, { status: 500 });
   }
 });
