@@ -205,10 +205,13 @@ export default function ReservationForm({
       // Use selected existing guest
       guestId = selectedGuestId;
     } else if (formData.guest_email) {
+      // Normalize email before saving
+      const normalizedEmail = formData.guest_email.toLowerCase().trim();
+      
       // Check if guest already exists
       const existingGuests = await base44.entities.Guest.filter({ 
         company_id: companyId, 
-        email: formData.guest_email 
+        email: normalizedEmail 
       });
 
       if (existingGuests.length > 0) {
@@ -223,7 +226,7 @@ export default function ReservationForm({
         const newGuest = await base44.entities.Guest.create({
           company_id: companyId,
           name: formData.guest_name,
-          email: formData.guest_email,
+          email: normalizedEmail,
           phone: formData.guest_phone
         });
         guestId = newGuest.id;
@@ -399,7 +402,7 @@ export default function ReservationForm({
                   <Input
                     type="email"
                     value={formData.guest_email}
-                    onChange={(e) => setFormData({ ...formData, guest_email: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, guest_email: e.target.value.toLowerCase().trim() })}
                     placeholder="email@exemplo.com"
                     disabled={guestMode === 'existing' && !selectedGuestId}
                   />
