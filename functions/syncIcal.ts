@@ -221,15 +221,22 @@ Deno.serve(async (req) => {
 
                 if (existingReservations.length > 0) {
                   const existing = existingReservations[0];
-                  await base44.entities.Reservation.update(existing.id, {
+                  const updateData = {
                     check_in: event.dtstart,
                     check_out: adjustedCheckOut,
                     notes: `Importado via ${icalConfig.name}`,
                     total_amount: totalAmount,
                     source: source,
-                    status: 'confirmed',
-                    guest_name: event.summary || 'Reserva iCal'
-                  });
+                    status: 'confirmed'
+                  };
+                  
+                  // Só atualiza o nome se ainda for "Reservado" ou vazio (não foi editado manualmente)
+                  const currentName = existing.guest_name || '';
+                  if (currentName === 'Reservado' || currentName === '' || currentName === 'Reserva iCal') {
+                    updateData.guest_name = event.summary || 'Reservado';
+                  }
+                  
+                  await base44.entities.Reservation.update(existing.id, updateData);
                 } else {
                   await base44.entities.Reservation.create({
                     company_id,
