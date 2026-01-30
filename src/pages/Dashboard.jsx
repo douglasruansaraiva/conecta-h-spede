@@ -23,12 +23,15 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import StatsCard from '@/components/dashboard/StatsCard';
 import ReservationCard from '@/components/reservations/ReservationCard';
+import ExternalReservationCard from '@/components/reservations/ExternalReservationCard';
+import ExternalReservationDialog from '@/components/reservations/ExternalReservationDialog';
 import TimelineCalendar from '@/components/reservations/TimelineCalendar';
 import CompanyGuard from '@/components/auth/CompanyGuard';
 
 function DashboardContent({ user, company }) {
   const [copied, setCopied] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [selectedExternalReservation, setSelectedExternalReservation] = useState(null);
   const queryClient = useQueryClient();
 
   // Auto-sync silencioso a cada 5 minutos
@@ -118,8 +121,21 @@ function DashboardContent({ user, company }) {
     .filter(t => t.type === 'expense' && isWithinInterval(parseISO(t.date), { start: monthStart, end: monthEnd }))
     .reduce((sum, t) => sum + (t.amount || 0), 0);
 
-  const upcomingReservations = reservations
+  // Combinar reservas diretas e externas
+  const directReservations = reservations
     .filter(r => ['pending', 'confirmed'].includes(r.status) && new Date(r.check_in) >= new Date())
+    .map(r => ({ ...r, type: 'direct' }));
+
+  const externalReservations = blockedDates
+    .filter(b => b.source === 'ical_import' && new Date(b.start_date) >= new Date())
+    .map(b => ({ 
+      ...b, 
+      type: 'external',
+      check_in: b.start_date,
+      check_out: b.end_date
+    }));
+
+  const upcomingReservations = [...directReservations, ...externalReservations]
     .sort((a, b) => new Date(a.check_in) - new Date(b.check_in))
     .slice(0, 5);
 
@@ -399,25 +415,45 @@ function DashboardContent({ user, company }) {
                     Nenhuma reserva pendente
                   </p>
                 ) : (
-                  upcomingReservations.map(reservation => (
-                    <ReservationCard
-                      key={reservation.id}
-                      reservation={reservation}
-                      accommodation={accommodations.find(a => a.id === reservation.accommodation_id)}
-                      compact
-                    />
-                  ))
+                  upcomingReservations.map(reservation => {
+                    if (reservation.type === 'external') {
+                      return (
+                        <ExternalReservationCard
+                          key={reservation.id}
+                          blockedDate={reservation}
+                          accommodation={accommodations.find(a => a.id === reservation.accommodation_id)}
+                          onClick={() => setSelectedExternalReservation(reservation)}
+                          compact
+                        />
+                      );
+                    }
+                    return (
+                      <ReservationCard
+                        key={reservation.id}
+                        reservation={reservation}
+                        accommodation={accommodations.find(a => a.id === reservation.accommodation_id)}
+                        compact
+                      />
+                    );
+                  })
                 )}
               </CardContent>
             </Card>
           </div>
         </div>
-      </div>
-    </div>
-  );
-}
+        </div>
 
-export default function Dashboard() {
+        {/* Dialog para editar reservas externas */}
+        <ExternalReservationDialog
+        blockedDate={selectedExternalReservation}
+        open={!!selectedExternalReservation}
+        onOpenChange={(open) => !open && setSelectedExternalReservation(null)}
+        />
+        </div>
+        );
+        }
+
+        export default function Dashboard() {
   return (
     <CompanyGuard>
       {({ user, company }) => <DashboardContent user={user} company={company} />}
