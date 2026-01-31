@@ -115,14 +115,32 @@ Deno.serve(async (req) => {
     console.log('Tentando enviar email para:', normalizedEmail);
     console.log('Assunto:', `✅ Confirmação de Reserva - ${company_name}`);
     
+    const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
+    if (!RESEND_API_KEY) {
+      throw new Error('RESEND_API_KEY não configurada');
+    }
+
     try {
-      // Usar integração Core.SendEmail do Base44
-      await base44.asServiceRole.integrations.Core.SendEmail({
-        from_name: company_name,
-        to: normalizedEmail,
-        subject: `✅ Confirmação de Reserva - ${company_name}`,
-        body: emailHtml,
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${RESEND_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: 'onboarding@resend.dev',
+          to: [normalizedEmail],
+          subject: `✅ Confirmação de Reserva - ${company_name}`,
+          html: emailHtml,
+        }),
       });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        console.error('Erro Resend:', result);
+        throw new Error(result.message || 'Erro ao enviar email via Resend');
+      }
 
       console.log('✅ Email enviado com sucesso para:', normalizedEmail);
     } catch (emailError) {
