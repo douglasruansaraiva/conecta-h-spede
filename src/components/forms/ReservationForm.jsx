@@ -295,10 +295,22 @@ export default function ReservationForm({
         savedReservation = await base44.entities.Reservation.create(data);
       }
 
+      // Enviar email de confirmação se houver email do hóspede
+      if (formData.guest_email) {
+        try {
+          await base44.functions.invoke('sendReservationConfirmation', {
+            reservation_id: savedReservation.id,
+            company_id: companyId
+          });
+        } catch (emailError) {
+          console.error('Erro ao enviar email:', emailError);
+        }
+      }
+
       setLoading(false);
       onSave();
       onClose();
-      
+
       // Show success toast
       const { toast } = await import("sonner");
       toast.success(reservation ? 'Reserva atualizada!' : 'Reserva criada!');
