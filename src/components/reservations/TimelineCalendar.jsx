@@ -163,7 +163,7 @@ export default function TimelineCalendar({
                         sourceColors[source] || sourceColors.blocked
                       )}>
                         <div className="text-[9px] font-semibold truncate w-full text-center">
-                          {reservation?.guest_name || blocked?.reason?.split(':')[0] || 'Bloqueado'}
+                          {reservation?.guest_name || blocked?.guest_name || blocked?.reason?.split(':')[0] || 'Bloqueado'}
                         </div>
                         {reservation?.status && (
                           <div className="text-[8px] mt-0.5 opacity-70">
