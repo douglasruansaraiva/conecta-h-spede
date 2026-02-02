@@ -311,12 +311,29 @@ function DashboardContent({ user, company }) {
             )}
             <Button
               variant="outline"
-              onClick={syncAllCalendars}
+              onClick={async () => {
+                try {
+                  setSyncing(true);
+                  const response = await base44.functions.invoke('cleanupIcalReservations', { 
+                    company_id: company.id 
+                  });
+                  if (response.data.success) {
+                    toast.success(`${response.data.moved} reservas convertidas em bloqueios`);
+                    queryClient.invalidateQueries(['reservations']);
+                    queryClient.invalidateQueries(['blockedDates']);
+                    setTimeout(() => window.location.reload(), 1000);
+                  }
+                } catch (error) {
+                  toast.error('Erro ao limpar reservas');
+                } finally {
+                  setSyncing(false);
+                }
+              }}
               disabled={syncing}
               className="w-full sm:w-auto"
             >
               <RefreshCw className={`w-4 h-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
-              {syncing ? 'Sincronizando...' : 'Sincronizar iCal'}
+              {syncing ? 'Limpando...' : 'Limpar Reservas iCal'}
             </Button>
             <Link to={createPageUrl('Reservations')} className="w-full sm:w-auto">
               <Button className="bg-gradient-to-r from-[#2C5F5D] to-[#3A7A77] hover:from-[#234B49] hover:to-[#2C5F5D] text-white w-full shadow-md">
