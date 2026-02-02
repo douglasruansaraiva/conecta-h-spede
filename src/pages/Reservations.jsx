@@ -195,18 +195,30 @@ function ReservationsContent({ user, company }) {
                 <p className="text-slate-500">Nenhuma reserva encontrada</p>
               </div>
             ) : (
-              filteredReservations.map(reservation => (
-                <ReservationCard
-                  key={reservation.id}
-                  reservation={reservation}
-                  accommodation={accommodations.find(a => a.id === reservation.accommodation_id)}
-                  company={company}
-                  onEdit={() => handleEdit(reservation)}
-                  onStatusChange={(status) => handleStatusChange(reservation, status)}
-                  onAddPayment={() => handleAddPayment(reservation)}
-                  onDelete={() => handleDelete(reservation)}
-                />
-              ))
+              filteredReservations.map(reservation => {
+                if (reservation.type === 'external') {
+                  return (
+                    <ExternalReservationCard
+                      key={reservation.id}
+                      blockedDate={reservation}
+                      accommodation={accommodations.find(a => a.id === reservation.accommodation_id)}
+                      onClick={() => setSelectedExternalReservation(reservation)}
+                    />
+                  );
+                }
+                return (
+                  <ReservationCard
+                    key={reservation.id}
+                    reservation={reservation}
+                    accommodation={accommodations.find(a => a.id === reservation.accommodation_id)}
+                    company={company}
+                    onEdit={() => handleEdit(reservation)}
+                    onStatusChange={(status) => handleStatusChange(reservation, status)}
+                    onAddPayment={() => handleAddPayment(reservation)}
+                    onDelete={() => handleDelete(reservation)}
+                  />
+                );
+              })
             )}
           </div>
         )}
