@@ -246,6 +246,12 @@ function ReservationsContent({ user, company }) {
           queryClient.invalidateQueries(['transactions']);
         }}
       />
+
+      <ExternalReservationDialog
+        blockedDate={selectedExternalReservation}
+        open={!!selectedExternalReservation}
+        onOpenChange={(open) => !open && setSelectedExternalReservation(null)}
+      />
     </div>
   );
 }
