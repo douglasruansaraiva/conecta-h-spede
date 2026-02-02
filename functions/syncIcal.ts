@@ -206,62 +206,54 @@ Deno.serve(async (req) => {
                 }
 
               } else {
-                // É uma reserva real
-                // No iCal, DTEND já é o dia de checkout (exclusivo), não precisa ajustar
+                // É uma reserva externa - criar apenas BlockedDate
                 const adjustedCheckOut = event.dtend;
-
                 const source = detectSource(event.summary, icalConfig.url);
+                
+                const guestName = event.summary || 'Reservado';
+                const reason = `${icalConfig.name}: ${guestName}`;
 
-                // Não calcula valor automaticamente para Booking e Airbnb
-                const shouldCalculateAmount = source !== 'booking' && source !== 'airbnb';
-                const totalAmount = shouldCalculateAmount ? calculateTotalAmount(accommodation, event.dtstart, adjustedCheckOut) : null;
+                // Verificar se já existe um BlockedDate para este período
+                const existingBlocks = await base44.entities.BlockedDate.filter({
+                  accommodation_id: accommodation.id,
+                  start_date: event.dtstart,
+                  end_date: adjustedCheckOut,
+                  source: 'ical_import'
+                });
 
-                const existingReservations = await base44.entities.Reservation.filter({ 
+                if (existingBlocks.length > 0) {
+                  // Atualizar o BlockedDate existente
+                  const currentGuestName = existingBlocks[0].guest_name || '';
+                  const updateData = {
+                    reason: reason
+                  };
+                  
+                  // Só atualiza o nome se não foi editado manualmente
+                  if (currentGuestName === 'Reservado' || currentGuestName === '' || currentGuestName === guestName) {
+                    updateData.guest_name = guestName;
+                  }
+
+                  await base44.entities.BlockedDate.update(existingBlocks[0].id, updateData);
+                } else {
+                  // Criar novo BlockedDate
+                  await base44.entities.BlockedDate.create({
+                    company_id,
+                    accommodation_id: accommodation.id,
+                    start_date: event.dtstart,
+                    end_date: adjustedCheckOut,
+                    reason: reason,
+                    source: 'ical_import',
+                    guest_name: guestName
+                  });
+                }
+
+                // Deletar reserva antiga se existir (limpeza de dados antigos)
+                const oldReservations = await base44.entities.Reservation.filter({
                   external_id: event.uid,
                   accommodation_id: accommodation.id
                 });
-
-                if (existingReservations.length > 0) {
-                  const existing = existingReservations[0];
-                  const updateData = {
-                    check_in: event.dtstart,
-                    check_out: adjustedCheckOut,
-                    notes: `Importado via ${icalConfig.name}`,
-                    source: source,
-                    status: 'confirmed'
-                  };
-
-                  // Só atualiza o valor se não for Booking/Airbnb
-                  if (shouldCalculateAmount) {
-                    updateData.total_amount = totalAmount;
-                  }
-
-                  // Só atualiza o nome se ainda for "Reservado" ou vazio (não foi editado manualmente)
-                  const currentName = existing.guest_name || '';
-                  if (currentName === 'Reservado' || currentName === '' || currentName === 'Reserva iCal') {
-                    updateData.guest_name = event.summary || 'Reservado';
-                  }
-
-                  await base44.entities.Reservation.update(existing.id, updateData);
-                } else {
-                  const newReservation = {
-                    company_id,
-                    accommodation_id: accommodation.id,
-                    external_id: event.uid,
-                    source: source,
-                    status: 'confirmed',
-                    check_in: event.dtstart,
-                    check_out: adjustedCheckOut,
-                    guest_name: event.summary || 'Reservado',
-                    notes: `Importado via ${icalConfig.name}`
-                  };
-
-                  // Só adiciona valor se não for Booking/Airbnb
-                  if (shouldCalculateAmount) {
-                    newReservation.total_amount = totalAmount;
-                  }
-
-                  await base44.entities.Reservation.create(newReservation);
+                if (oldReservations.length > 0) {
+                  await base44.entities.Reservation.delete(oldReservations[0].id);
                 }
               }
 
