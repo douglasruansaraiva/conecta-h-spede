@@ -11,6 +11,8 @@ import {
   List
 } from "lucide-react";
 import ReservationCard from '@/components/reservations/ReservationCard';
+import ExternalReservationCard from '@/components/reservations/ExternalReservationCard';
+import ExternalReservationDialog from '@/components/reservations/ExternalReservationDialog';
 import CalendarGrid from '@/components/reservations/CalendarGrid';
 import ReservationForm from '@/components/forms/ReservationForm';
 import PaymentForm from '@/components/forms/PaymentForm';
