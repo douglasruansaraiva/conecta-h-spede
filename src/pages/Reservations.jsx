@@ -11,8 +11,6 @@ import {
   List
 } from "lucide-react";
 import ReservationCard from '@/components/reservations/ReservationCard';
-import ExternalReservationCard from '@/components/reservations/ExternalReservationCard';
-import ExternalReservationDialog from '@/components/reservations/ExternalReservationDialog';
 import CalendarGrid from '@/components/reservations/CalendarGrid';
 import ReservationForm from '@/components/forms/ReservationForm';
 import PaymentForm from '@/components/forms/PaymentForm';
@@ -27,7 +25,6 @@ function ReservationsContent({ user, company }) {
   const [paymentReservation, setPaymentReservation] = useState(null);
   const [selectedAccommodation, setSelectedAccommodation] = useState(null);
   const [selectedDates, setSelectedDates] = useState(null);
-  const [selectedExternalReservation, setSelectedExternalReservation] = useState(null);
   const queryClient = useQueryClient();
 
   const { data: accommodations = [] } = useQuery({
@@ -195,30 +192,18 @@ function ReservationsContent({ user, company }) {
                 <p className="text-slate-500">Nenhuma reserva encontrada</p>
               </div>
             ) : (
-              filteredReservations.map(reservation => {
-                if (reservation.type === 'external') {
-                  return (
-                    <ExternalReservationCard
-                      key={reservation.id}
-                      blockedDate={reservation}
-                      accommodation={accommodations.find(a => a.id === reservation.accommodation_id)}
-                      onClick={() => setSelectedExternalReservation(reservation)}
-                    />
-                  );
-                }
-                return (
-                  <ReservationCard
-                    key={reservation.id}
-                    reservation={reservation}
-                    accommodation={accommodations.find(a => a.id === reservation.accommodation_id)}
-                    company={company}
-                    onEdit={() => handleEdit(reservation)}
-                    onStatusChange={(status) => handleStatusChange(reservation, status)}
-                    onAddPayment={() => handleAddPayment(reservation)}
-                    onDelete={() => handleDelete(reservation)}
-                  />
-                );
-              })
+              filteredReservations.map(reservation => (
+                <ReservationCard
+                  key={reservation.id}
+                  reservation={reservation}
+                  accommodation={accommodations.find(a => a.id === reservation.accommodation_id)}
+                  company={company}
+                  onEdit={() => handleEdit(reservation)}
+                  onStatusChange={(status) => handleStatusChange(reservation, status)}
+                  onAddPayment={() => handleAddPayment(reservation)}
+                  onDelete={() => handleDelete(reservation)}
+                />
+              ))
             )}
           </div>
         )}
@@ -245,12 +230,6 @@ function ReservationsContent({ user, company }) {
           queryClient.invalidateQueries(['reservations']);
           queryClient.invalidateQueries(['transactions']);
         }}
-      />
-
-      <ExternalReservationDialog
-        blockedDate={selectedExternalReservation}
-        open={!!selectedExternalReservation}
-        onOpenChange={(open) => !open && setSelectedExternalReservation(null)}
       />
     </div>
   );
