@@ -27,6 +27,7 @@ function ReservationsContent({ user, company }) {
   const [paymentReservation, setPaymentReservation] = useState(null);
   const [selectedAccommodation, setSelectedAccommodation] = useState(null);
   const [selectedDates, setSelectedDates] = useState(null);
+  const [selectedExternalReservation, setSelectedExternalReservation] = useState(null);
   const queryClient = useQueryClient();
 
   const { data: accommodations = [] } = useQuery({
