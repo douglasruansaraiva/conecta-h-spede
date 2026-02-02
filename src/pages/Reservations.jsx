@@ -54,7 +54,25 @@ function ReservationsContent({ user, company }) {
     enabled: !!company?.id
   });
 
-  const filteredReservations = reservations.filter(r => {
+  // Combinar reservas diretas com reservas externas (do iCal)
+  const externalReservations = blockedDates
+    .filter(b => b.source === 'ical_import')
+    .map(b => ({
+      ...b,
+      id: b.id,
+      type: 'external',
+      guest_name: b.guest_name || b.reason?.split(':')[1]?.trim() || 'Hóspede Externo',
+      check_in: b.start_date,
+      check_out: b.end_date,
+      status: 'confirmed',
+      source: b.reason?.toLowerCase().includes('airbnb') ? 'airbnb' : 
+              b.reason?.toLowerCase().includes('booking') ? 'booking' : 
+              b.reason?.toLowerCase().includes('vrbo') ? 'vrbo' : 'other'
+    }));
+
+  const allReservations = [...reservations.map(r => ({ ...r, type: 'direct' })), ...externalReservations];
+
+  const filteredReservations = allReservations.filter(r => {
     const matchesSearch = !search || 
       r.guest_name?.toLowerCase().includes(search.toLowerCase()) ||
       r.guest_email?.toLowerCase().includes(search.toLowerCase());
