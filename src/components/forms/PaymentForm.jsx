@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Loader2 } from "lucide-react";
 import { format } from 'date-fns';
 import { base44 } from "@/api/base44Client";
+import { sendReservationConfirmationEmail } from "@/components/utils/sendConfirmationEmail";
 
 export default function PaymentForm({ 
   open, 

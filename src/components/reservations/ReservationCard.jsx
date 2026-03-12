@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Calendar, User, Phone, Mail, Home, CreditCard, MoreHorizontal, Trash2, Send } from "lucide-react";
 import { base44 } from '@/api/base44Client';
 import { toast } from "sonner";
+import { sendReservationConfirmationEmail } from "@/components/utils/sendConfirmationEmail";
 import {
   DropdownMenu,
   DropdownMenuContent,
