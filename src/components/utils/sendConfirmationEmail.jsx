@@ -18,6 +18,7 @@ export async function sendReservationConfirmationEmail({
   payment_instructions
 }) {
   if (!guest_email) return;
+  guest_email = guest_email.toLowerCase().trim();
 
   const remaining = (total_amount || 0) - (paid_amount || 0);
 
