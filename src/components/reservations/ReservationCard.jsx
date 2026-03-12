@@ -57,10 +57,8 @@ export default function ReservationCard({
 
     setSendingEmail(true);
     try {
-      const normalizedEmail = reservation.guest_email.toLowerCase().trim();
-      const response = await base44.functions.invoke('sendReservationConfirmation', {
-        reservation_id: reservation.id,
-        guest_email: normalizedEmail,
+      await sendReservationConfirmationEmail({
+        guest_email: reservation.guest_email.toLowerCase().trim(),
         guest_name: reservation.guest_name || 'Hóspede',
         accommodation_name: accommodation?.name || 'Acomodação',
         check_in: reservation.check_in,
@@ -68,32 +66,17 @@ export default function ReservationCard({
         guests_count: reservation.guests_count,
         total_amount: reservation.total_amount,
         paid_amount: reservation.paid_amount || 0,
-        remaining_amount: pendingAmount,
         company_name: company?.name || '',
         company_phone: company?.phone || '',
         company_email: company?.email || '',
         check_in_time: company?.check_in_time || '14:00',
         check_out_time: company?.check_out_time || '12:00',
-        payment_instructions: company?.payment_instructions || '',
-        company_id: company?.id
+        payment_instructions: company?.payment_instructions || ''
       });
-      
-      if (response?.data?.success) {
-        toast.success('Email de confirmação enviado com sucesso!');
-      } else {
-        toast.error('Erro ao enviar email');
-      }
+      toast.success('Email de confirmação enviado com sucesso!');
     } catch (error) {
       console.error('Erro ao enviar email:', error);
-      
-      // Mensagem específica para rate limit
-      if (error.message && error.message.includes('Rate limit')) {
-        toast.error('Limite de emails atingido. Aguarde alguns minutos e tente novamente.');
-      } else if (error.response?.data?.error) {
-        toast.error('Erro ao enviar email: ' + error.response.data.error);
-      } else {
-        toast.error('Erro ao enviar email: ' + (error.message || 'Erro desconhecido'));
-      }
+      toast.error('Erro ao enviar email: ' + (error.message || 'Erro desconhecido'));
     } finally {
       setSendingEmail(false);
     }

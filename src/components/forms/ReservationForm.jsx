@@ -299,9 +299,25 @@ export default function ReservationForm({
       // Enviar email de confirmação se houver email do hóspede
       if (formData.guest_email) {
         try {
-          await base44.functions.invoke('sendReservationConfirmation', {
-            reservation_id: savedReservation.id,
-            company_id: companyId
+          const companies = await base44.entities.Company.filter({ id: companyId });
+          const comp = companies[0];
+          const acc = accommodations.find(a => a.id === formData.accommodation_id);
+
+          await sendReservationConfirmationEmail({
+            guest_email: formData.guest_email,
+            guest_name: formData.guest_name,
+            accommodation_name: acc?.name,
+            check_in: formData.check_in,
+            check_out: formData.check_out,
+            guests_count: formData.guests_count || 1,
+            total_amount: parseFloat(String(formData.total_amount).replace(/\./g, '').replace(',', '.')) || 0,
+            paid_amount: 0,
+            company_name: comp?.name,
+            company_phone: comp?.phone,
+            company_email: comp?.email,
+            check_in_time: comp?.check_in_time,
+            check_out_time: comp?.check_out_time,
+            payment_instructions: comp?.payment_instructions
           });
         } catch (emailError) {
           console.error('Erro ao enviar email:', emailError);
