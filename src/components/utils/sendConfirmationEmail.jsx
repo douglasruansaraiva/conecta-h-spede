@@ -82,9 +82,10 @@ export async function sendReservationConfirmationEmail({
 </body>
 </html>`;
 
-  await base44.integrations.Core.SendEmail({
+  const result = await base44.integrations.Core.SendEmail({
     to: guest_email,
     subject: `✅ Confirmação de Reserva - ${company_name || "Sua Hospedagem"}`,
     body
   });
+  console.log("[SendEmail] resultado:", result);
 }
