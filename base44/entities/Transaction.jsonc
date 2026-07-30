@@ -1,0 +1,74 @@
+{
+  "name": "Transaction",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string"
+    },
+    "reservation_id": {
+      "type": "string",
+      "description": "Vinculado a uma reserva (opcional)"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "income",
+        "expense"
+      ],
+      "default": "income"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "reservation",
+        "extra_service",
+        "cleaning",
+        "maintenance",
+        "utilities",
+        "taxes",
+        "supplies",
+        "marketing",
+        "salary",
+        "other"
+      ],
+      "default": "reservation"
+    },
+    "description": {
+      "type": "string"
+    },
+    "amount": {
+      "type": "number"
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "payment_method": {
+      "type": "string",
+      "enum": [
+        "pix",
+        "credit_card",
+        "debit_card",
+        "cash",
+        "transfer",
+        "other"
+      ],
+      "default": "pix"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "completed",
+        "cancelled"
+      ],
+      "default": "completed"
+    }
+  },
+  "required": [
+    "company_id",
+    "type",
+    "amount",
+    "date"
+  ]
+}

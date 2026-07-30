@@ -1,0 +1,61 @@
+{
+  "name": "SeasonalPrice",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string"
+    },
+    "accommodation_id": {
+      "type": "string",
+      "description": "ID da acomoda\u00e7\u00e3o (ou vazio para aplicar a todas)"
+    },
+    "name": {
+      "type": "string",
+      "description": "Nome da temporada (ex: Carnaval, R\u00e9veillon)"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "price_multiplier": {
+      "type": "number",
+      "description": "Multiplicador do pre\u00e7o base (ex: 1.5 = 50% mais caro)"
+    },
+    "fixed_price": {
+      "type": "number",
+      "description": "Pre\u00e7o fixo (sobrep\u00f5e o multiplicador)"
+    },
+    "min_nights": {
+      "type": "number",
+      "description": "M\u00ednimo de noites para este per\u00edodo"
+    },
+    "allowed_checkin_days": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "description": "Dias permitidos para check-in neste per\u00edodo"
+    },
+    "allowed_checkout_days": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "description": "Dias permitidos para check-out neste per\u00edodo"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "company_id",
+    "name",
+    "start_date",
+    "end_date"
+  ]
+}

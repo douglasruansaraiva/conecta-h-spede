@@ -1,0 +1,78 @@
+{
+  "name": "Guest",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "document": {
+      "type": "string",
+      "description": "CPF ou documento"
+    },
+    "address": {
+      "type": "string"
+    },
+    "city": {
+      "type": "string"
+    },
+    "state": {
+      "type": "string"
+    },
+    "country": {
+      "type": "string",
+      "default": "Brasil"
+    },
+    "birth_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "total_stays": {
+      "type": "number",
+      "default": 0
+    },
+    "total_spent": {
+      "type": "number",
+      "default": 0
+    },
+    "preferred_room_type": {
+      "type": "string",
+      "enum": [
+        "quarto",
+        "suite",
+        "chale",
+        "apartamento",
+        "casa"
+      ],
+      "description": "Tipo de acomoda\u00e7\u00e3o preferida"
+    },
+    "dietary_restrictions": {
+      "type": "string",
+      "description": "Restri\u00e7\u00f5es alimentares"
+    },
+    "special_requests": {
+      "type": "string",
+      "description": "Pedidos especiais"
+    },
+    "vip": {
+      "type": "boolean",
+      "default": false,
+      "description": "H\u00f3spede VIP"
+    }
+  },
+  "required": [
+    "company_id",
+    "name"
+  ]
+}

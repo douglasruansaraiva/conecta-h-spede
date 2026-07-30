@@ -1,0 +1,50 @@
+{
+  "name": "Expense",
+  "type": "object",
+  "properties": {
+    "description": {
+      "type": "string",
+      "description": "Descri\u00e7\u00e3o da despesa"
+    },
+    "amount": {
+      "type": "number",
+      "description": "Valor da despesa"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "servidor",
+        "marketing",
+        "suporte",
+        "desenvolvimento",
+        "infraestrutura",
+        "outros"
+      ],
+      "default": "outros",
+      "description": "Categoria da despesa"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Data da despesa"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "paid"
+      ],
+      "default": "pending",
+      "description": "Status do pagamento"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Observa\u00e7\u00f5es adicionais"
+    }
+  },
+  "required": [
+    "description",
+    "amount",
+    "date"
+  ]
+}

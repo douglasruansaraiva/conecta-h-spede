@@ -1,0 +1,109 @@
+{
+  "name": "Accommodation",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "description": "ID da empresa propriet\u00e1ria"
+    },
+    "name": {
+      "type": "string",
+      "description": "Nome do quarto/chal\u00e9/su\u00edte"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "quarto",
+        "suite",
+        "chale",
+        "apartamento",
+        "casa"
+      ],
+      "default": "quarto"
+    },
+    "description": {
+      "type": "string"
+    },
+    "max_guests": {
+      "type": "number",
+      "default": 2
+    },
+    "base_price": {
+      "type": "number",
+      "description": "Pre\u00e7o base por di\u00e1ria"
+    },
+    "weekend_price": {
+      "type": "number",
+      "description": "Pre\u00e7o para fins de semana"
+    },
+    "images": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "URLs das imagens"
+    },
+    "amenities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Comodidades (WiFi, AC, etc)"
+    },
+    "ical_urls": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "URLs de iCal para importar (Airbnb, Booking, VRBO, etc)"
+    },
+    "ical_export_token": {
+      "type": "string",
+      "description": "Token \u00fanico para exporta\u00e7\u00e3o do calend\u00e1rio iCal"
+    },
+    "min_nights": {
+      "type": "number",
+      "default": 1
+    },
+    "min_nights_weekend": {
+      "type": "number",
+      "description": "M\u00ednimo de noites para fins de semana"
+    },
+    "allowed_checkin_days": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "description": "Dias da semana permitidos para check-in (0=Dom, 1=Seg, ..., 6=S\u00e1b)"
+    },
+    "allowed_checkout_days": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "description": "Dias da semana permitidos para check-out (0=Dom, 1=Seg, ..., 6=S\u00e1b)"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "inactive",
+        "maintenance"
+      ],
+      "default": "active"
+    }
+  },
+  "required": [
+    "company_id",
+    "name",
+    "base_price"
+  ]
+}

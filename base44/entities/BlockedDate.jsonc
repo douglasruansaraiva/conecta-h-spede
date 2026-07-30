@@ -1,0 +1,53 @@
+{
+  "name": "BlockedDate",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string"
+    },
+    "accommodation_id": {
+      "type": "string"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "reason": {
+      "type": "string"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "manual",
+        "ical_import"
+      ],
+      "default": "manual"
+    },
+    "guest_name": {
+      "type": "string",
+      "description": "Nome do h\u00f3spede (reservas externas)"
+    },
+    "guest_email": {
+      "type": "string",
+      "description": "Email do h\u00f3spede"
+    },
+    "guest_phone": {
+      "type": "string",
+      "description": "Telefone do h\u00f3spede"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Observa\u00e7\u00f5es adicionais"
+    }
+  },
+  "required": [
+    "company_id",
+    "accommodation_id",
+    "start_date",
+    "end_date"
+  ]
+}

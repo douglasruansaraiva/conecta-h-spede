@@ -1,0 +1,52 @@
+{
+  "name": "Notification",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string"
+    },
+    "user_email": {
+      "type": "string",
+      "description": "Email do usu\u00e1rio que receber\u00e1 a notifica\u00e7\u00e3o"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "new_reservation",
+        "check_in_today",
+        "check_out_today",
+        "cancellation",
+        "payment_received"
+      ],
+      "description": "Tipo de notifica\u00e7\u00e3o"
+    },
+    "title": {
+      "type": "string",
+      "description": "T\u00edtulo da notifica\u00e7\u00e3o"
+    },
+    "message": {
+      "type": "string",
+      "description": "Mensagem da notifica\u00e7\u00e3o"
+    },
+    "link": {
+      "type": "string",
+      "description": "Link relacionado \u00e0 notifica\u00e7\u00e3o"
+    },
+    "read": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se a notifica\u00e7\u00e3o foi lida"
+    },
+    "reservation_id": {
+      "type": "string",
+      "description": "ID da reserva relacionada"
+    }
+  },
+  "required": [
+    "company_id",
+    "user_email",
+    "type",
+    "title",
+    "message"
+  ]
+}

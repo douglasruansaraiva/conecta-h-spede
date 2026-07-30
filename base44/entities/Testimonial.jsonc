@@ -1,0 +1,35 @@
+{
+  "name": "Testimonial",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "description": "ID da empresa"
+    },
+    "guest_name": {
+      "type": "string",
+      "description": "Nome do h\u00f3spede"
+    },
+    "rating": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 5,
+      "default": 5,
+      "description": "Avalia\u00e7\u00e3o de 1 a 5 estrelas"
+    },
+    "comment": {
+      "type": "string",
+      "description": "Coment\u00e1rio do h\u00f3spede"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Se o depoimento est\u00e1 ativo/vis\u00edvel"
+    }
+  },
+  "required": [
+    "company_id",
+    "guest_name",
+    "comment"
+  ]
+}

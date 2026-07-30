@@ -1,0 +1,65 @@
+{
+  "name": "Subscription",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "description": "ID da empresa"
+    },
+    "plan": {
+      "type": "string",
+      "enum": [
+        "free",
+        "basic",
+        "premium",
+        "enterprise"
+      ],
+      "default": "free",
+      "description": "Plano da empresa"
+    },
+    "monthly_fee": {
+      "type": "number",
+      "description": "Valor da mensalidade"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "suspended",
+        "cancelled"
+      ],
+      "default": "active",
+      "description": "Status da assinatura"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Data de vencimento"
+    },
+    "paid_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Data de pagamento"
+    },
+    "payment_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "paid",
+        "overdue"
+      ],
+      "default": "pending",
+      "description": "Status do pagamento"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Observa\u00e7\u00f5es"
+    }
+  },
+  "required": [
+    "company_id",
+    "plan",
+    "monthly_fee",
+    "due_date"
+  ]
+}

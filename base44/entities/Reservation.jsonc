@@ -1,0 +1,79 @@
+{
+  "name": "Reservation",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string"
+    },
+    "accommodation_id": {
+      "type": "string"
+    },
+    "guest_id": {
+      "type": "string"
+    },
+    "check_in": {
+      "type": "string",
+      "format": "date"
+    },
+    "check_out": {
+      "type": "string",
+      "format": "date"
+    },
+    "guests_count": {
+      "type": "number",
+      "default": 1
+    },
+    "total_amount": {
+      "type": "number"
+    },
+    "paid_amount": {
+      "type": "number",
+      "default": 0
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "confirmed",
+        "checked_in",
+        "checked_out",
+        "cancelled"
+      ],
+      "default": "pending"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "direct",
+        "airbnb",
+        "booking",
+        "vrbo",
+        "other"
+      ],
+      "default": "direct"
+    },
+    "external_id": {
+      "type": "string",
+      "description": "ID \u00fanico do evento iCal ou plataforma externa"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "guest_name": {
+      "type": "string",
+      "description": "Nome do h\u00f3spede (para reservas r\u00e1pidas)"
+    },
+    "guest_email": {
+      "type": "string"
+    },
+    "guest_phone": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "company_id",
+    "accommodation_id",
+    "check_in",
+    "check_out"
+  ]
+}
